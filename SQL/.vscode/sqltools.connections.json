@@ -1,0 +1,13 @@
+[
+        {
+            "name": "hall",
+            "driver": "MySQL",
+            "server": "localhost",
+            "port": 3306,
+            "database": "hall_mgmt",
+            "username": "WasifDarain",
+            "password": "mysql",
+            "previewLimit": 50
+        }
+
+]
