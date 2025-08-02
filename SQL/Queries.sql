@@ -11,5 +11,5 @@ SELECT
 FROM
     INFORMATION_SCHEMA.KEY_COLUMN_USAGE
 WHERE
-    TABLE_NAME = 'Hall'
+    TABLE_NAME = 'Complaint_Resolution'
     AND TABLE_SCHEMA = 'hall_mgmt';

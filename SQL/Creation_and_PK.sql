@@ -1,5 +1,5 @@
 CREATE TABLE Student_Info (
-    Student_ID BIGINT  NOT NULL ,
+    Student_ID BIGINT ,
     Name VARCHAR(40)  NOT NULL ,
     Password VARCHAR(40)  NOT NULL ,
     Serial_No BIGINT  NOT NULL ,
@@ -17,7 +17,7 @@ CREATE TABLE Student_Info (
 );
 
 CREATE TABLE Resident (
-    Student_ID BIGINT  NOT NULL ,
+    Student_ID BIGINT ,
     Resident_ID BIGINT  NOT NULL ,
     Date DATETIME  NOT NULL ,
     PRIMARY KEY (
@@ -26,7 +26,7 @@ CREATE TABLE Resident (
 );
 
 CREATE TABLE Events (
-    Event_ID BIGINT  NOT NULL ,
+    Event_ID BIGINT ,
     Type VARCHAR(25)  NOT NULL ,
     Date DATETIME  NOT NULL ,
     Description VARCHAR(500)  NOT NULL ,
@@ -38,7 +38,7 @@ CREATE TABLE Events (
 
 CREATE TABLE Complaint (
     Student_ID BIGINT  NOT NULL ,
-    Complaint_ID BIGINT  NOT NULL ,
+    Complaint_ID BIGINT ,
     Description VARCHAR(500)  NOT NULL ,
     Time DATETIME  NOT NULL ,
     Status TINYINT  NOT NULL ,
@@ -48,7 +48,7 @@ CREATE TABLE Complaint (
 );
 
 CREATE TABLE Complaint_Resolution (
-    Resolution_ID BIGINT  NOT NULL ,
+    Resolution_ID BIGINT ,
     Complaint_ID BIGINT  NOT NULL ,
     Receive_Time DATETIME  NOT NULL ,
     PRIMARY KEY (
@@ -58,7 +58,7 @@ CREATE TABLE Complaint_Resolution (
 
 CREATE TABLE Visitor_Entry (
     Student_ID BIGINT  NOT NULL ,
-    Visitor_ID BIGINT  NOT NULL ,
+    Visitor_ID BIGINT ,
     Name VARCHAR(40)  NOT NULL ,
     Phone_No VARCHAR(25)  NOT NULL ,
     Relation VARCHAR(25)  NOT NULL ,
@@ -68,7 +68,7 @@ CREATE TABLE Visitor_Entry (
 );
 
 CREATE TABLE Room_Allocation (
-    Allocation_ID BIGINT  NOT NULL ,
+    Allocation_ID BIGINT ,
     Student_ID BIGINT  NOT NULL ,
     Room_No SMALLINT  NOT NULL ,
     Hall_No TINYINT  NOT NULL ,
@@ -80,7 +80,7 @@ CREATE TABLE Room_Allocation (
 CREATE TABLE Lost_Item (
     Student_ID BIGINT  NOT NULL ,
     Item_ID BIGINT  NOT NULL ,
-    Lost_ID BIGINT  NOT NULL ,
+    Lost_ID BIGINT ,
     Description VARCHAR(500)  NOT NULL ,
     Lost_Time DATETIME  NOT NULL ,
     PRIMARY KEY (
@@ -89,7 +89,7 @@ CREATE TABLE Lost_Item (
 );
 
 CREATE TABLE Found_Item (
-    Found_ID BIGINT  NOT NULL ,
+    Found_ID BIGINT ,
     Lost_ID BIGINT  NOT NULL ,
     Found_Time DATETIME  NOT NULL ,
     PRIMARY KEY (
@@ -98,7 +98,7 @@ CREATE TABLE Found_Item (
 );
 
 CREATE TABLE Room (
-    Room_No SMALLINT  NOT NULL ,
+    Room_No SMALLINT ,
     Hall_No TINYINT  NOT NULL ,
     PRIMARY KEY (
         Room_No
@@ -106,7 +106,7 @@ CREATE TABLE Room (
 );
 
 CREATE TABLE Hall (
-    Hall_No TINYINT  NOT NULL ,
+    Hall_No TINYINT ,
     Place VARCHAR(25)  NOT NULL ,
     PRIMARY KEY (
         Hall_No
@@ -114,7 +114,7 @@ CREATE TABLE Hall (
 );
 
 CREATE TABLE Item (
-    Item_ID BIGINT  NOT NULL ,
+    Item_ID BIGINT ,
     Item_Type VARCHAR(25)  NOT NULL ,
     PRIMARY KEY (
         Item_ID
