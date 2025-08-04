@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Allocation Info</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #FFB6C1, #87CEFA);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .info-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      width: 360px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 16px;
+      transition: 0.3s ease;
+    }
+    input:focus {
+      border-color: #87CEFA;
+      outline: none;
+    }
+    button {
+      background-color: #87CEFA;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      color: white;
+      transition: 0.3s ease;
+    }
+    button:hover {
+      background-color: #70b4e0;
+    }
+    .details {
+      margin-top: 15px;
+      font-weight: 600;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="info-box">
+    <h2>Allocation Info</h2>
+    <input type="text" id="studentIdInput" placeholder="Enter Student ID" required />
+    <button onclick="showAllocation()">Get Info</button>
+    <div class="details" id="allocationDetails"></div>
+  </div>
+
+  <script>
+    function showAllocation() {
+      const inputId = document.getElementById('studentIdInput').value.trim();
+      const output = document.getElementById('allocationDetails');
+
+      if (!inputId) {
+        output.textContent = "Please enter a valid Student ID.";
+        return;
+      }
+
+      // Simulated data for demo
+      output.innerHTML = `
+        Student ID: ${inputId}<br>
+        Room No: ${100 + parseInt(inputId.slice(-2))}<br>
+        Hostel Name: Sapphire Block<br>
+        Floor: ${(parseInt(inputId.slice(-1)) % 3) + 1}
+      `;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Submit Hall Event</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #ffecd2, #fcb69f);
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header {
+      padding: 20px;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+
+    .form-box {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    .form-box h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.7);
+      font-size: 1rem;
+    }
+
+    textarea {
+      resize: vertical;
+      height: 80px;
+    }
+
+    button {
+      background: #ff6ec4;
+      color: white;
+      padding: 12px 25px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover {
+      background: #fc5c7d;
+      transform: scale(1.05);
+    }
+
+    .event-display {
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(5px);
+      border-left: 6px solid #6a82fb;
+      border-radius: 16px;
+      padding: 15px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+
+    .back-link {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .back-link a {
+      text-decoration: none;
+      color: #0056b3;
+      font-weight: bold;
+    }
+
+    .back-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">📅 Submit a Hall Event</div>
+  <div class="form-box">
+    <h2>Event Info</h2>
+    <form id="eventForm">
+      <input type="text" id="eventType" placeholder="Event Type (e.g. Cultural Fest)" required />
+      <input type="date" id="eventDate" required />
+      <textarea id="eventDesc" placeholder="Short Description" required></textarea>
+      <input type="text" id="studentId" placeholder="Your Student ID" required />
+      <button type="submit">🚀 Submit Event</button>
+    </form>
+  </div>
+
+  <div id="eventMessage"></div>
+
+  <div class="back-link">
+    <a href="dashboard.html">← Back to Dashboard</a>
+  </div>
+
+  <script>
+    document.getElementById("eventForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const type = document.getElementById("eventType").value;
+      const date = document.getElementById("eventDate").value;
+      const desc = document.getElementById("eventDesc").value;
+      const studentId = document.getElementById("studentId").value;
+
+      const messageBox = document.createElement("div");
+      messageBox.className = "event-display";
+      messageBox.innerHTML = `
+        <h3>📢 Event Submitted!</h3>
+        <p><strong>Type:</strong> ${type}</p>
+        <p><strong>Date:</strong> ${date}</p>
+        <p><strong>Description:</strong> ${desc}</p>
+        <p><strong>Submitted by:</strong> ${studentId}</p>
+      `;
+
+      const eventMessage = document.getElementById("eventMessage");
+      eventMessage.innerHTML = "";
+      eventMessage.appendChild(messageBox);
+
+      document.getElementById("eventForm").reset();
+    });
+  </script>
+</body>
+</html>

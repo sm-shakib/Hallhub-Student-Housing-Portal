@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HallHub Dashboard</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(6px);
+      padding: 20px;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .container {
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 40px;
+    }
+
+    .nav-card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .nav-card:hover {
+      transform: scale(1.05);
+      background-color: #ffe1ff;
+    }
+
+    .event-section {
+      width: 100%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      animation: fadeIn 1.5s ease;
+    }
+
+    .event-section h3 {
+      margin-bottom: 10px;
+    }
+
+    .event-section p {
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+  </style>
+</head>
+<body>
+  <div class="header">📚 HallHub Dashboard</div>
+  <div class="container">
+
+    <!-- Event Highlights -->
+    <div class="event-section">
+      <h3>📢 Latest Events</h3>
+      <p>
+        🗓️ <strong>Aug 10:</strong> Inter-Hall Cultural Fest 🎭<br/>
+        🗓️ <strong>Aug 15:</strong> TechTalk: AI on Campus 💻<br/>
+        🗓️ <strong>Aug 20:</strong> Sustainability Cleanup 🌱
+      </p>
+    </div>
+
+    <!-- Feature Navigation -->
+    <div class="nav-grid">
+      <div class="nav-card" onclick="goTo('event.html')">📅 Submit Event</div>
+      <div class="nav-card" onclick="goTo('complain.html')">⚠️ File Complaint</div>
+      <div class="nav-card" onclick="goTo('showcomplain.html')">📂 Show Complaints</div>
+      <div class="nav-card" onclick="goTo('resolved.html')">✅ Resolved Complaints</div>
+      <div class="nav-card" onclick="goTo('visitor.html')">🚪 Visitor Application</div>
+      <div class="nav-card" onclick="goTo('visitorstatus.html')">📋 Visitor Status</div>
+      <div class="nav-card" onclick="goTo('allocation.html')">📦 Allocation Info</div>
+      <div class="nav-card" onclick="goTo('categories.html')">📚 Item Categories</div>
+      <div class="nav-card" onclick="goTo('lost.html')">🎒 Lost Item Form</div>
+      <div class="nav-card" onclick="goTo('mylost.html')">🔍 My Lost Items</div>
+      <div class="nav-card" onclick="goTo('found.html')">🧭 Found Items</div>
+      <div class="nav-card" onclick="goTo('index.html')">🏠 Back to Home</div>
+      <div class="nav-card" onclick="logout()">🚪 Logout</div>
+    </div>
+
+  </div>
+
+  <script>
+    function goTo(page) {
+      window.location.href = page;
+    }
+
+    function logout() {
+      alert("👋 You’ve been logged out!");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
