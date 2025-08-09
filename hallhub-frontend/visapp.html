@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visitor Application</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #74ebd5, #ACB6E5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .form-container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      width: 350px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 18px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      transition: 0.3s ease;
+    }
+    input:focus {
+      border-color: #74ebd5;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      background-color: #74ebd5;
+      color: #fff;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #57d0c1;
+    }
+    .message {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Visitor Application</h2>
+    <form id="visitorForm">
+      <label for="studentId">Student ID</label>
+      <input type="text" id="studentId" required />
+
+      <label for="visitorName">Visitor Name</label>
+      <input type="text" id="visitorName" required />
+
+      <label for="visitorPhone">Phone Number</label>
+      <input type="tel" id="visitorPhone" required pattern="[0-9]{10}" />
+
+      <label for="relation">Relation</label>
+      <input type="text" id="relation" required />
+
+      <button type="submit">Submit</button>
+      <div class="message" id="formMessage"></div>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('visitorForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const message = document.getElementById('formMessage');
+      message.textContent = "Visitor request submitted ✔️ (mock submission)";
+      
+      // Reset form fields
+      e.target.reset();
+    });
+  </script>
+</body>
+</html>

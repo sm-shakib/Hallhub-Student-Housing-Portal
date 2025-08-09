@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HallHub - Student Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Enable dark mode via class -->
+    <script>
+        tailwind.config = { darkMode: 'class' };
+
+        // Apply saved theme before rendering
+        if (localStorage.theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark'); // default: light
+        }
+    </script>
+    <!-- Include SheetJS for XLSX handling -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 font-sans min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-indigo-700 dark:to-purple-900 text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-3xl font-bold">🏢 HallHub</h1>
+            <nav class="flex items-center space-x-4">
+                <a href="home.html" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Back to Home</a>
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" class="px-3 py-1 bg-white/20 rounded hover:bg-white/30 transition select-none">
+                    🌙
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Registration Form Section -->
+    <section class="flex-grow py-12">
+        <div class="container mx-auto px-4">
+            <div class="max-w-md mx-auto 
+                        bg-white/20 dark:bg-gray-800/30 
+                        backdrop-blur-lg border border-white/20 dark:border-gray-700/30 
+                        rounded-xl shadow-lg p-8 
+                        hover:shadow-[0_0_25px_rgba(0,255,255,0.8)] transition
+                        hover:scale-[1.01] transform duration-300 ease-in-out">
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-white text-center mb-6">🎓 Student Registration</h2>
+                <form id="registration-form" class="space-y-4" novalidate>
+                    <div>
+                        <label for="student-id" class="block text-gray-700 dark:text-gray-300 font-semibold">Student ID</label>
+                        <input type="text" id="student-id" name="student-id" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="name" class="block text-gray-700 dark:text-gray-300 font-semibold">Full Name</label>
+                        <input type="text" id="name" name="name" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="email" class="block text-gray-700 dark:text-gray-300 font-semibold">Email Address</label>
+                        <input type="email" id="email" name="email" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="department" class="block text-gray-700 dark:text-gray-300 font-semibold">Department</label>
+                        <input type="text" id="department" name="department" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="level" class="block text-gray-700 dark:text-gray-300 font-semibold">Level</label>
+                        <input type="text" id="level" name="level" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="address" class="block text-gray-700 dark:text-gray-300 font-semibold">Address</label>
+                        <input type="text" id="address" name="address" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-gray-700 dark:text-gray-300 font-semibold">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="relativename" class="block text-gray-700 dark:text-gray-300 font-semibold">Relative Name</label>
+                        <input type="text" id="relativename" name="relativename" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="relativerelation" class="block text-gray-700 dark:text-gray-300 font-semibold">Relative Relation</label>
+                        <input type="text" id="relativerelation" name="relativerelation" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="relativeaddress" class="block text-gray-700 dark:text-gray-300 font-semibold">Relative Address</label>
+                        <input type="text" id="relativeaddress" name="relativeaddress" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="relativephone" class="block text-gray-700 dark:text-gray-300 font-semibold">Relative Phone Number</label>
+                        <input type="tel" id="relativephone" name="relativephone" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="password" class="block text-gray-700 dark:text-gray-300 font-semibold">Password</label>
+                        <input type="password" id="password" name="password" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="confirm-password" class="block text-gray-700 dark:text-gray-300 font-semibold">Confirm Password</label>
+                        <input type="password" id="confirm-password" name="confirm-password" autocomplete="off" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full 
+                               bg-gradient-to-r from-blue-500 to-indigo-600 
+                               hover:from-cyan-400 hover:to-blue-700
+                               hover:scale-[1.03] transform duration-300 ease-in-out
+                               text-white py-3 rounded-lg 
+                               shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.9)] 
+                               transition font-semibold">
+                        Register Now
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="bg-gray-800 dark:bg-gradient-to-t dark:from-gray-900 dark:to-gray-800 text-white py-6 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-4 text-gray-300">© 2025 HallHub. All rights reserved.</p>
+            <div class="flex justify-center space-x-4">
+                <a href="#contact" class="hover:text-gray-200 dark:hover:text-gray-400 transition">Contact Us</a>
+                <a href="#privacy" class="hover:text-gray-200 dark:hover:text-gray-400 transition">Privacy Policy</a>
+                <a href="#terms" class="hover:text-gray-200 dark:hover:text-gray-400 transition">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- XLSX Handling Script -->
+    <script>
+        // Theme Toggle Logic
+        document.getElementById('theme-toggle').addEventListener('click', function () {
+            document.documentElement.classList.toggle('dark');
+            if (document.documentElement.classList.contains('dark')) {
+                localStorage.theme = 'dark';
+                this.textContent = '☀️';
+            } else {
+                localStorage.theme = 'light';
+                this.textContent = '🌙';
+            }
+        });
+
+        // Set button icon on load
+        document.getElementById('theme-toggle').textContent =
+            document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+
+
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
+        }
+
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+                    var csvSheet = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    var csv = XLSX.utils.sheet_to_csv(csvSheet, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+    </script>
+    <script>
+        // Select the form by its ID
+        const form = document.getElementById('registration-form');
+  
+        // Listen for form submit event
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevent page reload on submit
+
+            // Collect data from all inputs
+            const formData = {
+                studentId: document.getElementById('student-id').value.trim(),
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                department: document.getElementById('department').value.trim(),
+                level: document.getElementById('level').value.trim(),
+                address: document.getElementById('address').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                relativeName: document.getElementById('relativename').value.trim(),
+                relativeRelation: document.getElementById('relativerelation').value.trim(),
+                relativeAddress: document.getElementById('relativeaddress').value.trim(),
+                relativePhone: document.getElementById('relativephone').value.trim(),
+                password: document.getElementById('password').value,
+                confirmPassword: document.getElementById('confirm-password').value,
+            };
+
+            try {
+                // Send data to backend API with POST request
+                const response = await fetch('http://localhost:3000/register', { // Replace with your backend URL if different
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData),
+                });
+
+                // Read JSON response from backend
+                const result = await response.json();
+
+                // Show success or error message
+                if (response.ok) {
+                    alert(result.message || 'Registration successful!');
+                    form.reset(); // Clear the form inputs after success
+                } else {
+                    alert(result.error || 'Registration failed. Please try again.');
+                }
+            } catch (error) {
+                alert('Failed to connect to the server. Please try again later.');
+                console.error(error);
+            }
+        });
+    </script>
+
+</body>
+</html>

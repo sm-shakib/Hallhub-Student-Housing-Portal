@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lost Item Form</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #FF9A8B, #FFB199);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .form-wrapper {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      width: 380px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      transition: 0.3s ease;
+    }
+    input:focus, textarea:focus {
+      border-color: #FF9A8B;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      background-color: #FF9A8B;
+      color: white;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+    button:hover {
+      background-color: #f37c6c;
+    }
+    .msg {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-wrapper">
+    <h2>Lost Item Report</h2>
+    <form id="lostForm">
+      <label for="studentId">Student ID</label>
+      <input type="text" id="studentId" required>
+
+      <label for="itemId">Item ID</label>
+      <input type="text" id="itemId" required>
+
+      <label for="description">Item Description</label>
+      <textarea id="description" rows="2" required></textarea>
+
+      <label for="lostDate">Date Lost</label>
+      <input type="date" id="lostDate" required>
+
+      <button type="submit">Submit Report</button>
+      <div class="msg" id="submissionMsg"></div>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("lostForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      document.getElementById("submissionMsg").textContent = "Lost item reported successfully 📋 (mock submission)";
+      e.target.reset();
+    });
+  </script>
+</body>
+</html>

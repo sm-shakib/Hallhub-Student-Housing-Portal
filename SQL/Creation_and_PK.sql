@@ -1,19 +1,19 @@
 CREATE TABLE Student_Info (
-    Student_ID BIGINT  NOT NULL ,
-    Name VARCHAR(40)  NOT NULL ,
-    Password VARCHAR(40)  NOT NULL ,
-    Serial_No BIGINT  NOT NULL ,
-    Department VARCHAR(40)  NOT NULL ,
-    Level TINYINT  NOT NULL ,
-    Address VARCHAR(128)  NOT NULL ,
-    Phone_No VARCHAR(25)  NOT NULL ,
-    Relative_Name VARCHAR(40)  NOT NULL ,
-    Relative_Address VARCHAR(128)  NOT NULL ,
-    Relative_Relation VARCHAR(25)  NOT NULL ,
-    Relative_Phone_No VARCHAR(25)  NOT NULL ,
-    PRIMARY KEY (
-        Student_ID
-    )
+    Serial_No INT AUTO_INCREMENT,
+    Student_Id VARCHAR(50) NOT NULL,
+    Name VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) NOT NULL,
+    Department VARCHAR(100) NOT NULL,
+    Level VARCHAR(50) NOT NULL,
+    Address TEXT NOT NULL,
+    Phone_No VARCHAR(20) NOT NULL,
+    Relative_Name VARCHAR(100) NOT NULL,
+    Relative_Relation VARCHAR(50) NOT NULL,
+    Relative_Address TEXT NOT NULL,
+    Relative_Phone_no VARCHAR(20) NOT NULL,
+    Password_Hash VARCHAR(255) NOT NULL,
+    Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (Serial_No, Student_Id)
 );
 
 CREATE TABLE Resident (
