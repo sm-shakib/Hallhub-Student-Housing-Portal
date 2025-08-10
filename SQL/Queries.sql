@@ -1,7 +1,3 @@
-select * from student_info;
-
-select * from room;
-
 SELECT
     CONSTRAINT_NAME,
     TABLE_NAME,
@@ -22,3 +18,16 @@ SELECT DISTINCT TABLE_SCHEMA
 FROM INFORMATION_SCHEMA.TABLES;
 
 SELECT user, host FROM mysql.user;
+
+SELECT * FROM `student_info`;
+SELECT * FROM `resident`;
+SELECT * FROM `events`;
+SELECT * FROM `complaint`;
+SELECT * FROM `complaint_resolution`;
+SELECT * FROM `visitor_entry`;
+SELECT * FROM `room_allocation`;
+SELECT * FROM `lost_item`;
+SELECT * FROM `found_item`;
+SELECT * FROM `room`;
+SELECT * FROM `hall`;
+SELECT * FROM `item`;
