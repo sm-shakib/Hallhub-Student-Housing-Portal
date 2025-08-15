@@ -1,3 +1,5 @@
+--mysqldump -u WasifDarain -p --verbose HallHub > dump.sql
+
 SELECT
     CONSTRAINT_NAME,
     TABLE_NAME,
@@ -31,3 +33,6 @@ SELECT * FROM found_item;
 SELECT * FROM room;
 SELECT * FROM hall;
 SELECT * FROM item;
+
+ALTER TABLE room_allocation
+MODIFY COLUMN Allocation_Time DATETIME NOT NULL;

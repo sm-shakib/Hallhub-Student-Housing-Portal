@@ -69,6 +69,7 @@ CREATE TABLE room_allocation (
   Student_ID bigint NOT NULL,
   Room_No smallint NOT NULL,
   Hall_No tinyint NOT NULL,
+  Allocation_Time datetime NOT NULL,
   PRIMARY KEY (Allocation_ID),
   KEY ral_stdid_fk (Student_ID),
   KEY ral_romno_fk (Room_No),
