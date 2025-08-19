@@ -69,7 +69,8 @@ CREATE TABLE room_allocation (
   Student_ID bigint NOT NULL,
   Room_No smallint NOT NULL,
   Hall_No tinyint NOT NULL,
-  Allocation_Time datetime NOT NULL,
+  Alloc_Start_Time datetime NOT NULL,
+  Alloc_End_Time datetime,
   PRIMARY KEY (Allocation_ID),
   KEY ral_stdid_fk (Student_ID),
   KEY ral_romno_fk (Room_No),
@@ -77,6 +78,7 @@ CREATE TABLE room_allocation (
   CONSTRAINT ral_halno_fk FOREIGN KEY (Hall_No) REFERENCES hall (Hall_No) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT ral_romno_fk FOREIGN KEY (Room_No) REFERENCES room (Room_No) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT ral_stdid_fk FOREIGN KEY (Student_ID) REFERENCES resident (Student_ID) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT ral_alctm_ck CHECK (Alloc_End_Time IS NOT NULL OR Alloc_Start_Time < Alloc_End_Time)
 );
 
 CREATE TABLE lost_item (

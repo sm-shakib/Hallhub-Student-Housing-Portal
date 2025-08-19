@@ -59,7 +59,7 @@ INSERT INTO visitor_entry (Student_ID, Name, Phone_No, Relation) VALUES
 (202314053, 'Wasif Colleague', '01799999999', 'Colleague'),
 (202314401, 'Jakaria Neighbor', '01700000000', 'Neighbor');
 
-INSERT INTO room_allocation (Student_ID, Room_No, Hall_No, Allocation_Time) VALUES
+INSERT INTO room_allocation (Student_ID, Room_No, Hall_No, Alloc_Start_Time) VALUES
 (202314016, 101, 1, '2025-08-15 11:20:00'),
 (202314029, 201, 1, '2025-08-01 17:15:20'),
 (202314030, 301, 2, '2025-01-02 00:12:55'),
@@ -92,5 +92,10 @@ UPDATE room_allocation
 SET Allocation_Time = '2025-01-02 00:12:55'
 WHERE Allocation_ID = 3;
 
+UPDATE room_allocation
+SET Alloc_End_Time = '2025-12-31 00:00:00'
+WHERE Allocation_ID = 2;
 
-
+UPDATE room_allocation
+SET Alloc_End_Time = '2025-08-21 15:15:55'
+WHERE Allocation_ID = 3;

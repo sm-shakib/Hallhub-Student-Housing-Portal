@@ -1,23 +1,4 @@
---mysqldump -u WasifDarain -p --verbose HallHub > dump.sql
-
-SELECT
-    CONSTRAINT_NAME,
-    TABLE_NAME,
-    COLUMN_NAME,
-    REFERENCED_TABLE_NAME,
-    REFERENCED_COLUMN_NAME
-FROM
-    INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-WHERE
-    TABLE_NAME = 'Complaint_Resolution'
-    AND TABLE_SCHEMA = 'hall_mgmt';
-
-SELECT TABLE_SCHEMA, TABLE_NAME
-FROM INFORMATION_SCHEMA.TABLES
-WHERE TABLE_TYPE = 'BASE TABLE';
-
-SELECT DISTINCT TABLE_SCHEMA
-FROM INFORMATION_SCHEMA.TABLES;
+--mysqldump -u WasifDarain -p --verbose Hall_Mgmt > dump.sql
 
 SELECT user, host FROM mysql.user;
 
@@ -36,3 +17,23 @@ SELECT * FROM item;
 
 ALTER TABLE room_allocation
 MODIFY COLUMN Allocation_Time DATETIME NOT NULL;
+
+ALTER TABLE room_allocation
+CHANGE Allocation_Time Alloc_Start_Time DATETIME NOT NULL;
+
+ALTER TABLE room_allocation
+ADD Alloc_End_Time DATETIME;
+
+ALTER TABLE room_allocation
+ADD CONSTRAINT ral_alctm_ck
+CHECK (
+    Alloc_End_Time IS NULL OR Alloc_Start_Time < Alloc_End_Time
+);
+
+SELECT 
+    tc.CONSTRAINT_NAME,
+    tc.CONSTRAINT_TYPE,
+    tc.TABLE_NAME
+FROM information_schema.TABLE_CONSTRAINTS tc
+WHERE tc.CONSTRAINT_SCHEMA = DATABASE()
+  AND tc.CONSTRAINT_NAME LIKE '%_%_%';
