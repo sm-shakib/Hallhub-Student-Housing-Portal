@@ -26,6 +26,15 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+app.get('/test-connection', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT 1');
+    res.json({ success: true, message: 'Database connection is working!' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Database connection failed', error: error.message });
+  }
+});
+
 // Test database connection
 async function testConnection() {
   try {
