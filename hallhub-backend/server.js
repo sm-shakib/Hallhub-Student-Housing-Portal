@@ -18,7 +18,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Create a connection pool to freeaqldatabase.com database
 const pool = mysql.createPool({
   host: 'mysql-71ed2b0-hallhub-1.g.aivencloud.com',
-  port: 12345,//port updated
+  port: 28592,//port updated
   user: 'avnadmin',
   password: 'AVNS_FnvYhizl3z5Xkya3Tr4',
   database: 'defaultdb',
