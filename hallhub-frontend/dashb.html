@@ -29,6 +29,38 @@
       align-items: center;
     }
 
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      animation: fadeIn 1.5s ease;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #6c5ce7;
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #666;
+      font-weight: 500;
+    }
+
     .nav-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -76,6 +108,16 @@
       line-height: 1.6;
     }
 
+    .loading {
+      color: #666;
+      font-style: italic;
+    }
+
+    .error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
     @keyframes fadeIn {
       from {opacity: 0;}
       to {opacity: 1;}
@@ -86,44 +128,180 @@
   <div class="header">📚 HallHub Dashboard</div>
   <div class="container">
 
-    <!-- Event Highlights -->
+    <!-- Dashboard Statistics -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-number" id="totalLostItems">...</div>
+        <div class="stat-label">Total Lost Items</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalFoundItems">...</div>
+        <div class="stat-label">Total Found Items</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalEvents">...</div>
+        <div class="stat-label">Total Events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalComplaints">...</div>
+        <div class="stat-label">Total Complaints</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="pendingComplaints">...</div>
+        <div class="stat-label">Pending Complaints</div>
+      </div>
+      <div class="stat-card" id="userStatsCard" style="display: none;">
+        <div class="stat-number" id="userComplaints">...</div>
+        <div class="stat-label">My Complaints</div>
+      </div>
+    </div>
+
+    <!-- Latest Events Section -->
     <div class="event-section">
       <h3>📢 Latest Events</h3>
-      <p>
-        🗓️ <strong>Aug 10:</strong> Inter-Hall Cultural Fest 🎭<br/>
-        🗓️ <strong>Aug 15:</strong> TechTalk: AI on Campus 💻<br/>
-        🗓️ <strong>Aug 20:</strong> Sustainability Cleanup 🌱
-      </p>
+      <div id="eventsContainer">
+        <p class="loading">Loading latest events...</p>
+      </div>
     </div>
 
     <!-- Feature Navigation -->
     <div class="nav-grid">
-      <div class="nav-card" onclick="goTo('event.html')">📅 Submit Event</div>
-      <div class="nav-card" onclick="goTo('complain.html')">⚠️ File Complaint</div>
-      <div class="nav-card" onclick="goTo('showcomplain.html')">📂 Show Complaints</div>
-      <div class="nav-card" onclick="goTo('resolved.html')">✅ Resolved Complaints</div>
-      <div class="nav-card" onclick="goTo('visitor.html')">🚪 Visitor Application</div>
-      <div class="nav-card" onclick="goTo('visitorstatus.html')">📋 Visitor Status</div>
-      <div class="nav-card" onclick="goTo('allocation.html')">📦 Allocation Info</div>
-      <div class="nav-card" onclick="goTo('categories.html')">📚 Item Categories</div>
-      <div class="nav-card" onclick="goTo('lost.html')">🎒 Lost Item Form</div>
-      <div class="nav-card" onclick="goTo('mylost.html')">🔍 My Lost Items</div>
-      <div class="nav-card" onclick="goTo('found.html')">🧭 Found Items</div>
-      <div class="nav-card" onclick="goTo('index.html')">🏠 Back to Home</div>
+      <div class="nav-card" onclick="goTo('/events')">📅 Submit Event</div>
+      <div class="nav-card" onclick="goTo('/complaints')">⚠️ File Complaint</div>
+      <div class="nav-card" onclick="goTo('/show-complaints')">📂 Show Complaints</div>
+      <div class="nav-card" onclick="goTo('/resolved-complaints')">✅ Resolved Complaints</div>
+      <div class="nav-card" onclick="goTo('/visitor-applications')">🚪 Visitor Application</div>
+      <div class="nav-card" onclick="goTo('/visitor-status')">📋 Visitor Status</div>
+      <div class="nav-card" onclick="goTo('/allocations')">📦 Allocation Info</div>
+      <div class="nav-card" onclick="goTo('/item-categories')">📚 Item Categories</div>
+      <div class="nav-card" onclick="goTo('/lostitems')">🎒 Lost Item Form</div>
+      <div class="nav-card" onclick="goTo('/see-lost-items')">🔍 My Lost Items</div>
+      <div class="nav-card" onclick="goTo('/founditems')">🧭 Found Items</div>
+      <div class="nav-card" onclick="goTo('/home')">🏠 Back to Home</div>
       <div class="nav-card" onclick="logout()">🚪 Logout</div>
     </div>
 
   </div>
 
   <script>
+    // Get current user data from localStorage
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
+    // Function to load dashboard statistics
+    async function loadDashboardStats() {
+      try {
+        let url = '/api/dashboard-stats';
+        if (currentUser.studentId) {
+          url += `?student_id=${currentUser.studentId}`;
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard statistics');
+        }
+
+        const stats = await response.json();
+        
+        // Update general statistics
+        document.getElementById('totalLostItems').textContent = stats.totalLostItems || 0;
+        document.getElementById('totalFoundItems').textContent = stats.totalFoundItems || 0;
+        document.getElementById('totalEvents').textContent = stats.totalEvents || 0;
+        document.getElementById('totalComplaints').textContent = stats.totalComplaints || 0;
+        document.getElementById('pendingComplaints').textContent = stats.pendingComplaints || 0;
+
+        // Show user-specific stats if available
+        if (currentUser.studentId && stats.userComplaints !== undefined) {
+          document.getElementById('userComplaints').textContent = stats.userComplaints || 0;
+          document.getElementById('userStatsCard').style.display = 'block';
+        }
+
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+        // Show error state
+        document.querySelectorAll('.stat-number').forEach(el => {
+          el.textContent = 'Error';
+          el.className += ' error';
+        });
+      }
+    }
+
+    // Function to load latest events
+    async function loadLatestEvents() {
+      try {
+        const response = await fetch('/api/events');
+        if (!response.ok) {
+          throw new Error('Failed to fetch events');
+        }
+
+        const events = await response.json();
+        const eventsContainer = document.getElementById('eventsContainer');
+
+        if (events.length === 0) {
+          eventsContainer.innerHTML = '<p>No events available at the moment.</p>';
+          return;
+        }
+
+        // Display latest 3 events
+        const latestEvents = events.slice(0, 3);
+        let eventsHTML = '';
+
+        latestEvents.forEach(event => {
+          const eventDate = new Date(event.event_date).toLocaleDateString();
+          eventsHTML += `
+            <p>
+              🗓️ <strong>${eventDate}:</strong> ${event.title} 
+              ${event.location ? `📍 ${event.location}` : ''}
+            </p>
+          `;
+        });
+
+        eventsContainer.innerHTML = eventsHTML;
+
+      } catch (error) {
+        console.error('Error loading events:', error);
+        document.getElementById('eventsContainer').innerHTML = 
+          '<p class="error">Failed to load events. Please try again later.</p>';
+      }
+    }
+
+    // Navigation function
     function goTo(page) {
       window.location.href = page;
     }
 
+    // Logout function
     function logout() {
-      alert("👋 You’ve been logged out!");
-      window.location.href = "index.html";
+      localStorage.removeItem('currentUser');
+      alert("👋 You've been logged out!");
+      window.location.href = "/";
     }
+
+    // Check if user is logged in
+    function checkAuth() {
+      if (!currentUser.studentId) {
+        alert('Please log in to access the dashboard');
+        window.location.href = '/';
+        return false;
+      }
+      return true;
+    }
+
+    // Update header with user info
+    function updateHeader() {
+      if (currentUser.name) {
+        const header = document.querySelector('.header');
+        header.innerHTML = `📚 HallHub Dashboard - Welcome, ${currentUser.name}!`;
+      }
+    }
+
+    // Initialize dashboard when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      if (checkAuth()) {
+        updateHeader();
+        loadDashboardStats();
+        loadLatestEvents();
+      }
+    });
   </script>
 </body>
 </html>

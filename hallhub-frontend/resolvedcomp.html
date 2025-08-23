@@ -1,139 +1,276 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Resolved Complaints</title>
-  <style>
-    body {
-      background: linear-gradient(to right, #fbc2eb, #a6c1ee);
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      color: #333;
-    }
+ <meta charset="UTF-8" />
+ <title>Resolved Complaints</title>
+ <style>
+   body {
+     background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+     font-family: 'Segoe UI', sans-serif;
+     margin: 0;
+     padding: 0;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     min-height: 100vh;
+     color: #333;
+   }
 
-    .header {
-      font-size: 2rem;
-      font-weight: bold;
-      padding: 20px;
-      text-align: center;
-    }
+   .header {
+     font-size: 2rem;
+     font-weight: bold;
+     padding: 20px;
+     text-align: center;
+   }
 
-    .form-container {
-      background: rgba(255,255,255,0.6);
-      backdrop-filter: blur(8px);
-      padding: 25px;
-      border-radius: 20px;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-      text-align: center;
-    }
+   .form-container {
+     background: rgba(255,255,255,0.6);
+     backdrop-filter: blur(8px);
+     padding: 25px;
+     border-radius: 20px;
+     width: 90%;
+     max-width: 400px;
+     box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+     margin-bottom: 20px;
+     text-align: center;
+   }
 
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: none;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.8);
-      font-size: 1rem;
-    }
+   input {
+     width: 100%;
+     padding: 12px;
+     margin-bottom: 15px;
+     border: none;
+     border-radius: 12px;
+     background: rgba(255,255,255,0.8);
+     font-size: 1rem;
+     box-sizing: border-box;
+   }
 
-    button {
-      background: #38ef7d;
-      color: white;
-      padding: 12px 25px;
-      border: none;
-      border-radius: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      width: 100%;
-    }
+   input:focus {
+     outline: none;
+     background: rgba(255,255,255,0.95);
+     box-shadow: 0 0 10px rgba(56, 239, 125, 0.3);
+   }
 
-    button:hover {
-      background: #11998e;
-      transform: scale(1.05);
-    }
+   button {
+     background: #38ef7d;
+     color: white;
+     padding: 12px 25px;
+     border: none;
+     border-radius: 30px;
+     font-weight: bold;
+     cursor: pointer;
+     width: 100%;
+     transition: all 0.3s ease;
+   }
 
-    .result-box {
-      background: rgba(255,255,255,0.5);
-      backdrop-filter: blur(6px);
-      border-radius: 16px;
-      padding: 20px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      animation: fadeIn 0.8s ease;
-      display: none;
-    }
+   button:hover {
+     background: #11998e;
+     transform: scale(1.05);
+   }
 
-    .back-link {
-      margin-top: 15px;
-    }
+   button:disabled {
+     background: #ccc;
+     transform: none;
+     cursor: not-allowed;
+   }
 
-    .back-link a {
-      text-decoration: none;
-      font-weight: bold;
-      color: #0056b3;
-    }
+   .result-box {
+     background: rgba(255,255,255,0.5);
+     backdrop-filter: blur(6px);
+     border-radius: 16px;
+     padding: 20px;
+     width: 90%;
+     max-width: 600px;
+     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+     animation: fadeIn 0.8s ease;
+     display: none;
+     margin-bottom: 20px;
+   }
 
-    @keyframes fadeIn {
-      from {opacity: 0;}
-      to {opacity: 1;}
-    }
-  </style>
+   .complaint-card {
+     background: rgba(255,255,255,0.7);
+     border-radius: 12px;
+     padding: 15px;
+     margin-bottom: 10px;
+     border-left: 5px solid #38ef7d;
+   }
+
+   .complaint-card.pending {
+     border-left-color: #ffa500;
+   }
+
+   .complaint-card.resolved {
+     border-left-color: #38ef7d;
+   }
+
+   .status-badge {
+     display: inline-block;
+     padding: 4px 12px;
+     border-radius: 20px;
+     font-size: 0.9rem;
+     font-weight: bold;
+     margin-bottom: 10px;
+   }
+
+   .status-resolved {
+     background: rgba(56, 239, 125, 0.2);
+     color: #11998e;
+   }
+
+   .status-pending {
+     background: rgba(255, 165, 0, 0.2);
+     color: #ff8c00;
+   }
+
+   .error-message {
+     color: #e74c3c;
+     background: rgba(231, 76, 60, 0.1);
+     padding: 15px;
+     border-radius: 12px;
+     border-left: 5px solid #e74c3c;
+   }
+
+   .loading-message {
+     color: #f39c12;
+     background: rgba(243, 156, 18, 0.1);
+     padding: 15px;
+     border-radius: 12px;
+     border-left: 5px solid #f39c12;
+   }
+
+   .back-link {
+     margin-top: 15px;
+   }
+
+   .back-link a {
+     text-decoration: none;
+     font-weight: bold;
+     color: #0056b3;
+     padding: 10px 20px;
+     border-radius: 20px;
+     background: rgba(255, 255, 255, 0.3);
+     transition: all 0.3s ease;
+   }
+
+   .back-link a:hover {
+     background: rgba(255, 255, 255, 0.6);
+     text-decoration: none;
+   }
+
+   @keyframes fadeIn {
+     from {opacity: 0;}
+     to {opacity: 1;}
+   }
+ </style>
 </head>
 <body>
-  <div class="header">✅ Check Complaint Resolution</div>
+ <div class="header">✅ Check Complaint Resolution</div>
 
-  <div class="form-container">
-    <form id="resolutionSearchForm">
-      <input type="text" id="complaintIdInput" placeholder="Enter Complaint ID" required />
-      <button type="submit">🔍 Check Status</button>
-    </form>
-  </div>
+ <div class="form-container">
+   <form id="resolutionSearchForm">
+     <input type="text" id="complaintIdInput" placeholder="Enter Complaint ID (e.g., 123)" required />
+     <button type="submit" id="searchBtn">🔍 Check Status</button>
+   </form>
+ </div>
 
-  <div id="resolutionOutput" class="result-box"></div>
+ <div id="resolutionOutput" class="result-box"></div>
 
-  <div class="back-link">
-    <a href="dashboard.html">← Back to Dashboard</a>
-  </div>
+ <div class="back-link">
+   <a href="/dashboard">← Back to Dashboard</a>
+ </div>
 
-  <script>
-    document.getElementById("resolutionSearchForm").addEventListener("submit", function(e) {
-      e.preventDefault();
+ <script>
+   // Get current user data from localStorage
+   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
-      const complaintId = document.getElementById("complaintIdInput").value;
-      const outputBox = document.getElementById("resolutionOutput");
-      outputBox.innerHTML = ""; 
-      outputBox.style.display = "block";
+   // Check if user is logged in
+   if (!currentUser.studentId) {
+     alert('Please log in to check complaint status');
+     window.location.href = '/';
+   }
 
-      // Mock resolution data
-      const mockResolutions = [
-        { id: "CMP1001", status: "Resolved", notes: "Technician fixed the A/C unit." },
-        { id: "CMP1002", status: "Pending", notes: "Issue assigned to maintenance team." },
-        { id: "CMP1003", status: "Resolved", notes: "Wi-Fi router replaced." }
-      ];
+   document.getElementById("resolutionSearchForm").addEventListener("submit", async function(e) {
+     e.preventDefault();
 
-      const complaint = mockResolutions.find(c => c.id === complaintId);
+     const complaintId = document.getElementById("complaintIdInput").value.trim();
+     const outputBox = document.getElementById("resolutionOutput");
+     const searchBtn = document.getElementById("searchBtn");
 
-      if (!complaint) {
-        outputBox.innerHTML = `<p>No resolution found for Complaint ID: <strong>${complaintId}</strong></p>`;
-      } else {
-        outputBox.innerHTML = `
-          <p><strong>Status:</strong> ${complaint.status}</p>
-          <p><strong>Notes:</strong> ${complaint.notes}</p>
-        `;
-      }
+     if (!complaintId) {
+       return;
+     }
 
-      document.getElementById("complaintIdInput").value = "";
-    });
-  </script>
+     // Show loading state
+     searchBtn.disabled = true;
+     searchBtn.textContent = 'Searching...';
+     
+     outputBox.style.display = "block";
+     outputBox.innerHTML = '<div class="loading-message">🔍 Searching for complaint...</div>';
+
+     try {
+       // Fetch complaint by ID
+       const response = await fetch(`/api/complaints?complaint_id=${complaintId}`);
+       
+       if (!response.ok) {
+         throw new Error('Failed to fetch complaint data');
+       }
+
+       const complaints = await response.json();
+       
+       // Filter for the specific complaint ID
+       const complaint = complaints.find(c => c.complaint_id == complaintId);
+
+       if (!complaint) {
+         outputBox.innerHTML = `
+           <div class="error-message">
+             <h3>❌ Complaint Not Found</h3>
+             <p>No complaint found with ID: <strong>#${complaintId}</strong></p>
+             <p>Please check the complaint ID and try again.</p>
+           </div>
+         `;
+       } else {
+         // Format date
+         const complaintDate = new Date(complaint.complaint_date).toLocaleDateString();
+         const resolvedDate = complaint.resolved_date ? 
+           new Date(complaint.resolved_date).toLocaleDateString() : 'N/A';
+
+         outputBox.innerHTML = `
+           <div class="complaint-card ${complaint.status}">
+             <div class="status-badge status-${complaint.status}">
+               ${complaint.status.toUpperCase()}
+             </div>
+             <h3><strong>Complaint #${complaint.complaint_id}</strong></h3>
+             <p><strong>Title:</strong> ${complaint.title}</p>
+             <p><strong>Description:</strong> ${complaint.description}</p>
+             <p><strong>Student ID:</strong> ${complaint.student_id}</p>
+             <p><strong>Submitted:</strong> ${complaintDate}</p>
+             ${complaint.status === 'resolved' ? `
+               <p><strong>Resolved Date:</strong> ${resolvedDate}</p>
+               <p><strong>Resolution:</strong> ${complaint.resolution || 'Resolution details not provided'}</p>
+             ` : `
+               <p><strong>Status:</strong> Your complaint is still being processed.</p>
+               <p><em>You will be notified once it's resolved.</em></p>
+             `}
+           </div>
+         `;
+       }
+
+     } catch (error) {
+       console.error('Error fetching complaint:', error);
+       outputBox.innerHTML = `
+         <div class="error-message">
+           <h3>❌ Error</h3>
+           <p>Failed to fetch complaint data. Please check your connection and try again.</p>
+         </div>
+       `;
+     } finally {
+       // Reset button
+       searchBtn.disabled = false;
+       searchBtn.textContent = '🔍 Check Status';
+       document.getElementById("complaintIdInput").value = "";
+     }
+   });
+ </script>
 </body>
 </html>

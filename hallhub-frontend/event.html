@@ -39,7 +39,7 @@
       margin-bottom: 20px;
     }
 
-    input, textarea {
+    input, textarea, select {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
@@ -47,6 +47,13 @@
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.7);
       font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 10px rgba(255, 110, 196, 0.3);
     }
 
     textarea {
@@ -64,11 +71,18 @@
       font-weight: bold;
       cursor: pointer;
       width: 100%;
+      transition: all 0.3s ease;
     }
 
     button:hover {
       background: #fc5c7d;
       transform: scale(1.05);
+    }
+
+    button:disabled {
+      background: #ccc;
+      transform: none;
+      cursor: not-allowed;
     }
 
     .event-display {
@@ -81,6 +95,24 @@
       max-width: 500px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       animation: fadeIn 1s ease;
+    }
+
+    .success-message {
+      border-left: 6px solid #27ae60;
+      background: rgba(39, 174, 96, 0.1);
+      color: #27ae60;
+    }
+
+    .error-message {
+      border-left: 6px solid #e74c3c;
+      background: rgba(231, 76, 60, 0.1);
+      color: #e74c3c;
+    }
+
+    .loading-message {
+      border-left: 6px solid #f39c12;
+      background: rgba(243, 156, 18, 0.1);
+      color: #f39c12;
     }
 
     @keyframes fadeIn {
@@ -97,10 +129,45 @@
       text-decoration: none;
       color: #0056b3;
       font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
     }
 
     .back-link a:hover {
-      text-decoration: underline;
+      background: rgba(255, 255, 255, 0.6);
+      text-decoration: none;
+    }
+
+    .events-list {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      margin-top: 30px;
+    }
+
+    .event-card {
+      background: rgba(255, 255, 255, 0.7);
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 12px;
+      border-left: 4px solid #ff6ec4;
+    }
+
+    .event-card h4 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+
+    .event-card p {
+      margin: 5px 0;
+      color: #666;
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -109,45 +176,191 @@
   <div class="form-box">
     <h2>Event Info</h2>
     <form id="eventForm">
-      <input type="text" id="eventType" placeholder="Event Type (e.g. Cultural Fest)" required />
+      <input type="text" id="eventTitle" placeholder="Event Title (e.g. Cultural Fest)" required />
       <input type="date" id="eventDate" required />
-      <textarea id="eventDesc" placeholder="Short Description" required></textarea>
-      <input type="text" id="studentId" placeholder="Your Student ID" required />
-      <button type="submit">🚀 Submit Event</button>
+      <input type="time" id="eventTime" placeholder="Event Time (optional)" />
+      <input type="text" id="eventLocation" placeholder="Event Location" required />
+      <textarea id="eventDesc" placeholder="Event Description" required></textarea>
+      <input type="text" id="organizerId" placeholder="Your Student ID" required readonly />
+      <button type="submit" id="submitBtn">🚀 Submit Event</button>
     </form>
   </div>
 
   <div id="eventMessage"></div>
 
+  <div class="events-list" id="eventsList">
+    <h2>📋 Recent Events</h2>
+    <div id="eventsContainer">
+      <p>Loading recent events...</p>
+    </div>
+  </div>
+
   <div class="back-link">
-    <a href="dashboard.html">← Back to Dashboard</a>
+    <a href="/dashboard">← Back to Dashboard</a>
   </div>
 
   <script>
-    document.getElementById("eventForm").addEventListener("submit", function(e) {
-      e.preventDefault();
+    // Get current user data from localStorage
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
-      const type = document.getElementById("eventType").value;
-      const date = document.getElementById("eventDate").value;
-      const desc = document.getElementById("eventDesc").value;
-      const studentId = document.getElementById("studentId").value;
-
-      const messageBox = document.createElement("div");
-      messageBox.className = "event-display";
-      messageBox.innerHTML = `
-        <h3>📢 Event Submitted!</h3>
-        <p><strong>Type:</strong> ${type}</p>
-        <p><strong>Date:</strong> ${date}</p>
-        <p><strong>Description:</strong> ${desc}</p>
-        <p><strong>Submitted by:</strong> ${studentId}</p>
-      `;
-
-      const eventMessage = document.getElementById("eventMessage");
-      eventMessage.innerHTML = "";
-      eventMessage.appendChild(messageBox);
-
-      document.getElementById("eventForm").reset();
+    // Initialize form with user data
+    document.addEventListener('DOMContentLoaded', function() {
+      if (currentUser.studentId) {
+        document.getElementById('organizerId').value = currentUser.studentId;
+      } else {
+        // Redirect to login if not logged in
+        alert('Please log in to submit events');
+        window.location.href = '/';
+        return;
+      }
+      
+      // Set minimum date to today
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('eventDate').min = today;
+      
+      // Load recent events
+      loadRecentEvents();
     });
+
+    // Handle form submission
+    document.getElementById("eventForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const messageDiv = document.getElementById('eventMessage');
+      
+      // Get form data
+      const title = document.getElementById("eventTitle").value.trim();
+      const date = document.getElementById("eventDate").value;
+      const time = document.getElementById("eventTime").value;
+      const location = document.getElementById("eventLocation").value.trim();
+      const description = document.getElementById("eventDesc").value.trim();
+      const organizerId = document.getElementById("organizerId").value;
+
+      // Combine date and time
+      let eventDateTime = date;
+      if (time) {
+        eventDateTime += ' ' + time;
+      }
+
+      // Show loading state
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      showMessage('Submitting your event...', 'loading');
+
+      try {
+        const response = await fetch('/api/events', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: title,
+            description: description,
+            event_date: eventDateTime,
+            location: location,
+            organizer_id: organizerId
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          // Success
+          showMessage(`
+            <h3>🎉 Event Submitted Successfully!</h3>
+            <p><strong>Title:</strong> ${title}</p>
+            <p><strong>Date:</strong> ${new Date(eventDateTime).toLocaleDateString()}</p>
+            <p><strong>Location:</strong> ${location}</p>
+            <p><strong>Organizer:</strong> ${organizerId}</p>
+            <p>Event ID: #${result.eventId}</p>
+          `, 'success');
+
+          // Reset form
+          document.getElementById("eventForm").reset();
+          document.getElementById('organizerId').value = currentUser.studentId;
+          
+          // Reload recent events
+          loadRecentEvents();
+        } else {
+          // Error from server
+          showMessage(`❌ Error: ${result.error}`, 'error');
+        }
+
+      } catch (error) {
+        console.error('Error submitting event:', error);
+        showMessage('❌ Failed to submit event. Please check your connection and try again.', 'error');
+      } finally {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Submit Event';
+      }
+    });
+
+    // Function to show messages
+    function showMessage(message, type) {
+      const messageDiv = document.getElementById('eventMessage');
+      const messageBox = document.createElement('div');
+      messageBox.className = `event-display ${type}-message`;
+      messageBox.innerHTML = message;
+      
+      messageDiv.innerHTML = '';
+      messageDiv.appendChild(messageBox);
+      
+      // Auto-hide success messages after 5 seconds
+      if (type === 'success') {
+        setTimeout(() => {
+          messageDiv.innerHTML = '';
+        }, 5000);
+      }
+    }
+
+    // Function to load recent events
+    async function loadRecentEvents() {
+      const container = document.getElementById('eventsContainer');
+      
+      try {
+        const response = await fetch('/api/events');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch events');
+        }
+        
+        const events = await response.json();
+        
+        if (events.length === 0) {
+          container.innerHTML = '<p>No events found.</p>';
+          return;
+        }
+        
+        // Display recent events (limit to 5)
+        const recentEvents = events.slice(0, 5);
+        let eventsHTML = '';
+        
+        recentEvents.forEach(event => {
+          const eventDate = new Date(event.event_date);
+          const formattedDate = eventDate.toLocaleDateString();
+          const formattedTime = eventDate.toLocaleTimeString();
+          
+          eventsHTML += `
+            <div class="event-card">
+              <h4>${event.title}</h4>
+              <p><strong>📅 Date:</strong> ${formattedDate}</p>
+              <p><strong>🕒 Time:</strong> ${formattedTime}</p>
+              <p><strong>📍 Location:</strong> ${event.location}</p>
+              <p><strong>👤 Organizer:</strong> ${event.organizer_id}</p>
+              ${event.description ? `<p><strong>📝 Description:</strong> ${event.description}</p>` : ''}
+            </div>
+          `;
+        });
+        
+        container.innerHTML = eventsHTML;
+        
+      } catch (error) {
+        console.error('Error loading events:', error);
+        container.innerHTML = '<p class="error-message">Failed to load recent events.</p>';
+      }
+    }
   </script>
 </body>
 </html>
