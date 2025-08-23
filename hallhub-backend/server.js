@@ -178,10 +178,15 @@ app.post('/api/events', async (req, res) => {
   }
 });
 
-// API routes for lost items
+// API routes for lost items - Updated to match your frontend form exactly
 app.get('/api/lostitems', async (req, res) => {
   try {
-    const sql = 'SELECT * FROM Lost_Items ORDER BY date_lost DESC';
+    const sql = `
+      SELECT li.*, si.name as student_name 
+      FROM Lost_Items li 
+      LEFT JOIN Student_Info si ON li.student_id = si.student_id 
+      ORDER BY li.date_lost DESC
+    `;
     const [rows] = await pool.execute(sql);
     res.json(rows);
   } catch (error) {
@@ -192,17 +197,28 @@ app.get('/api/lostitems', async (req, res) => {
 
 app.post('/api/lostitems', async (req, res) => {
   try {
-    const { item_name, description, date_lost, location_lost, finder_contact, student_id } = req.body;
+    // Extract data matching your frontend form field names
+    const { studentId, itemId, description, lostDate } = req.body;
 
-    if (!item_name || !date_lost || !location_lost) {
-      return res.status(400).json({ error: 'Please provide item name, date lost, and location' });
+    // Validation - check for required fields using your form's field names
+    if (!studentId || !itemId || !lostDate) {
+      return res.status(400).json({ 
+        error: 'Please provide Student ID, Item ID, and Date Lost' 
+      });
     }
 
+    // Insert into database - map your form fields to database columns
     const sql = `
-      INSERT INTO Lost_Items (item_name, description, date_lost, location_lost, finder_contact, student_id)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO Lost_Items (student_id, item_name, description, date_lost)
+      VALUES (?, ?, ?, ?)
     `;
-    const [result] = await pool.execute(sql, [item_name, description, date_lost, location_lost, finder_contact, student_id]);
+    
+    const [result] = await pool.execute(sql, [
+      studentId,           // maps to student_id in database
+      itemId,             // maps to item_name in database  
+      description || '',  // description (optional)
+      lostDate            // maps to date_lost in database
+    ]);
 
     res.json({
       success: true,
@@ -211,15 +227,20 @@ app.post('/api/lostitems', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Error submitting lost item:', error);
     res.status(500).json({ error: 'Failed to report lost item' });
   }
 });
 
-// API routes for found items
+// API routes for found items - Updated to match expected frontend data
 app.get('/api/founditems', async (req, res) => {
   try {
-    const sql = 'SELECT * FROM Found_Items ORDER BY date_found DESC';
+    const sql = `
+      SELECT fi.*, si.name as student_name 
+      FROM Found_Items fi 
+      LEFT JOIN Student_Info si ON fi.student_id = si.student_id 
+      ORDER BY fi.date_found DESC
+    `;
     const [rows] = await pool.execute(sql);
     res.json(rows);
   } catch (error) {
@@ -230,17 +251,26 @@ app.get('/api/founditems', async (req, res) => {
 
 app.post('/api/founditems', async (req, res) => {
   try {
-    const { item_name, description, date_found, location_found, finder_contact, student_id } = req.body;
+    // Assuming similar field names for found items form
+    const { studentId, itemId, description, foundDate } = req.body;
 
-    if (!item_name || !date_found || !location_found) {
-      return res.status(400).json({ error: 'Please provide item name, date found, and location' });
+    if (!studentId || !itemId || !foundDate) {
+      return res.status(400).json({ 
+        error: 'Please provide Student ID, Item ID, and Date Found' 
+      });
     }
 
     const sql = `
-      INSERT INTO Found_Items (item_name, description, date_found, location_found, finder_contact, student_id)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO Found_Items (student_id, item_name, description, date_found)
+      VALUES (?, ?, ?, ?)
     `;
-    const [result] = await pool.execute(sql, [item_name, description, date_found, location_found, finder_contact, student_id]);
+    
+    const [result] = await pool.execute(sql, [
+      studentId,           // maps to student_id in database
+      itemId,             // maps to item_name in database  
+      description || '',  // description (optional)
+      foundDate           // maps to date_found in database
+    ]);
 
     res.json({
       success: true,
@@ -249,7 +279,7 @@ app.post('/api/founditems', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Error submitting found item:', error);
     res.status(500).json({ error: 'Failed to report found item' });
   }
 });
@@ -258,15 +288,19 @@ app.post('/api/founditems', async (req, res) => {
 app.get('/api/complaints', async (req, res) => {
   try {
     const { status } = req.query;
-    let sql = 'SELECT * FROM Complaints';
+    let sql = `
+      SELECT c.*, si.name as student_name 
+      FROM Complaints c 
+      LEFT JOIN Student_Info si ON c.student_id = si.student_id
+    `;
     let params = [];
     
     if (status) {
-      sql += ' WHERE status = ?';
+      sql += ' WHERE c.status = ?';
       params.push(status);
     }
     
-    sql += ' ORDER BY complaint_date DESC';
+    sql += ' ORDER BY c.complaint_date DESC';
     const [rows] = await pool.execute(sql, params);
     res.json(rows);
   } catch (error) {
@@ -328,15 +362,19 @@ app.put('/api/complaints/:id/resolve', async (req, res) => {
 app.get('/api/allocations', async (req, res) => {
   try {
     const { student_id } = req.query;
-    let sql = 'SELECT * FROM Room_Allocations';
+    let sql = `
+      SELECT ra.*, si.name as student_name 
+      FROM Room_Allocations ra 
+      LEFT JOIN Student_Info si ON ra.student_id = si.student_id
+    `;
     let params = [];
     
     if (student_id) {
-      sql += ' WHERE student_id = ?';
+      sql += ' WHERE ra.student_id = ?';
       params.push(student_id);
     }
     
-    sql += ' ORDER BY allocation_date DESC';
+    sql += ' ORDER BY ra.allocation_date DESC';
     const [rows] = await pool.execute(sql, params);
     res.json(rows);
   } catch (error) {
@@ -375,17 +413,21 @@ app.post('/api/allocations', async (req, res) => {
 app.get('/api/visitor-applications', async (req, res) => {
   try {
     const { student_id, status } = req.query;
-    let sql = 'SELECT * FROM Visitor_Applications';
+    let sql = `
+      SELECT va.*, si.name as student_name 
+      FROM Visitor_Applications va 
+      LEFT JOIN Student_Info si ON va.student_id = si.student_id
+    `;
     let params = [];
     let conditions = [];
     
     if (student_id) {
-      conditions.push('student_id = ?');
+      conditions.push('va.student_id = ?');
       params.push(student_id);
     }
     
     if (status) {
-      conditions.push('status = ?');
+      conditions.push('va.status = ?');
       params.push(status);
     }
     
@@ -393,7 +435,7 @@ app.get('/api/visitor-applications', async (req, res) => {
       sql += ' WHERE ' + conditions.join(' AND ');
     }
     
-    sql += ' ORDER BY application_date DESC';
+    sql += ' ORDER BY va.application_date DESC';
     const [rows] = await pool.execute(sql, params);
     res.json(rows);
   } catch (error) {
@@ -472,31 +514,82 @@ app.get('/api/visitor-status', async (req, res) => {
   }
 });
 
-// API routes for item categories
+// API routes for item categories - Updated with better categorization
 app.get('/api/item-categories', async (req, res) => {
   try {
+    // Get all lost and found items with better categorization
     const sql = `
       SELECT 
-        category,
-        COUNT(CASE WHEN type = 'lost' THEN 1 END) as lost_count,
-        COUNT(CASE WHEN type = 'found' THEN 1 END) as found_count
-      FROM (
-        SELECT 'Electronics' as category, 'lost' as type FROM Lost_Items WHERE item_name LIKE '%phone%' OR item_name LIKE '%laptop%' OR item_name LIKE '%tablet%'
-        UNION ALL
-        SELECT 'Electronics' as category, 'found' as type FROM Found_Items WHERE item_name LIKE '%phone%' OR item_name LIKE '%laptop%' OR item_name LIKE '%tablet%'
-        UNION ALL
-        SELECT 'Documents' as category, 'lost' as type FROM Lost_Items WHERE item_name LIKE '%card%' OR item_name LIKE '%certificate%' OR item_name LIKE '%paper%'
-        UNION ALL
-        SELECT 'Documents' as category, 'found' as type FROM Found_Items WHERE item_name LIKE '%card%' OR item_name LIKE '%certificate%' OR item_name LIKE '%paper%'
-        UNION ALL
-        SELECT 'Personal Items' as category, 'lost' as type FROM Lost_Items WHERE item_name LIKE '%wallet%' OR item_name LIKE '%bag%' OR item_name LIKE '%key%'
-        UNION ALL
-        SELECT 'Personal Items' as category, 'found' as type FROM Found_Items WHERE item_name LIKE '%wallet%' OR item_name LIKE '%bag%' OR item_name LIKE '%key%'
-      ) as categorized_items
-      GROUP BY category
+        CASE 
+          WHEN LOWER(item_name) LIKE '%phone%' OR LOWER(item_name) LIKE '%laptop%' OR LOWER(item_name) LIKE '%tablet%' OR LOWER(item_name) LIKE '%computer%' OR LOWER(item_name) LIKE '%charger%' OR LOWER(item_name) LIKE '%headphone%' OR LOWER(item_name) LIKE '%earphone%' THEN 'Electronics'
+          WHEN LOWER(item_name) LIKE '%card%' OR LOWER(item_name) LIKE '%certificate%' OR LOWER(item_name) LIKE '%paper%' OR LOWER(item_name) LIKE '%document%' OR LOWER(item_name) LIKE '%id%' THEN 'Documents'
+          WHEN LOWER(item_name) LIKE '%wallet%' OR LOWER(item_name) LIKE '%bag%' OR LOWER(item_name) LIKE '%key%' OR LOWER(item_name) LIKE '%watch%' OR LOWER(item_name) LIKE '%jewelry%' OR LOWER(item_name) LIKE '%glass%' THEN 'Personal Items'
+          WHEN LOWER(item_name) LIKE '%book%' OR LOWER(item_name) LIKE '%pen%' OR LOWER(item_name) LIKE '%pencil%' OR LOWER(item_name) LIKE '%notebook%' OR LOWER(item_name) LIKE '%file%' THEN 'Study Materials'
+          WHEN LOWER(item_name) LIKE '%cloth%' OR LOWER(item_name) LIKE '%shirt%' OR LOWER(item_name) LIKE '%jacket%' OR LOWER(item_name) LIKE '%shoe%' OR LOWER(item_name) LIKE '%cap%' THEN 'Clothing'
+          ELSE 'Others'
+        END as category,
+        'lost' as type,
+        COUNT(*) as count
+      FROM Lost_Items 
+      GROUP BY 
+        CASE 
+          WHEN LOWER(item_name) LIKE '%phone%' OR LOWER(item_name) LIKE '%laptop%' OR LOWER(item_name) LIKE '%tablet%' OR LOWER(item_name) LIKE '%computer%' OR LOWER(item_name) LIKE '%charger%' OR LOWER(item_name) LIKE '%headphone%' OR LOWER(item_name) LIKE '%earphone%' THEN 'Electronics'
+          WHEN LOWER(item_name) LIKE '%card%' OR LOWER(item_name) LIKE '%certificate%' OR LOWER(item_name) LIKE '%paper%' OR LOWER(item_name) LIKE '%document%' OR LOWER(item_name) LIKE '%id%' THEN 'Documents'
+          WHEN LOWER(item_name) LIKE '%wallet%' OR LOWER(item_name) LIKE '%bag%' OR LOWER(item_name) LIKE '%key%' OR LOWER(item_name) LIKE '%watch%' OR LOWER(item_name) LIKE '%jewelry%' OR LOWER(item_name) LIKE '%glass%' THEN 'Personal Items'
+          WHEN LOWER(item_name) LIKE '%book%' OR LOWER(item_name) LIKE '%pen%' OR LOWER(item_name) LIKE '%pencil%' OR LOWER(item_name) LIKE '%notebook%' OR LOWER(item_name) LIKE '%file%' THEN 'Study Materials'
+          WHEN LOWER(item_name) LIKE '%cloth%' OR LOWER(item_name) LIKE '%shirt%' OR LOWER(item_name) LIKE '%jacket%' OR LOWER(item_name) LIKE '%shoe%' OR LOWER(item_name) LIKE '%cap%' THEN 'Clothing'
+          ELSE 'Others'
+        END
+
+      UNION ALL
+
+      SELECT 
+        CASE 
+          WHEN LOWER(item_name) LIKE '%phone%' OR LOWER(item_name) LIKE '%laptop%' OR LOWER(item_name) LIKE '%tablet%' OR LOWER(item_name) LIKE '%computer%' OR LOWER(item_name) LIKE '%charger%' OR LOWER(item_name) LIKE '%headphone%' OR LOWER(item_name) LIKE '%earphone%' THEN 'Electronics'
+          WHEN LOWER(item_name) LIKE '%card%' OR LOWER(item_name) LIKE '%certificate%' OR LOWER(item_name) LIKE '%paper%' OR LOWER(item_name) LIKE '%document%' OR LOWER(item_name) LIKE '%id%' THEN 'Documents'
+          WHEN LOWER(item_name) LIKE '%wallet%' OR LOWER(item_name) LIKE '%bag%' OR LOWER(item_name) LIKE '%key%' OR LOWER(item_name) LIKE '%watch%' OR LOWER(item_name) LIKE '%jewelry%' OR LOWER(item_name) LIKE '%glass%' THEN 'Personal Items'
+          WHEN LOWER(item_name) LIKE '%book%' OR LOWER(item_name) LIKE '%pen%' OR LOWER(item_name) LIKE '%pencil%' OR LOWER(item_name) LIKE '%notebook%' OR LOWER(item_name) LIKE '%file%' THEN 'Study Materials'
+          WHEN LOWER(item_name) LIKE '%cloth%' OR LOWER(item_name) LIKE '%shirt%' OR LOWER(item_name) LIKE '%jacket%' OR LOWER(item_name) LIKE '%shoe%' OR LOWER(item_name) LIKE '%cap%' THEN 'Clothing'
+          ELSE 'Others'
+        END as category,
+        'found' as type,
+        COUNT(*) as count
+      FROM Found_Items 
+      GROUP BY 
+        CASE 
+          WHEN LOWER(item_name) LIKE '%phone%' OR LOWER(item_name) LIKE '%laptop%' OR LOWER(item_name) LIKE '%tablet%' OR LOWER(item_name) LIKE '%computer%' OR LOWER(item_name) LIKE '%charger%' OR LOWER(item_name) LIKE '%headphone%' OR LOWER(item_name) LIKE '%earphone%' THEN 'Electronics'
+          WHEN LOWER(item_name) LIKE '%card%' OR LOWER(item_name) LIKE '%certificate%' OR LOWER(item_name) LIKE '%paper%' OR LOWER(item_name) LIKE '%document%' OR LOWER(item_name) LIKE '%id%' THEN 'Documents'
+          WHEN LOWER(item_name) LIKE '%wallet%' OR LOWER(item_name) LIKE '%bag%' OR LOWER(item_name) LIKE '%key%' OR LOWER(item_name) LIKE '%watch%' OR LOWER(item_name) LIKE '%jewelry%' OR LOWER(item_name) LIKE '%glass%' THEN 'Personal Items'
+          WHEN LOWER(item_name) LIKE '%book%' OR LOWER(item_name) LIKE '%pen%' OR LOWER(item_name) LIKE '%pencil%' OR LOWER(item_name) LIKE '%notebook%' OR LOWER(item_name) LIKE '%file%' THEN 'Study Materials'
+          WHEN LOWER(item_name) LIKE '%cloth%' OR LOWER(item_name) LIKE '%shirt%' OR LOWER(item_name) LIKE '%jacket%' OR LOWER(item_name) LIKE '%shoe%' OR LOWER(item_name) LIKE '%cap%' THEN 'Clothing'
+          ELSE 'Others'
+        END
     `;
-    const [rows] = await pool.execute(sql);
-    res.json(rows);
+    
+    const [rawResults] = await pool.execute(sql);
+    
+    // Process results to group by category
+    const categoryStats = {};
+    
+    rawResults.forEach(row => {
+      if (!categoryStats[row.category]) {
+        categoryStats[row.category] = {
+          category: row.category,
+          lost_count: 0,
+          found_count: 0
+        };
+      }
+      
+      if (row.type === 'lost') {
+        categoryStats[row.category].lost_count = row.count;
+      } else {
+        categoryStats[row.category].found_count = row.count;
+      }
+    });
+    
+    const result = Object.values(categoryStats);
+    res.json(result);
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch item categories' });
@@ -529,6 +622,10 @@ app.get('/api/dashboard-stats', async (req, res) => {
     // Pending complaints
     const [pendingComplaints] = await pool.execute('SELECT COUNT(*) as count FROM Complaints WHERE status = "pending"');
     stats.pendingComplaints = pendingComplaints[0].count;
+    
+    // Total students
+    const [totalStudents] = await pool.execute('SELECT COUNT(*) as count FROM Student_Info');
+    stats.totalStudents = totalStudents[0].count;
     
     // User specific stats if student_id provided
     if (student_id) {

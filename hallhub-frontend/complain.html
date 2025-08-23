@@ -1,148 +1,255 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>File a Complaint</title>
-  <style>
-    body {
-      background: linear-gradient(to right, #d299c2, #fef9d7);
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      color: #333;
-    }
+ <meta charset="UTF-8" />
+ <title>File a Complaint</title>
+ <style>
+   body {
+     background: linear-gradient(to right, #d299c2, #fef9d7);
+     font-family: 'Segoe UI', sans-serif;
+     margin: 0;
+     padding: 0;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     min-height: 100vh;
+     color: #333;
+   }
 
-    .header {
-      font-size: 2rem;
-      font-weight: bold;
-      padding: 20px;
-      text-align: center;
-    }
+   .header {
+     font-size: 2rem;
+     font-weight: bold;
+     padding: 20px;
+     text-align: center;
+   }
 
-    .form-container {
-      background: rgba(255,255,255,0.6);
-      backdrop-filter: blur(8px);
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 500px;
-      margin-bottom: 20px;
-    }
+   .form-container {
+     background: rgba(255,255,255,0.6);
+     backdrop-filter: blur(8px);
+     padding: 30px;
+     border-radius: 20px;
+     box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+     width: 90%;
+     max-width: 500px;
+     margin-bottom: 20px;
+   }
 
-    .form-container h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+   .form-container h2 {
+     text-align: center;
+     margin-bottom: 20px;
+   }
 
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: none;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.8);
-      font-size: 1rem;
-    }
+   input, textarea {
+     width: 100%;
+     padding: 12px;
+     margin-bottom: 15px;
+     border: none;
+     border-radius: 12px;
+     background: rgba(255,255,255,0.8);
+     font-size: 1rem;
+     box-sizing: border-box;
+   }
 
-    textarea {
-      height: 100px;
-      resize: vertical;
-    }
+   input:focus, textarea:focus {
+     outline: none;
+     background: rgba(255,255,255,0.95);
+     box-shadow: 0 0 10px rgba(255, 110, 196, 0.3);
+   }
 
-    button {
-      background: #ff6ec4;
-      color: white;
-      padding: 12px 25px;
-      border: none;
-      border-radius: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      width: 100%;
-    }
+   textarea {
+     height: 100px;
+     resize: vertical;
+   }
 
-    button:hover {
-      background: #fc5c7d;
-      transform: scale(1.05);
-    }
+   button {
+     background: #ff6ec4;
+     color: white;
+     padding: 12px 25px;
+     border: none;
+     border-radius: 30px;
+     font-weight: bold;
+     cursor: pointer;
+     width: 100%;
+     transition: all 0.3s ease;
+   }
 
-    .confirmation {
-      background: rgba(255,255,255,0.5);
-      border-left: 6px solid #6a82fb;
-      padding: 15px;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-      animation: fadeIn 1s ease;
-    }
+   button:hover {
+     background: #fc5c7d;
+     transform: scale(1.05);
+   }
 
-    @keyframes fadeIn {
-      from {opacity: 0;}
-      to {opacity: 1;}
-    }
+   button:disabled {
+     background: #ccc;
+     transform: none;
+     cursor: not-allowed;
+   }
 
-    .back-link {
-      margin-top: 10px;
-    }
+   .confirmation {
+     background: rgba(255,255,255,0.5);
+     border-left: 6px solid #6a82fb;
+     padding: 15px;
+     border-radius: 16px;
+     width: 90%;
+     max-width: 500px;
+     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+     margin-bottom: 20px;
+     animation: fadeIn 1s ease;
+   }
 
-    .back-link a {
-      text-decoration: none;
-      font-weight: bold;
-      color: #0056b3;
-    }
+   .success {
+     border-left: 6px solid #27ae60;
+     background: rgba(39, 174, 96, 0.1);
+     color: #27ae60;
+   }
 
-    .back-link a:hover {
-      text-decoration: underline;
-    }
-  </style>
+   .error {
+     border-left: 6px solid #e74c3c;
+     background: rgba(231, 76, 60, 0.1);
+     color: #e74c3c;
+   }
+
+   .loading {
+     border-left: 6px solid #f39c12;
+     background: rgba(243, 156, 18, 0.1);
+     color: #f39c12;
+   }
+
+   @keyframes fadeIn {
+     from {opacity: 0;}
+     to {opacity: 1;}
+   }
+
+   .back-link {
+     margin-top: 10px;
+   }
+
+   .back-link a {
+     text-decoration: none;
+     font-weight: bold;
+     color: #0056b3;
+     padding: 10px 20px;
+     border-radius: 20px;
+     background: rgba(255, 255, 255, 0.3);
+     transition: all 0.3s ease;
+   }
+
+   .back-link a:hover {
+     background: rgba(255, 255, 255, 0.6);
+     text-decoration: none;
+   }
+ </style>
 </head>
 <body>
-  <div class="header">⚠️ Submit a Complaint</div>
-  <div class="form-container">
-    <h2>Complaint Form</h2>
-    <form id="complainForm">
-      <input type="text" id="studentId" placeholder="Your Student ID" required />
-      <textarea id="complainDesc" placeholder="Write your complaint here..." required></textarea>
-      <input type="date" id="complainDate" required />
-      <button type="submit">🚀 Submit Complaint</button>
-    </form>
-  </div>
+ <div class="header">⚠️ Submit a Complaint</div>
+ <div class="form-container">
+   <h2>Complaint Form</h2>
+   <form id="complainForm">
+     <input type="text" id="studentId" placeholder="Your Student ID" required readonly />
+     <input type="text" id="complaintTitle" placeholder="Complaint Title/Subject" required />
+     <textarea id="complainDesc" placeholder="Write your complaint here..." required></textarea>
+     <button type="submit" id="submitBtn">🚀 Submit Complaint</button>
+   </form>
+ </div>
 
-  <div id="confirmationBox"></div>
+ <div id="confirmationBox"></div>
 
-  <div class="back-link">
-    <a href="dashboard.html">← Back to Dashboard</a>
-  </div>
+ <div class="back-link">
+   <a href="/dashboard">← Back to Dashboard</a>
+ </div>
 
-  <script>
-    document.getElementById("complainForm").addEventListener("submit", function(e) {
-      e.preventDefault();
+ <script>
+   // Get current user data from localStorage
+   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
-      const id = document.getElementById("studentId").value;
-      const desc = document.getElementById("complainDesc").value;
-      const date = document.getElementById("complainDate").value;
+   // Initialize form
+   document.addEventListener('DOMContentLoaded', function() {
+     if (currentUser.studentId) {
+       document.getElementById('studentId').value = currentUser.studentId;
+     } else {
+       alert('Please log in to file a complaint');
+       window.location.href = '/';
+       return;
+     }
+   });
 
-      const box = document.createElement("div");
-      box.className = "confirmation";
-      box.innerHTML = `
-        <h3>✅ Complaint Submitted!</h3>
-        <p><strong>Student ID:</strong> ${id}</p>
-        <p><strong>Date:</strong> ${date}</p>
-        <p><strong>Description:</strong> ${desc}</p>
-      `;
+   // Handle form submission
+   document.getElementById("complainForm").addEventListener("submit", async function(e) {
+     e.preventDefault();
+     
+     const submitBtn = document.getElementById('submitBtn');
+     const confirmationDiv = document.getElementById('confirmationBox');
+     
+     // Get form data
+     const studentId = document.getElementById("studentId").value;
+     const title = document.getElementById("complaintTitle").value.trim();
+     const description = document.getElementById("complainDesc").value.trim();
 
-      const target = document.getElementById("confirmationBox");
-      target.innerHTML = "";
-      target.appendChild(box);
+     // Show loading state
+     submitBtn.disabled = true;
+     submitBtn.textContent = 'Submitting...';
+     showMessage('Submitting your complaint...', 'loading');
 
-      document.getElementById("complainForm").reset();
-    });
-  </script>
+     try {
+       const response = await fetch('/api/complaints', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({
+           title: title,
+           description: description,
+           student_id: studentId
+         })
+       });
+
+       const result = await response.json();
+
+       if (response.ok) {
+         // Success
+         showMessage(`
+           <h3>✅ Complaint Submitted Successfully!</h3>
+           <p><strong>Complaint ID:</strong> #${result.complaintId}</p>
+           <p><strong>Title:</strong> ${title}</p>
+           <p><strong>Status:</strong> Pending</p>
+           <p><strong>Submitted by:</strong> ${studentId}</p>
+           <p><em>You will be notified once your complaint is resolved.</em></p>
+         `, 'success');
+
+         // Reset form
+         document.getElementById("complainForm").reset();
+         document.getElementById('studentId').value = currentUser.studentId;
+       } else {
+         // Error from server
+         showMessage(`❌ Error: ${result.error}`, 'error');
+       }
+
+     } catch (error) {
+       console.error('Error submitting complaint:', error);
+       showMessage('❌ Failed to submit complaint. Please check your connection and try again.', 'error');
+     } finally {
+       // Reset button
+       submitBtn.disabled = false;
+       submitBtn.textContent = '🚀 Submit Complaint';
+     }
+   });
+
+   // Function to show messages
+   function showMessage(message, type) {
+     const confirmationDiv = document.getElementById('confirmationBox');
+     const messageBox = document.createElement('div');
+     messageBox.className = `confirmation ${type}`;
+     messageBox.innerHTML = message;
+     
+     confirmationDiv.innerHTML = '';
+     confirmationDiv.appendChild(messageBox);
+     
+     // Auto-hide success messages after 7 seconds
+     if (type === 'success') {
+       setTimeout(() => {
+         confirmationDiv.innerHTML = '';
+       }, 7000);
+     }
+   }
+ </script>
 </body>
 </html>
