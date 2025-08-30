@@ -700,7 +700,7 @@ app.get('/allocations', (req, res) => {
 });
 
 app.get('/visitor-applications', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'vissapp.html'));
+  res.sendFile(path.join(__dirname, 'public', 'visapp.html'));
 });
 
 app.get('/visitor-status', (req, res) => {

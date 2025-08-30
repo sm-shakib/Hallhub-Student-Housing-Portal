@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HallHub Dashboard</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(6px);
+      padding: 20px;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .container {
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      animation: fadeIn 1.5s ease;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #6c5ce7;
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 40px;
+    }
+
+    .nav-card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .nav-card:hover {
+      transform: scale(1.05);
+      background-color: #ffe1ff;
+    }
+
+    .event-section {
+      width: 100%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      animation: fadeIn 1.5s ease;
+    }
+
+    .event-section h3 {
+      margin-bottom: 10px;
+    }
+
+    .event-section p {
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .loading {
+      color: #666;
+      font-style: italic;
+    }
+
+    .error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+  </style>
+</head>
+<body>
+  <div class="header">📚 HallHub Dashboard</div>
+  <div class="container">
+
+    <!-- Dashboard Statistics -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-number" id="totalLostItems">...</div>
+        <div class="stat-label">Total Lost Items</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalFoundItems">...</div>
+        <div class="stat-label">Total Found Items</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalEvents">...</div>
+        <div class="stat-label">Total Events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalComplaints">...</div>
+        <div class="stat-label">Total Complaints</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="pendingComplaints">...</div>
+        <div class="stat-label">Pending Complaints</div>
+      </div>
+      <div class="stat-card" id="userStatsCard" style="display: none;">
+        <div class="stat-number" id="userComplaints">...</div>
+        <div class="stat-label">My Complaints</div>
+      </div>
+    </div>
+
+    <!-- Latest Events Section -->
+    <div class="event-section">
+      <h3>📢 Latest Events</h3>
+      <div id="eventsContainer">
+        <p class="loading">Loading latest events...</p>
+      </div>
+    </div>
+
+    <!-- Feature Navigation -->
+    <div class="nav-grid">
+      <div class="nav-card" onclick="goTo('/events')">📅 Submit Event</div>
+      <div class="nav-card" onclick="goTo('/complaints')">⚠️ File Complaint</div>
+      <div class="nav-card" onclick="goTo('/show-complaints')">📂 Show Complaints</div>
+      <div class="nav-card" onclick="goTo('/resolved-complaints')">✅ Resolved Complaints</div>
+      <div class="nav-card" onclick="goTo('/visitor-applications')">🚪 Visitor Application</div>
+      <div class="nav-card" onclick="goTo('/visitor-status')">📋 Visitor Status</div>
+      <div class="nav-card" onclick="goTo('/allocations')">📦 Allocation Info</div>
+      <div class="nav-card" onclick="goTo('/item-categories')">📚 Item Categories</div>
+      <div class="nav-card" onclick="goTo('/lostitems')">🎒 Lost Item Form</div>
+      <div class="nav-card" onclick="goTo('/see-lost-items')">🔍 My Lost Items</div>
+      <div class="nav-card" onclick="goTo('/founditems')">🧭 Found Items</div>
+      <div class="nav-card" onclick="goTo('/home')">🏠 Back to Home</div>
+      <div class="nav-card" onclick="logout()">🚪 Logout</div>
+    </div>
+
+  </div>
+
+  <script>
+    // Get current user data from localStorage
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
+    // Function to load dashboard statistics
+    async function loadDashboardStats() {
+      try {
+        let url = '/api/dashboard-stats';
+        if (currentUser.studentId) {
+          url += `?student_id=${currentUser.studentId}`;
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard statistics');
+        }
+
+        const stats = await response.json();
+        
+        // Update general statistics
+        document.getElementById('totalLostItems').textContent = stats.totalLostItems || 0;
+        document.getElementById('totalFoundItems').textContent = stats.totalFoundItems || 0;
+        document.getElementById('totalEvents').textContent = stats.totalEvents || 0;
+        document.getElementById('totalComplaints').textContent = stats.totalComplaints || 0;
+        document.getElementById('pendingComplaints').textContent = stats.pendingComplaints || 0;
+
+        // Show user-specific stats if available
+        if (currentUser.studentId && stats.userComplaints !== undefined) {
+          document.getElementById('userComplaints').textContent = stats.userComplaints || 0;
+          document.getElementById('userStatsCard').style.display = 'block';
+        }
+
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+        // Show error state
+        document.querySelectorAll('.stat-number').forEach(el => {
+          el.textContent = 'Error';
+          el.className += ' error';
+        });
+      }
+    }
+
+    // Function to load latest events
+    async function loadLatestEvents() {
+      try {
+        const response = await fetch('/api/events');
+        if (!response.ok) {
+          throw new Error('Failed to fetch events');
+        }
+
+        const events = await response.json();
+        const eventsContainer = document.getElementById('eventsContainer');
+
+        if (events.length === 0) {
+          eventsContainer.innerHTML = '<p>No events available at the moment.</p>';
+          return;
+        }
+
+        // Display latest 3 events
+        const latestEvents = events.slice(0, 3);
+        let eventsHTML = '';
+
+        latestEvents.forEach(event => {
+          const eventDate = new Date(event.event_date).toLocaleDateString();
+          eventsHTML += `
+            <p>
+              🗓️ <strong>${eventDate}:</strong> ${event.title} 
+              ${event.location ? `📍 ${event.location}` : ''}
+            </p>
+          `;
+        });
+
+        eventsContainer.innerHTML = eventsHTML;
+
+      } catch (error) {
+        console.error('Error loading events:', error);
+        document.getElementById('eventsContainer').innerHTML = 
+          '<p class="error">Failed to load events. Please try again later.</p>';
+      }
+    }
+
+    // Navigation function
+    function goTo(page) {
+      window.location.href = page;
+    }
+
+    // Logout function
+    function logout() {
+      localStorage.removeItem('currentUser');
+      alert("👋 You've been logged out!");
+      window.location.href = "/";
+    }
+
+    // Check if user is logged in
+    function checkAuth() {
+      if (!currentUser.studentId) {
+        alert('Please log in to access the dashboard');
+        window.location.href = '/';
+        return false;
+      }
+      return true;
+    }
+
+    // Update header with user info
+    function updateHeader() {
+      if (currentUser.name) {
+        const header = document.querySelector('.header');
+        header.innerHTML = `📚 HallHub Dashboard - Welcome, ${currentUser.name}!`;
+      }
+    }
+
+    // Initialize dashboard when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      if (checkAuth()) {
+        updateHeader();
+        loadDashboardStats();
+        loadLatestEvents();
+      }
+    });
+  </script>
+</body>
+</html>

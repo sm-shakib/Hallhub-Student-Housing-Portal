@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Found Items</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #A18CD1, #FBC2EB);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .box {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+      width: 400px;
+      text-align: center;
+    }
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 16px;
+      transition: 0.3s ease;
+    }
+    input:focus {
+      border-color: #A18CD1;
+      outline: none;
+    }
+    button {
+      background-color: #A18CD1;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #8c75bb;
+    }
+    .result {
+      margin-top: 15px;
+      background-color: #FBC2EB;
+      padding: 10px;
+      border-radius: 10px;
+      color: #444;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Found Item Lookup</h2>
+    <input type="text" id="lostId" placeholder="Enter Lost Item ID" required />
+    <button onclick="lookupFoundItem()">Check Status</button>
+    <div class="result" id="statusBox"></div>
+  </div>
+
+  <script>
+    function lookupFoundItem() {
+      const id = document.getElementById('lostId').value.trim();
+      const statusBox = document.getElementById('statusBox');
+
+      if (!id) {
+        statusBox.textContent = "Please enter a valid Lost Item ID.";
+        return;
+      }
+
+      // Mock found item check
+      const foundItems = {
+        "L101": { desc: "Black Wallet", location: "Security Office", date: "2025-08-02" },
+        "L322": { desc: "Student ID Card", location: "Reception Desk", date: "2025-08-01" }
+      };
+
+      if (foundItems[id]) {
+        const item = foundItems[id];
+        statusBox.innerHTML = `
+          ✅ <strong>Found Match</strong><br>
+          <strong>Description:</strong> ${item.desc}<br>
+          <strong>Location:</strong> ${item.location}<br>
+          <strong>Date Found:</strong> ${item.date}
+        `;
+      } else {
+        statusBox.textContent = "❌ No match found for this Lost ID.";
+      }
+    }
+  </script>
+</body>
+</html>
