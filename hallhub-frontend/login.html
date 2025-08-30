@@ -41,8 +41,8 @@
       <h1 class="text-3xl font-bold">🏢 HallHub</h1>
       <div class="flex items-center space-x-4">
         <nav>
-          <a href="/home" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Back to Home</a>
-          <a href="/register" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Register</a>
+          <a href="home.html" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Back to Home</a>
+          <a href="register.html" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Register</a>
         </nav>
         <!-- Theme Toggle Button -->
         <button id="theme-toggle" class="px-3 py-1 bg-white/20 rounded hover:bg-white/30 transition">
@@ -137,7 +137,7 @@
         <div class="text-center mt-6">
           <p class="text-gray-600 dark:text-gray-400">
             Don't have an account? 
-            <a href="/register" class="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
+            <a href="register.html" class="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
               Register here
             </a>
           </p>
@@ -334,7 +334,7 @@
 
       try {
         // Send login request to backend
-        const response = await fetch('/api/login', {
+        const response = await fetch('http://localhost:3000/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -355,7 +355,7 @@
           
           // Redirect to dashboard after short delay
           setTimeout(() => {
-            window.location.href = '/dashboard';
+            window.location.href = 'dashb.html';
           }, 1500);
         } else {
           showAlert(result.error || 'Login failed. Please check your credentials.', 'error');
@@ -375,7 +375,7 @@
       if (existingSession) {
         showAlert('You are already logged in. Redirecting to dashboard...', 'success');
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = 'dashb.html';
         }, 2000);
       }
     });

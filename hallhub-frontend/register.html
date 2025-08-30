@@ -24,8 +24,8 @@
         <div class="container mx-auto px-4 flex justify-between items-center">
             <h1 class="text-3xl font-bold">🏢 HallHub</h1>
             <nav class="flex items-center space-x-4">
-                <a href="/home" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Back to Home</a>
-                <a href="/" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Login</a>
+                <a href="home.html" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Back to Home</a>
+                <a href="login.html" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Login</a>
                 <!-- Theme Toggle Button -->
                 <button id="theme-toggle" class="px-3 py-1 bg-white/20 rounded hover:bg-white/30 transition select-none">
                     🌙
@@ -184,7 +184,7 @@
                     
                     <div class="text-center mt-4">
                         <p class="text-gray-600 dark:text-gray-400">Already have an account? 
-                            <a href="/" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold">Login here</a>
+                            <a href="login.html" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold">Login here</a>
                         </p>
                     </div>
                 </form>
@@ -377,7 +377,7 @@
 
             try {
                 // Send registration request
-                const response = await fetch('/register', {
+                const response = await fetch('http://localhost:3000/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -393,7 +393,7 @@
                     
                     // Redirect to login page after 2 seconds
                     setTimeout(() => {
-                        window.location.href = '/';
+                        window.location.href = 'login.html';
                     }, 2000);
                 } else {
                     showAlert(result.error || 'Registration failed. Please try again.', 'error');

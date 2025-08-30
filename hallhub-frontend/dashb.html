@@ -185,7 +185,7 @@
 
   <script>
     // Get current user data from localStorage
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const currentUser = JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || '{}');
 
     // Function to load dashboard statistics
     async function loadDashboardStats() {
@@ -228,7 +228,7 @@
     // Function to load latest events
     async function loadLatestEvents() {
       try {
-        const response = await fetch('/api/events');
+        const response = await fetch('http://localhost:3000/api/events');
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
@@ -271,16 +271,16 @@
 
     // Logout function
     function logout() {
-      localStorage.removeItem('currentUser');
+      localStorage.removeItem('userSession');
       alert("👋 You've been logged out!");
-      window.location.href = "/";
+      window.location.href = "home.html";
     }
 
     // Check if user is logged in
     function checkAuth() {
       if (!currentUser.studentId) {
         alert('Please log in to access the dashboard');
-        window.location.href = '/';
+        window.location.href = 'login.html';
         return false;
       }
       return true;
