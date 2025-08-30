@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HallHub Dashboard</title>
   <style>
     body {
@@ -118,6 +119,11 @@
       font-weight: bold;
     }
 
+    .highlight-card {
+      border: 2px solid #6c5ce7;
+      background: rgba(108, 92, 231, 0.1);
+    }
+
     @keyframes fadeIn {
       from {opacity: 0;}
       to {opacity: 1;}
@@ -125,7 +131,7 @@
   </style>
 </head>
 <body>
-  <div class="header">📚 HallHub Dashboard</div>
+  <div class="header">HallHub Dashboard</div>
   <div class="container">
 
     <!-- Dashboard Statistics -->
@@ -138,15 +144,15 @@
         <div class="stat-number" id="totalFoundItems">...</div>
         <div class="stat-label">Total Found Items</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card highlight-card">
         <div class="stat-number" id="totalEvents">...</div>
         <div class="stat-label">Total Events</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card highlight-card">
         <div class="stat-number" id="totalComplaints">...</div>
         <div class="stat-label">Total Complaints</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card highlight-card">
         <div class="stat-number" id="pendingComplaints">...</div>
         <div class="stat-label">Pending Complaints</div>
       </div>
@@ -158,7 +164,7 @@
 
     <!-- Latest Events Section -->
     <div class="event-section">
-      <h3>📢 Latest Events</h3>
+      <h3>Latest Events</h3>
       <div id="eventsContainer">
         <p class="loading">Loading latest events...</p>
       </div>
@@ -166,19 +172,24 @@
 
     <!-- Feature Navigation -->
     <div class="nav-grid">
-      <div class="nav-card" onclick="goTo('/events')">📅 Submit Event</div>
-      <div class="nav-card" onclick="goTo('/complaints')">⚠️ File Complaint</div>
-      <div class="nav-card" onclick="goTo('/show-complaints')">📂 Show Complaints</div>
-      <div class="nav-card" onclick="goTo('/resolved-complaints')">✅ Resolved Complaints</div>
-      <div class="nav-card" onclick="goTo('/visitor-applications')">🚪 Visitor Application</div>
-      <div class="nav-card" onclick="goTo('/visitor-status')">📋 Visitor Status</div>
-      <div class="nav-card" onclick="goTo('/allocations')">📦 Allocation Info</div>
-      <div class="nav-card" onclick="goTo('/item-categories')">📚 Item Categories</div>
-      <div class="nav-card" onclick="goTo('/lostitems')">🎒 Lost Item Form</div>
-      <div class="nav-card" onclick="goTo('/see-lost-items')">🔍 My Lost Items</div>
-      <div class="nav-card" onclick="goTo('/founditems')">🧭 Found Items</div>
-      <div class="nav-card" onclick="goTo('/home')">🏠 Back to Home</div>
-      <div class="nav-card" onclick="logout()">🚪 Logout</div>
+      <!-- Highlighted Priority Options -->
+      <div class="nav-card highlight-card" onclick="goTo('event.html')">Submit Event</div>
+      <div class="nav-card highlight-card" onclick="goTo('complain.html')">File Complaint</div>
+      <div class="nav-card highlight-card" onclick="goTo('showcomp.html')">Show Complaints</div>
+      <div class="nav-card highlight-card" onclick="goTo('resolvedcomp.html')">Resolved Complaints</div>
+      <div class="nav-card highlight-card" onclick="goTo('visapp.html')">Visitor Application</div>
+      <div class="nav-card highlight-card" onclick="goTo('visstat.html')">Visitor Status</div>
+      <div class="nav-card highlight-card" onclick="goTo('allocinfo.html')">Allocation Info</div>
+      <div class="nav-card highlight-card" onclick="goTo('itemcat.html')">Item Categories</div>
+      
+      <!-- Additional Options -->
+      <div class="nav-card" onclick="goTo('lostitem.html')">Lost Item Form</div>
+      <div class="nav-card" onclick="goTo('seelostitem.html')">My Lost Items</div>
+      <div class="nav-card" onclick="goTo('founditem.html')">Found Items</div>
+      
+      <!-- Navigation Options -->
+      <div class="nav-card" onclick="goTo('home.html')">Back to Home</div>
+      <div class="nav-card" onclick="logout()">Logout</div>
     </div>
 
   </div>
@@ -202,7 +213,7 @@
 
         const stats = await response.json();
         
-        // Update general statistics
+        // Update all statistics
         document.getElementById('totalLostItems').textContent = stats.totalLostItems || 0;
         document.getElementById('totalFoundItems').textContent = stats.totalFoundItems || 0;
         document.getElementById('totalEvents').textContent = stats.totalEvents || 0;
@@ -228,7 +239,7 @@
     // Function to load latest events
     async function loadLatestEvents() {
       try {
-        const response = await fetch('http://localhost:3000/api/events');
+        const response = await fetch('/api/events');
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
@@ -249,8 +260,8 @@
           const eventDate = new Date(event.event_date).toLocaleDateString();
           eventsHTML += `
             <p>
-              🗓️ <strong>${eventDate}:</strong> ${event.title} 
-              ${event.location ? `📍 ${event.location}` : ''}
+              <strong>${eventDate}:</strong> ${event.title} 
+              ${event.location ? `${event.location}` : ''}
             </p>
           `;
         });
@@ -264,23 +275,47 @@
       }
     }
 
-    // Navigation function
+    // Enhanced navigation function with error handling
     function goTo(page) {
-      window.location.href = page;
+      try {
+        // Add visual feedback
+        event.target.style.transform = 'scale(0.95)';
+        event.target.style.opacity = '0.7';
+        
+        setTimeout(() => {
+          window.location.href = page;
+        }, 150);
+      } catch (error) {
+        console.error('Navigation error:', error);
+        window.location.href = page;
+      }
     }
 
-    // Logout function
+    // Enhanced logout function
     function logout() {
-      localStorage.removeItem('userSession');
-      alert("👋 You've been logged out!");
-      window.location.href = "home.html";
+      if (confirm('Are you sure you want to logout?')) {
+        try {
+          // Clear all session data
+          localStorage.removeItem('userSession');
+          sessionStorage.removeItem('userSession');
+          
+          // Show logout message
+          alert("You've been logged out!");
+          
+          // Redirect to home page
+          window.location.href = "/home";
+        } catch (error) {
+          console.error('Logout error:', error);
+          window.location.href = "/home";
+        }
+      }
     }
 
     // Check if user is logged in
     function checkAuth() {
       if (!currentUser.studentId) {
         alert('Please log in to access the dashboard');
-        window.location.href = 'login.html';
+        window.location.href = '/';
         return false;
       }
       return true;
@@ -290,8 +325,14 @@
     function updateHeader() {
       if (currentUser.name) {
         const header = document.querySelector('.header');
-        header.innerHTML = `📚 HallHub Dashboard - Welcome, ${currentUser.name}!`;
+        header.innerHTML = `HallHub Dashboard - Welcome, ${currentUser.name}!`;
       }
+    }
+
+    // Refresh dashboard data
+    function refreshDashboard() {
+      loadDashboardStats();
+      loadLatestEvents();
     }
 
     // Initialize dashboard when page loads
@@ -301,6 +342,24 @@
         loadDashboardStats();
         loadLatestEvents();
       }
+    });
+
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'r' && event.ctrlKey) {
+        event.preventDefault();
+        refreshDashboard();
+      }
+    });
+
+    // Handle network connectivity
+    window.addEventListener('online', function() {
+      console.log('Connection restored, refreshing dashboard...');
+      refreshDashboard();
+    });
+
+    window.addEventListener('offline', function() {
+      console.log('Connection lost');
     });
   </script>
 </body>

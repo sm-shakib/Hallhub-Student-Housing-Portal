@@ -169,10 +169,23 @@
       color: #666;
       font-size: 0.9rem;
     }
+
+    .demo-notice {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      border: 2px solid #3498db;
+      color: #2c3e50;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <div class="header">📅 Submit a Hall Event</div>
+  
+
+  
   <div class="form-box">
     <h2>Event Info</h2>
     <form id="eventForm">
@@ -181,7 +194,7 @@
       <input type="time" id="eventTime" placeholder="Event Time (optional)" />
       <input type="text" id="eventLocation" placeholder="Event Location" required />
       <textarea id="eventDesc" placeholder="Event Description" required></textarea>
-      <input type="text" id="organizerId" placeholder="Your Student ID" required readonly />
+      <input type="text" id="organizerId" placeholder="Your Student ID" required />
       <button type="submit" id="submitBtn">🚀 Submit Event</button>
     </form>
   </div>
@@ -196,22 +209,40 @@
   </div>
 
   <div class="back-link">
-    <a href="/dashboard">← Back to Dashboard</a>
+    <a href="dashb.html">← Back to Dashboard</a>
   </div>
 
   <script>
     // Get current user data from localStorage
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    let currentUser = {};
+    try {
+      currentUser = JSON.parse(localStorage.getItem('userSession') || '{}');
+    } catch (error) {
+      console.error('Error parsing user session:', error);
+      currentUser = {};
+    }
 
     // Initialize form with user data
     document.addEventListener('DOMContentLoaded', function() {
-      if (currentUser.studentId) {
-        document.getElementById('organizerId').value = currentUser.studentId;
+      // Debug: Check what's in localStorage
+      console.log('User session data:', currentUser);
+      console.log('Student ID:', currentUser.studentId);
+      
+      // Check multiple possible field names for student ID
+      const studentId = currentUser.studentId || currentUser.student_id || currentUser.id || currentUser.userId;
+      
+      if (studentId) {
+        document.getElementById('organizerId').value = studentId;
+        console.log('Student ID set to:', studentId);
       } else {
-        // Redirect to login if not logged in
-        alert('Please log in to submit events');
-        window.location.href = '/';
-        return;
+        // For debugging - show what data is available
+        console.log('Available user data keys:', Object.keys(currentUser));
+        
+        // Don't redirect immediately - let user manually enter ID
+        console.warn('No student ID found in session data');
+        
+        // Optional: Show a warning message instead of redirecting
+        showMessage('⚠️ Student ID not found in session. Please enter your Student ID manually.', 'error');
       }
       
       // Set minimum date to today
@@ -235,12 +266,20 @@
       const time = document.getElementById("eventTime").value;
       const location = document.getElementById("eventLocation").value.trim();
       const description = document.getElementById("eventDesc").value.trim();
-      const organizerId = document.getElementById("organizerId").value;
+      const organizerId = document.getElementById("organizerId").value.trim();
 
-      // Combine date and time
-      let eventDateTime = date;
+      // Frontend validation
+      if (!title || !date || !location || !organizerId) {
+        showMessage('❌ Please fill in all required fields (Title, Date, Location, Student ID).', 'error');
+        return;
+      }
+
+      // Combine date and time - format for MySQL
+      let eventDateTime;
       if (time) {
-        eventDateTime += ' ' + time;
+        eventDateTime = `${date} ${time}:00`; // Add seconds for MySQL datetime format
+      } else {
+        eventDateTime = `${date} 12:00:00`; // Default time with seconds
       }
 
       // Show loading state
@@ -249,21 +288,41 @@
       showMessage('Submitting your event...', 'loading');
 
       try {
-        const response = await fetch('/api/events', {
+        // Debug: Log the request details
+        const requestData = {
+          title: title,
+          description: description,
+          event_date: eventDateTime,
+          location: location,
+          organizer_id: organizerId
+        };
+        
+        console.log('Submitting to:', 'http://localhost:3000/api/events');
+        console.log('Request data:', requestData);
+        console.log('Request JSON:', JSON.stringify(requestData));
+
+        const response = await fetch('http://localhost:3000/api/events', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            title: title,
-            description: description,
-            event_date: eventDateTime,
-            location: location,
-            organizer_id: organizerId
-          })
+          body: JSON.stringify(requestData)
         });
 
-        const result = await response.json();
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        // Try to get response text first
+        const responseText = await response.text();
+        console.log('Raw response:', responseText);
+        
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse response as JSON:', parseError);
+          result = { error: 'Server returned invalid response: ' + responseText };
+        }
 
         if (response.ok) {
           // Success
@@ -273,23 +332,34 @@
             <p><strong>Date:</strong> ${new Date(eventDateTime).toLocaleDateString()}</p>
             <p><strong>Location:</strong> ${location}</p>
             <p><strong>Organizer:</strong> ${organizerId}</p>
-            <p>Event ID: #${result.eventId}</p>
+            <p>Event ID: #${result.eventId || result.id || 'Unknown'}</p>
           `, 'success');
 
           // Reset form
           document.getElementById("eventForm").reset();
-          document.getElementById('organizerId').value = currentUser.studentId;
+          const studentId = currentUser.studentId || currentUser.student_id || currentUser.id || currentUser.userId;
+          if (studentId) {
+            document.getElementById('organizerId').value = studentId;
+          }
           
           // Reload recent events
           loadRecentEvents();
         } else {
           // Error from server
-          showMessage(`❌ Error: ${result.error}`, 'error');
+          showMessage(`❌ Server Error (${response.status}): ${result.error || result.message || 'Unknown error'}`, 'error');
         }
 
       } catch (error) {
-        console.error('Error submitting event:', error);
-        showMessage('❌ Failed to submit event. Please check your connection and try again.', 'error');
+        console.error('Full error details:', error);
+        
+        // More specific error messages
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          showMessage('❌ Cannot connect to server. Is your backend running on the correct port?', 'error');
+        } else if (error.name === 'SyntaxError') {
+          showMessage('❌ Server returned invalid response. Check server logs.', 'error');
+        } else {
+          showMessage(`❌ Connection failed: ${error.message}. Please check your backend server.`, 'error');
+        }
       } finally {
         // Reset button
         submitBtn.disabled = false;
@@ -320,13 +390,17 @@
       const container = document.getElementById('eventsContainer');
       
       try {
-        const response = await fetch('/api/events');
+        console.log('Loading events from:', 'http://localhost:3000/api/events');
+        const response = await fetch('http://localhost:3000/api/events');
+        
+        console.log('Events response status:', response.status);
         
         if (!response.ok) {
-          throw new Error('Failed to fetch events');
+          throw new Error(`HTTP ${response.status}: Failed to fetch events`);
         }
         
         const events = await response.json();
+        console.log('Events loaded:', events);
         
         if (events.length === 0) {
           container.innerHTML = '<p>No events found.</p>';
@@ -358,7 +432,7 @@
         
       } catch (error) {
         console.error('Error loading events:', error);
-        container.innerHTML = '<p class="error-message">Failed to load recent events.</p>';
+        container.innerHTML = `<p class="error-message">Failed to load events: ${error.message}</p>`;
       }
     }
   </script>
