@@ -195,13 +195,13 @@
 
   <script>
     // Get current user data from localStorage
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    //const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
     // Check if user is logged in
-    if (!currentUser.studentId) {
-      alert('Please log in to submit visitor application');
-      window.location.href = '/';
-    }
+    //if (!currentUser.studentId) {
+     // alert('Please log in to submit visitor application');
+     // window.location.href = '/';
+   // }
 
     // Initialize form with student data
     document.addEventListener('DOMContentLoaded', function() {
