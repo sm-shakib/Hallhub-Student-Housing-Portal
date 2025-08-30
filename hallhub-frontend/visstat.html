@@ -174,13 +174,13 @@
 
  <script>
    // Get current user data from localStorage
-   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+   //const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
    // Check if user is logged in
-   if (!currentUser.studentId) {
-     alert('Please log in to check visitor status');
-     window.location.href = '/';
-   }
+  // if (!currentUser.studentId) {
+     //alert('Please log in to check visitor status');
+    // window.location.href = '/';
+   //}
 
    // Initialize with current user's student ID
    document.addEventListener('DOMContentLoaded', function() {
