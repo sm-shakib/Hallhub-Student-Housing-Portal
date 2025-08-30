@@ -217,7 +217,7 @@
  <div id="complaintsOutput" class="complaint-list"></div>
 
  <div class="back-link">
-   <a href="/dashboard">← Back to Dashboard</a>
+   <a href="/hallhub-frontend/dashb.html">← Back to Dashboard</a>
  </div>
 
  <script>
@@ -225,10 +225,10 @@
    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
    // Check if user is logged in
-   if (!currentUser.studentId) {
-     alert('Please log in to view your complaints');
-     window.location.href = '/';
-   }
+   //if (!currentUser.studentId) {
+     //alert('Please log in to view your complaints');
+     //window.location.href = '/';
+   //}
 
    // Display student information
    document.getElementById('studentInfo').innerHTML = `
