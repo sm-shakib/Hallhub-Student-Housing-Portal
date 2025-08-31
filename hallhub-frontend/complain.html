@@ -93,36 +93,16 @@
      max-width: 500px;
      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
      margin-bottom: 20px;
-     animation: fadeIn 1s ease;
+     animation: fadeIn 0.8s ease;
    }
 
-   .success {
-     border-left: 6px solid #27ae60;
-     background: rgba(39, 174, 96, 0.1);
-     color: #27ae60;
-   }
+   .success { border-left: 6px solid #27ae60; background: rgba(39, 174, 96, 0.1); color: #27ae60; }
+   .error   { border-left: 6px solid #e74c3c; background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+   .loading { border-left: 6px solid #f39c12; background: rgba(243, 156, 18, 0.1); color: #f39c12; }
 
-   .error {
-     border-left: 6px solid #e74c3c;
-     background: rgba(231, 76, 60, 0.1);
-     color: #e74c3c;
-   }
+   @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
 
-   .loading {
-     border-left: 6px solid #f39c12;
-     background: rgba(243, 156, 18, 0.1);
-     color: #f39c12;
-   }
-
-   @keyframes fadeIn {
-     from {opacity: 0;}
-     to {opacity: 1;}
-   }
-
-   .back-link {
-     margin-top: 10px;
-   }
-
+   .back-link { margin-top: 10px; }
    .back-link a {
      text-decoration: none;
      font-weight: bold;
@@ -132,7 +112,6 @@
      background: rgba(255, 255, 255, 0.3);
      transition: all 0.3s ease;
    }
-
    .back-link a:hover {
      background: rgba(255, 255, 255, 0.6);
      text-decoration: none;
@@ -144,7 +123,7 @@
  <div class="form-container">
    <h2>Complaint Form</h2>
    <form id="complainForm">
-     <input type="text" id="studentId" placeholder="Your Student ID" required readonly />
+     <input type="text" id="studentId" placeholder="Your Student ID" required />
      <input type="text" id="complaintTitle" placeholder="Complaint Title/Subject" required />
      <textarea id="complainDesc" placeholder="Write your complaint here..." required></textarea>
      <button type="submit" id="submitBtn">🚀 Submit Complaint</button>
@@ -158,54 +137,50 @@
  </div>
 
  <script>
-   // Get current user data from localStorage
    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
-   // Initialize form
    document.addEventListener('DOMContentLoaded', function() {
      if (currentUser.studentId) {
        document.getElementById('studentId').value = currentUser.studentId;
      } else {
-       //alert('Please log in to file a complaint');
+       //alert('Please log in to file a complaint.');
        //window.location.href = '/';
        //return;
      }
    });
 
-   // Handle form submission
    document.getElementById("complainForm").addEventListener("submit", async function(e) {
      e.preventDefault();
      
      const submitBtn = document.getElementById('submitBtn');
-     const confirmationDiv = document.getElementById('confirmationBox');
-     
-     // Get form data
-     const studentId = document.getElementById("studentId").value;
+     const studentId = document.getElementById("studentId").value.trim();
      const title = document.getElementById("complaintTitle").value.trim();
      const description = document.getElementById("complainDesc").value.trim();
 
-     // Show loading state
+     if (!studentId || !title || !description) {
+       showMessage("❌ All fields are required!", "error");
+       return;
+     }
+
      submitBtn.disabled = true;
      submitBtn.textContent = 'Submitting...';
      showMessage('Submitting your complaint...', 'loading');
 
      try {
-       const response = await fetch('/api/complaints', {
+       const response = await fetch('http://localhost:3000/api/complaints', {
          method: 'POST',
-         headers: {
-           'Content-Type': 'application/json',
-         },
-         body: JSON.stringify({
-           title: title,
-           description: description,
-           student_id: studentId
-         })
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ title, description, student_id: studentId })
        });
 
-       const result = await response.json();
+       let result;
+       try {
+         result = await response.json();
+       } catch {
+         result = { error: "Unexpected server response" };
+       }
 
        if (response.ok) {
-         // Success
          showMessage(`
            <h3>✅ Complaint Submitted Successfully!</h3>
            <p><strong>Complaint ID:</strong> #${result.complaintId}</p>
@@ -215,40 +190,24 @@
            <p><em>You will be notified once your complaint is resolved.</em></p>
          `, 'success');
 
-         // Reset form
          document.getElementById("complainForm").reset();
          document.getElementById('studentId').value = currentUser.studentId;
        } else {
-         // Error from server
-         showMessage(`❌ Error: ${result.error}`, 'error');
+         showMessage(`❌ Error: ${result.error || 'Something went wrong.'}`, 'error');
        }
 
      } catch (error) {
        console.error('Error submitting complaint:', error);
-       showMessage('❌ Failed to submit complaint. Please check your connection and try again.', 'error');
+       showMessage('❌ Failed to submit complaint. Please check your connection.', 'error');
      } finally {
-       // Reset button
        submitBtn.disabled = false;
        submitBtn.textContent = '🚀 Submit Complaint';
      }
    });
 
-   // Function to show messages
    function showMessage(message, type) {
      const confirmationDiv = document.getElementById('confirmationBox');
-     const messageBox = document.createElement('div');
-     messageBox.className = `confirmation ${type}`;
-     messageBox.innerHTML = message;
-     
-     confirmationDiv.innerHTML = '';
-     confirmationDiv.appendChild(messageBox);
-     
-     // Auto-hide success messages after 7 seconds
-     if (type === 'success') {
-       setTimeout(() => {
-         confirmationDiv.innerHTML = '';
-       }, 7000);
-     }
+     confirmationDiv.innerHTML = `<div class="confirmation ${type}">${message}</div>`;
    }
  </script>
 </body>

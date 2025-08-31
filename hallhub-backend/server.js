@@ -311,17 +311,17 @@ app.get('/api/complaints', async (req, res) => {
 
 app.post('/api/complaints', async (req, res) => {
   try {
-    const { title, description, category, student_id } = req.body;
+    const { title, description, student_id } = req.body;
 
-    if (!title || !description || !category) {
-      return res.status(400).json({ error: 'Please provide title, description, and category' });
+    if (!title || !description || !student_id) {
+      return res.status(400).json({ error: 'Please provide title, description, and student_id' });
     }
 
     const sql = `
-      INSERT INTO Complaints (title, description, category, student_id, status, complaint_date)
-      VALUES (?, ?, ?, ?, 'pending', NOW())
+      INSERT INTO complaint (title, description, student_id)
+      VALUES (?, ?, ?)
     `;
-    const [result] = await pool.execute(sql, [title, description, category, student_id]);
+    const [result] = await pool.execute(sql, [title, description, student_id]);
 
     res.json({
       success: true,
@@ -335,6 +335,7 @@ app.post('/api/complaints', async (req, res) => {
   }
 });
 
+
 app.put('/api/complaints/:id/resolve', async (req, res) => {
   try {
     const { id } = req.params;
@@ -342,7 +343,7 @@ app.put('/api/complaints/:id/resolve', async (req, res) => {
 
     const sql = `
       UPDATE Complaints 
-      SET status = 'resolved', resolution = ?, resolved_date = NOW()
+      SET status = 1, resolution = ?, resolved_date = NOW()
       WHERE complaint_id = ?
     `;
     await pool.execute(sql, [resolution, id]);
