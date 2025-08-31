@@ -223,7 +223,7 @@
 
     async function loadLatestEvents() {
       try {
-        const response = await fetch('http://localhost/3000/api/events');
+        const response = await fetch('http://localhost:3000/api/events');
         if (!response.ok) throw new Error('Failed to fetch events');
 
         const events = await response.json();
@@ -251,7 +251,7 @@
               box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             ">
               <strong>${eventDate}:</strong> ${event.Title}
-              ${event.Type ? `<br><em>Location: ${event.Type}</em>` : ''}
+              ${event.Type ? `<br><em>Type: ${event.Type}</em>` : ''}
               ${event.Description ? `<p>${event.Description}</p>` : ''}
             </div>
           `;
