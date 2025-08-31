@@ -159,7 +159,7 @@ app.post('/api/events', async (req, res) => {
     }
 
     const [rows] = await pool.execute(
-    "CALL CreateEvent(?, ?, ?, ?, ?)",
+    "CALL CreateEvent(?, ?, ?, ?)",
       [Type, Date, Description, Student_ID]
     );
 
