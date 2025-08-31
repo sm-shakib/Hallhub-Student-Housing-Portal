@@ -143,7 +143,7 @@ app.post('/api/login', async (req, res) => {
 // API routes for events
 app.get('/api/events', async (req, res) => {
   try {
-    const sql = 'SELECT * FROM Events ORDER BY event_date DESC';
+    const sql = 'SELECT * FROM events ORDER BY Date DESC';
     const [rows] = await pool.execute(sql);
     res.json(rows);
   } catch (error) {
@@ -154,17 +154,17 @@ app.get('/api/events', async (req, res) => {
 
 app.post('/api/events', async (req, res) => {
   try {
-    const { title, description, event_date, location, organizer_id } = req.body;
+    const { Title,Type,Date, Description, Student_ID} = req.body;
 
-    if (!title || !event_date || !location) {
-      return res.status(400).json({ error: 'Please provide title, date, and location' });
+    if (!Title || !Date || !Student_ID || !Type || !Description) {
+      return res.status(400).json({ error: 'Please provide title,Type,Description, date, and ID' });
     }
 
     const sql = `
-      INSERT INTO Events (title, description, event_date, location, organizer_id)
+      INSERT INTO events (Title,Type,Date, Description, Student_ID)
       VALUES (?, ?, ?, ?, ?)
     `;
-    const [result] = await pool.execute(sql, [title, description, event_date, location, organizer_id]);
+    const [result] = await pool.execute(sql, [Title,Type,Date, Description,Student_ID]);
 
     res.json({
       success: true,
@@ -612,7 +612,7 @@ app.get('/api/dashboard-stats', async (req, res) => {
     stats.totalFoundItems = foundItems[0].count;
     
     // Total events
-    const [events] = await pool.execute('SELECT COUNT(*) as count FROM Events');
+    const [events] = await pool.execute('SELECT COUNT(*) as count FROM events');
     stats.totalEvents = events[0].count;
     
     // Total complaints

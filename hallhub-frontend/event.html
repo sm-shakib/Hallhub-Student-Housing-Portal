@@ -16,13 +16,7 @@
       flex-direction: column;
       min-height: 100vh;
     }
-
-    .header {
-      padding: 20px;
-      font-size: 2rem;
-      font-weight: bold;
-    }
-
+    .header { padding: 20px; font-size: 2rem; font-weight: bold; }
     .form-box {
       background: rgba(255, 255, 255, 0.5);
       backdrop-filter: blur(8px);
@@ -33,12 +27,7 @@
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
       margin-bottom: 30px;
     }
-
-    .form-box h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
+    .form-box h2 { text-align: center; margin-bottom: 20px; }
     input, textarea, select {
       width: 100%;
       padding: 12px;
@@ -49,18 +38,12 @@
       font-size: 1rem;
       box-sizing: border-box;
     }
-
     input:focus, textarea:focus, select:focus {
       outline: none;
       background: rgba(255, 255, 255, 0.9);
       box-shadow: 0 0 10px rgba(255, 110, 196, 0.3);
     }
-
-    textarea {
-      resize: vertical;
-      height: 80px;
-    }
-
+    textarea { resize: vertical; height: 80px; }
     button {
       background: #ff6ec4;
       color: white;
@@ -73,126 +56,41 @@
       width: 100%;
       transition: all 0.3s ease;
     }
-
-    button:hover {
-      background: #fc5c7d;
-      transform: scale(1.05);
-    }
-
-    button:disabled {
-      background: #ccc;
-      transform: none;
-      cursor: not-allowed;
-    }
-
-    .event-display {
-      background: rgba(255, 255, 255, 0.4);
-      backdrop-filter: blur(5px);
-      border-left: 6px solid #6a82fb;
-      border-radius: 16px;
-      padding: 15px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      animation: fadeIn 1s ease;
-    }
-
-    .success-message {
-      border-left: 6px solid #27ae60;
-      background: rgba(39, 174, 96, 0.1);
-      color: #27ae60;
-    }
-
-    .error-message {
-      border-left: 6px solid #e74c3c;
-      background: rgba(231, 76, 60, 0.1);
-      color: #e74c3c;
-    }
-
-    .loading-message {
-      border-left: 6px solid #f39c12;
-      background: rgba(243, 156, 18, 0.1);
-      color: #f39c12;
-    }
-
-    @keyframes fadeIn {
-      from {opacity: 0;}
-      to {opacity: 1;}
-    }
-
-    .back-link {
-      margin-top: 30px;
-      text-align: center;
-    }
-
-    .back-link a {
-      text-decoration: none;
-      color: #0056b3;
-      font-weight: bold;
-      padding: 10px 20px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.3);
-      transition: all 0.3s ease;
-    }
-
-    .back-link a:hover {
-      background: rgba(255, 255, 255, 0.6);
-      text-decoration: none;
-    }
-
-    .events-list {
-      background: rgba(255, 255, 255, 0.5);
-      backdrop-filter: blur(8px);
-      padding: 30px;
-      border-radius: 20px;
-      width: 90%;
-      max-width: 800px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-      margin-top: 30px;
-    }
-
-    .event-card {
-      background: rgba(255, 255, 255, 0.7);
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 12px;
-      border-left: 4px solid #ff6ec4;
-    }
-
-    .event-card h4 {
-      margin: 0 0 10px 0;
-      color: #333;
-    }
-
-    .event-card p {
-      margin: 5px 0;
-      color: #666;
-      font-size: 0.9rem;
-    }
-
-    .demo-notice {
-      background: rgba(255, 255, 255, 0.8);
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 12px;
-      border: 2px solid #3498db;
-      color: #2c3e50;
-      text-align: center;
-    }
+    button:hover { background: #fc5c7d; transform: scale(1.05); }
+    button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+    .event-display { padding: 15px; border-radius: 16px; margin: 10px 0; }
+    .success-message { border-left: 6px solid #27ae60; background: rgba(39, 174, 96, 0.1); color: #27ae60; }
+    .error-message { border-left: 6px solid #e74c3c; background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+    .loading-message { border-left: 6px solid #f39c12; background: rgba(243, 156, 18, 0.1); color: #f39c12; }
+    .back-link { margin-top: 30px; text-align: center; }
+    .back-link a { text-decoration: none; color: #0056b3; font-weight: bold; padding: 10px 20px; border-radius: 20px; background: rgba(255, 255, 255, 0.3); transition: all 0.3s ease; }
+    .back-link a:hover { background: rgba(255, 255, 255, 0.6); }
+    .events-list { background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(8px); padding: 30px; border-radius: 20px; width: 90%; max-width: 800px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin-top: 30px; }
+    .event-card { background: rgba(255, 255, 255, 0.7); padding: 15px; margin: 10px 0; border-radius: 12px; border-left: 4px solid #ff6ec4; }
+    .event-card h4 { margin: 0 0 10px 0; color: #333; }
+    .event-card p { margin: 5px 0; color: #666; font-size: 0.9rem; }
   </style>
 </head>
 <body>
   <div class="header">📅 Submit a Hall Event</div>
-  
 
-  
   <div class="form-box">
     <h2>Event Info</h2>
     <form id="eventForm">
       <input type="text" id="eventTitle" placeholder="Event Title (e.g. Cultural Fest)" required />
+
+      <!-- Event Type Dropdown (after Title) -->
+      <select id="eventType" required>
+        <option value="">Select Event Type</option>
+        <option value="Cultural">Cultural</option>
+        <option value="Sports">Sports</option>
+        <option value="Food">Food</option>
+        <option value="Religious">Religious</option>
+        <option value="Meeting">Meeting</option>
+      </select>
+
       <input type="date" id="eventDate" required />
       <input type="time" id="eventTime" placeholder="Event Time (optional)" />
-      <input type="text" id="eventLocation" placeholder="Event Location" required />
       <textarea id="eventDesc" placeholder="Event Description" required></textarea>
       <input type="text" id="organizerId" placeholder="Your Student ID" required />
       <button type="submit" id="submitBtn">🚀 Submit Event</button>
@@ -203,9 +101,7 @@
 
   <div class="events-list" id="eventsList">
     <h2>📋 Recent Events</h2>
-    <div id="eventsContainer">
-      <p>Loading recent events...</p>
-    </div>
+    <div id="eventsContainer"><p>Loading recent events...</p></div>
   </div>
 
   <div class="back-link">
@@ -213,225 +109,100 @@
   </div>
 
   <script>
-    // Get current user data from localStorage
     let currentUser = {};
-    try {
-      currentUser = JSON.parse(localStorage.getItem('userSession') || '{}');
-    } catch (error) {
-      console.error('Error parsing user session:', error);
-      currentUser = {};
-    }
+    try { currentUser = JSON.parse(localStorage.getItem('userSession') || '{}'); } catch { currentUser = {}; }
 
-    // Initialize form with user data
     document.addEventListener('DOMContentLoaded', function() {
-      // Debug: Check what's in localStorage
-      console.log('User session data:', currentUser);
-      console.log('Student ID:', currentUser.studentId);
-      
-      // Check multiple possible field names for student ID
-      const studentId = currentUser.studentId || currentUser.student_id || currentUser.id || currentUser.userId;
-      
-      if (studentId) {
-        document.getElementById('organizerId').value = studentId;
-        console.log('Student ID set to:', studentId);
-      } else {
-        // For debugging - show what data is available
-        console.log('Available user data keys:', Object.keys(currentUser));
-        
-        // Don't redirect immediately - let user manually enter ID
-        console.warn('No student ID found in session data');
-        
-        // Optional: Show a warning message instead of redirecting
-        showMessage('⚠️ Student ID not found in session. Please enter your Student ID manually.', 'error');
-      }
-      
-      // Set minimum date to today
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('eventDate').min = today;
-      
-      // Load recent events
+      const studentId = currentUser.studentId || currentUser.student_id;
+      if (studentId) document.getElementById('organizerId').value = studentId;
+      document.getElementById('eventDate').min = new Date().toISOString().split('T')[0];
       loadRecentEvents();
     });
 
-    // Handle form submission
     document.getElementById("eventForm").addEventListener("submit", async function(e) {
       e.preventDefault();
-      
       const submitBtn = document.getElementById('submitBtn');
-      const messageDiv = document.getElementById('eventMessage');
-      
-      // Get form data
-      const title = document.getElementById("eventTitle").value.trim();
-      const date = document.getElementById("eventDate").value;
-      const time = document.getElementById("eventTime").value;
-      const location = document.getElementById("eventLocation").value.trim();
-      const description = document.getElementById("eventDesc").value.trim();
-      const organizerId = document.getElementById("organizerId").value.trim();
+      submitBtn.disabled = true; submitBtn.textContent = 'Submitting...';
+      showMessage('Submitting your event...', 'loading');
 
-      // Frontend validation
-      if (!title || !date || !location || !organizerId) {
-        showMessage('❌ Please fill in all required fields (Title, Date, Location, Student ID).', 'error');
+      const Title = document.getElementById("eventTitle").value.trim();
+      const Type = document.getElementById("eventType").value;
+      const DateVal = document.getElementById("eventDate").value;
+      const TimeVal = document.getElementById("eventTime").value;
+      const Description = document.getElementById("eventDesc").value.trim();
+      const Student_ID = document.getElementById("organizerId").value.trim();
+
+      if (!Title || !Type || !DateVal || !Student_ID) {
+        showMessage('❌ Please fill in all required fields.', 'error');
+        submitBtn.disabled = false; submitBtn.textContent = '🚀 Submit Event';
         return;
       }
 
-      // Combine date and time - format for MySQL
-      let eventDateTime;
-      if (time) {
-        eventDateTime = `${date} ${time}:00`; // Add seconds for MySQL datetime format
-      } else {
-        eventDateTime = `${date} 12:00:00`; // Default time with seconds
-      }
-
-      // Show loading state
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting...';
-      showMessage('Submitting your event...', 'loading');
+      const DateTime = TimeVal ? `${DateVal} ${TimeVal}:00` : `${DateVal} 12:00:00`;
 
       try {
-        // Debug: Log the request details
-        const requestData = {
-          title: title,
-          description: description,
-          event_date: eventDateTime,
-          location: location,
-          organizer_id: organizerId
-        };
-        
-        console.log('Submitting to:', 'http://localhost:3000/api/events');
-        console.log('Request data:', requestData);
-        console.log('Request JSON:', JSON.stringify(requestData));
-
         const response = await fetch('http://localhost:3000/api/events', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestData)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ Title,Type , Date: DateTime, Description, Student_ID})
         });
 
-        console.log('Response status:', response.status);
-        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-        
-        // Try to get response text first
-        const responseText = await response.text();
-        console.log('Raw response:', responseText);
-        
+        const resText = await response.text();
         let result;
-        try {
-          result = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('Failed to parse response as JSON:', parseError);
-          result = { error: 'Server returned invalid response: ' + responseText };
-        }
+        try { result = JSON.parse(resText); } catch { result = { error: 'Invalid server response' }; }
 
         if (response.ok) {
-          // Success
-          showMessage(`
-            <h3>🎉 Event Submitted Successfully!</h3>
-            <p><strong>Title:</strong> ${title}</p>
-            <p><strong>Date:</strong> ${new Date(eventDateTime).toLocaleDateString()}</p>
-            <p><strong>Location:</strong> ${location}</p>
-            <p><strong>Organizer:</strong> ${organizerId}</p>
-            <p>Event ID: #${result.eventId || result.id || 'Unknown'}</p>
-          `, 'success');
+          showMessage(`<h3>🎉 Event Submitted Successfully!</h3>
+            <p><strong>Title:</strong> ${Title}</p>
+            <p><strong>Type:</strong> ${Type}</p>
+            <p><strong>Date:</strong> ${new Date(DateTime).toLocaleDateString()}</p>
+            <p><strong>Organizer:</strong> ${Student_ID}</p>
+            <p>Event ID: #${result.Event_ID || 'Unknown'}</p>`, 'success');
 
-          // Reset form
           document.getElementById("eventForm").reset();
-          const studentId = currentUser.studentId || currentUser.student_id || currentUser.id || currentUser.userId;
-          if (studentId) {
-            document.getElementById('organizerId').value = studentId;
-          }
-          
-          // Reload recent events
+          document.getElementById('organizerId').value = Student_ID;
           loadRecentEvents();
         } else {
-          // Error from server
-          showMessage(`❌ Server Error (${response.status}): ${result.error || result.message || 'Unknown error'}`, 'error');
+          showMessage(`❌ Server Error (${response.status}): ${result.error || 'Unknown error'}`, 'error');
         }
-
       } catch (error) {
-        console.error('Full error details:', error);
-        
-        // More specific error messages
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
-          showMessage('❌ Cannot connect to server. Is your backend running on the correct port?', 'error');
-        } else if (error.name === 'SyntaxError') {
-          showMessage('❌ Server returned invalid response. Check server logs.', 'error');
-        } else {
-          showMessage(`❌ Connection failed: ${error.message}. Please check your backend server.`, 'error');
-        }
+        showMessage(`❌ Connection failed: ${error.message}`, 'error');
       } finally {
-        // Reset button
-        submitBtn.disabled = false;
-        submitBtn.textContent = '🚀 Submit Event';
+        submitBtn.disabled = false; submitBtn.textContent = '🚀 Submit Event';
       }
     });
 
-    // Function to show messages
-    function showMessage(message, type) {
-      const messageDiv = document.getElementById('eventMessage');
-      const messageBox = document.createElement('div');
-      messageBox.className = `event-display ${type}-message`;
-      messageBox.innerHTML = message;
-      
-      messageDiv.innerHTML = '';
-      messageDiv.appendChild(messageBox);
-      
-      // Auto-hide success messages after 5 seconds
-      if (type === 'success') {
-        setTimeout(() => {
-          messageDiv.innerHTML = '';
-        }, 5000);
-      }
+    function showMessage(message, Type) {
+      const msgDiv = document.getElementById('eventMessage');
+      const box = document.createElement('div');
+      box.className = `event-display ${Type}-message`;
+      box.innerHTML = message;
+      msgDiv.innerHTML = ''; msgDiv.appendChild(box);
+      if (Type === 'success') setTimeout(() => { msgDiv.innerHTML = ''; }, 5000);
     }
 
-    // Function to load recent events
     async function loadRecentEvents() {
       const container = document.getElementById('eventsContainer');
-      
       try {
-        console.log('Loading events from:', 'http://localhost:3000/api/events');
         const response = await fetch('http://localhost:3000/api/events');
-        
-        console.log('Events response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: Failed to fetch events`);
-        }
-        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const events = await response.json();
-        console.log('Events loaded:', events);
-        
-        if (events.length === 0) {
-          container.innerHTML = '<p>No events found.</p>';
-          return;
-        }
-        
-        // Display recent events (limit to 5)
-        const recentEvents = events.slice(0, 5);
-        let eventsHTML = '';
-        
-        recentEvents.forEach(event => {
-          const eventDate = new Date(event.event_date);
-          const formattedDate = eventDate.toLocaleDateString();
-          const formattedTime = eventDate.toLocaleTimeString();
-          
-          eventsHTML += `
-            <div class="event-card">
-              <h4>${event.title}</h4>
-              <p><strong>📅 Date:</strong> ${formattedDate}</p>
-              <p><strong>🕒 Time:</strong> ${formattedTime}</p>
-              <p><strong>📍 Location:</strong> ${event.location}</p>
-              <p><strong>👤 Organizer:</strong> ${event.organizer_id}</p>
-              ${event.description ? `<p><strong>📝 Description:</strong> ${event.description}</p>` : ''}
-            </div>
-          `;
+        if (!events.length) { container.innerHTML = '<p>No events found.</p>'; return; }
+        let html = '';
+        events.slice(0, 5).forEach(event => {
+          const eventDate = new Date(event.Date);
+          html += `<div class="event-card">
+            <h4>${event.Title}</h4>
+            <p><strong>Type:</strong> ${event.Type}</p>
+            <p><strong>📅 Date:</strong> ${eventDate.toLocaleDateString()}</p>
+            <p><strong>🕒 Time:</strong> ${eventDate.toLocaleTimeString()}</p>
+            ${event.Description ? `<p><strong>📝 Description:</strong> ${event.Description}</p>` : ''}
+            <p><strong>👤 Organizer:</strong> ${event.Student_ID}</p>
+            <p>Event ID: #${event.Event_ID}</p>
+          </div>`;
         });
-        
-        container.innerHTML = eventsHTML;
-        
+        container.innerHTML = html;
       } catch (error) {
-        console.error('Error loading events:', error);
         container.innerHTML = `<p class="error-message">Failed to load events: ${error.message}</p>`;
       }
     }

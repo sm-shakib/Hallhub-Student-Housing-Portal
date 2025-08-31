@@ -190,32 +190,23 @@
   </div>
 
   <script>
-    // Get current user data from localStorage
     const currentUser = JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || '{}');
 
-    // Function to load dashboard statistics
     async function loadDashboardStats() {
       try {
         let url = '/api/dashboard-stats';
-        if (currentUser.studentId) {
-          url += `?student_id=${currentUser.studentId}`;
-        }
+        if (currentUser.studentId) url += `?student_id=${currentUser.studentId}`;
 
         const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard statistics');
-        }
-
+        if (!response.ok) throw new Error('Failed to fetch dashboard statistics');
         const stats = await response.json();
         
-        // Update all statistics
         document.getElementById('totalLostItems').textContent = stats.totalLostItems || 0;
         document.getElementById('totalFoundItems').textContent = stats.totalFoundItems || 0;
-        document.getElementById('totalEvents').textContent = stats.totalEvents || 0;
+        document.getElementById('totalEvents').textContent = stats.totalEvents ?? 0;
         document.getElementById('totalComplaints').textContent = stats.totalComplaints || 0;
         document.getElementById('pendingComplaints').textContent = stats.pendingComplaints || 0;
 
-        // Show user-specific stats if available
         if (currentUser.studentId && stats.userComplaints !== undefined) {
           document.getElementById('userComplaints').textContent = stats.userComplaints || 0;
           document.getElementById('userStatsCard').style.display = 'block';
@@ -223,7 +214,6 @@
 
       } catch (error) {
         console.error('Error loading dashboard stats:', error);
-        // Show error state
         document.querySelectorAll('.stat-number').forEach(el => {
           el.textContent = 'Error';
           el.className += ' error';
@@ -231,82 +221,74 @@
       }
     }
 
-    // Function to load latest events
     async function loadLatestEvents() {
       try {
-        const response = await fetch('/api/events');
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
+        const response = await fetch('http://localhost/3000/api/events');
+        if (!response.ok) throw new Error('Failed to fetch events');
 
         const events = await response.json();
         const eventsContainer = document.getElementById('eventsContainer');
 
-        if (events.length === 0) {
+        if (!events.length) {
           eventsContainer.innerHTML = '<p>No events available at the moment.</p>';
           return;
         }
 
-        // Display latest 3 events
-        const latestEvents = events.slice(0, 3);
-        let eventsHTML = '';
+        // Sort events by date and take latest 3
+        const latestEvents = events
+          .sort((a, b) => new Date(b.Date) - new Date(a.Date))
+          .slice(0, 3);
 
-        latestEvents.forEach(event => {
-          const eventDate = new Date(event.event_date).toLocaleDateString();
-          eventsHTML += `
-            <p>
-              <strong>${eventDate}:</strong> ${event.title} 
-              ${event.location ? `${event.location}` : ''}
-            </p>
+        document.getElementById('totalEvents').textContent = events.length;
+
+        const eventsHTML = latestEvents.map(event => {
+          const eventDate = new Date(event.Date).toLocaleDateString();
+          return `
+            <div class="event-card" style="
+              background: rgba(255, 255, 255, 0.7);
+              padding: 15px; margin-bottom: 10px;
+              border-radius: 12px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            ">
+              <strong>${eventDate}:</strong> ${event.Title}
+              ${event.Type ? `<br><em>Location: ${event.Type}</em>` : ''}
+              ${event.Description ? `<p>${event.Description}</p>` : ''}
+            </div>
           `;
-        });
+        }).join('');
 
         eventsContainer.innerHTML = eventsHTML;
 
       } catch (error) {
         console.error('Error loading events:', error);
-        document.getElementById('eventsContainer').innerHTML = 
+        document.getElementById('eventsContainer').innerHTML =
           '<p class="error">Failed to load events. Please try again later.</p>';
       }
     }
 
-    // Enhanced navigation function with error handling
     function goTo(page) {
       try {
-        // Add visual feedback
         event.target.style.transform = 'scale(0.95)';
         event.target.style.opacity = '0.7';
-        
-        setTimeout(() => {
-          window.location.href = page;
-        }, 150);
-      } catch (error) {
-        console.error('Navigation error:', error);
+        setTimeout(() => window.location.href = page, 150);
+      } catch {
         window.location.href = page;
       }
     }
 
-    // Enhanced logout function
     function logout() {
       if (confirm('Are you sure you want to logout?')) {
         try {
-          // Clear all session data
           localStorage.removeItem('userSession');
           sessionStorage.removeItem('userSession');
-          
-          // Show logout message
           alert("You've been logged out!");
-          
-          // Redirect to home page
           window.location.href = "/home";
-        } catch (error) {
-          console.error('Logout error:', error);
+        } catch {
           window.location.href = "/home";
         }
       }
     }
 
-    // Check if user is logged in
     function checkAuth() {
       if (!currentUser.studentId) {
         alert('Please log in to access the dashboard');
@@ -316,21 +298,17 @@
       return true;
     }
 
-    // Update header with user info
     function updateHeader() {
       if (currentUser.name) {
-        const header = document.querySelector('.header');
-        header.innerHTML = `HallHub Dashboard - Welcome, ${currentUser.name}!`;
+        document.querySelector('.header').innerHTML = `HallHub Dashboard - Welcome, ${currentUser.name}!`;
       }
     }
 
-    // Refresh dashboard data
     function refreshDashboard() {
       loadDashboardStats();
       loadLatestEvents();
     }
 
-    // Initialize dashboard when page loads
     document.addEventListener('DOMContentLoaded', function() {
       if (checkAuth()) {
         updateHeader();
@@ -339,7 +317,6 @@
       }
     });
 
-    // Add keyboard shortcuts
     document.addEventListener('keydown', function(event) {
       if (event.key === 'r' && event.ctrlKey) {
         event.preventDefault();
@@ -347,15 +324,8 @@
       }
     });
 
-    // Handle network connectivity
-    window.addEventListener('online', function() {
-      console.log('Connection restored, refreshing dashboard...');
-      refreshDashboard();
-    });
-
-    window.addEventListener('offline', function() {
-      console.log('Connection lost');
-    });
+    window.addEventListener('online', refreshDashboard);
+    window.addEventListener('offline', () => console.log('Connection lost'));
   </script>
 </body>
 </html>
