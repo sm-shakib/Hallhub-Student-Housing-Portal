@@ -77,19 +77,17 @@ app.post('/register', async (req, res) => {
     // Hash the password before saving
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Insert data into DB
-    const sql = `
-      INSERT INTO Student_Info
-      (student_id, name, email, department, level, address, phone_no, relative_name, relative_relation, relative_address, relative_phone_no, password_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    const [result] = await pool.execute(sql, [
-      studentId, name, email, department, level, address, phone,
-      relativeName, relativeRelation, relativeAddress, relativePhone,
-      passwordHash
-    ]);
+    // Call stored procedure
+    const [rows] = await pool.execute(
+      "CALL RegisterStudent(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        studentId, name, email, department, level, address, phone,
+        relativeName, relativeRelation, relativeAddress, relativePhone,
+        passwordHash
+      ]
+    );
 
-    res.json({ success: true, message: 'Student registered successfully' });
+    res.json({ success: true, message: rows[0][0].message });
    
   } catch (error) {
     console.error(error);
@@ -160,17 +158,12 @@ app.post('/api/events', async (req, res) => {
       return res.status(400).json({ error: 'Please provide title,Type,Description, date, and ID' });
     }
 
-    const sql = `
-      INSERT INTO events (Title,Type,Date, Description, Student_ID)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    const [result] = await pool.execute(sql, [Title,Type,Date, Description,Student_ID]);
+    const [rows] = await pool.execute(
+    "CALL CreateEvent(?, ?, ?, ?, ?)",
+      [Type, Date, Description, Student_ID]
+    );
 
-    res.json({
-      success: true,
-      message: 'Event created successfully',
-      eventId: result.insertId
-    });
+    res.json(rows[0][0]);
 
   } catch (error) {
     console.error(error);
@@ -311,30 +304,24 @@ app.get('/api/complaints', async (req, res) => {
 
 app.post('/api/complaints', async (req, res) => {
   try {
-    const { title, description, student_id } = req.body;
+    const { time, status, description, student_id, title } = req.body;
 
-    if (!title || !description || !student_id) {
-      return res.status(400).json({ error: 'Please provide title, description, and student_id' });
+    if (!description || !title) {
+      return res.status(400).json({ error: 'Please provide title and description' });
     }
 
-    const sql = `
-      INSERT INTO complaint (title, description, student_id)
-      VALUES (?, ?, ?)
-    `;
-    const [result] = await pool.execute(sql, [title, description, student_id]);
+    const [rows] = await pool.execute(
+    "CALL CreateComplaint(?, ?, ?, ?, ?)",
+      [time, status, description, student_id, title]
+    );
 
-    res.json({
-      success: true,
-      message: 'Complaint submitted successfully',
-      complaintId: result.insertId
-    });
+    res.json(rows[0][0]);
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to submit complaint' });
   }
 });
-
 
 app.put('/api/complaints/:id/resolve', async (req, res) => {
   try {
