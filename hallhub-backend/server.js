@@ -15,7 +15,6 @@ app.use(bodyParser.json());
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Create a connection pool to freeaqldatabase.com database
 const pool = mysql.createPool({
   host: 'mysql-71ed2b0-hallhub-1.g.aivencloud.com',
   port: 28592,//port updated
@@ -364,18 +363,24 @@ app.get('/api/allocations', async (req, res) => {
   try {
     const { student_id } = req.query;
     let sql = `
-      SELECT ra.*, si.name as student_name 
-      FROM Room_Allocations ra 
-      LEFT JOIN Student_Info si ON ra.student_id = si.student_id
+      SELECT 
+        ra.Hall_No AS Hall_No,
+        ha.Place AS Hall_Place,
+        ra.Room_No AS Room_No,
+        ra.Alloc_Start_Time AS Alloc_Start_Time,
+        ra.Alloc_End_Time AS Alloc_End_Time
+      FROM room_allocation ra
+      LEFT JOIN hall ha ON ra.Hall_No = ha.Hall_No
     `;
+
     let params = [];
     
     if (student_id) {
-      sql += ' WHERE ra.student_id = ?';
+      sql += ' WHERE ra.Student_ID = ?';
       params.push(student_id);
     }
     
-    sql += ' ORDER BY ra.allocation_date DESC';
+    sql += ' ORDER BY ra.Alloc_Start_Time DESC';
     const [rows] = await pool.execute(sql, params);
     res.json(rows);
   } catch (error) {
@@ -384,31 +389,31 @@ app.get('/api/allocations', async (req, res) => {
   }
 });
 
-app.post('/api/allocations', async (req, res) => {
-  try {
-    const { student_id, room_number, building, allocation_date, fee_status } = req.body;
+// app.post('/api/allocations', async (req, res) => {
+//   try {
+//     const { student_id, room_number, building, allocation_date, fee_status } = req.body;
 
-    if (!student_id || !room_number || !building) {
-      return res.status(400).json({ error: 'Please provide student ID, room number, and building' });
-    }
+//     if (!student_id || !room_number || !building) {
+//       return res.status(400).json({ error: 'Please provide student ID, room number, and building' });
+//     }
 
-    const sql = `
-      INSERT INTO Room_Allocations (student_id, room_number, building, allocation_date, fee_status)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    const [result] = await pool.execute(sql, [student_id, room_number, building, allocation_date, fee_status || 'unpaid']);
+//     const sql = `
+//       INSERT INTO Room_Allocations (student_id, room_number, building, allocation_date, fee_status)
+//       VALUES (?, ?, ?, ?, ?)
+//     `;
+//     const [result] = await pool.execute(sql, [student_id, room_number, building, allocation_date, fee_status || 'unpaid']);
 
-    res.json({
-      success: true,
-      message: 'Room allocation created successfully',
-      allocationId: result.insertId
-    });
+//     res.json({
+//       success: true,
+//       message: 'Room allocation created successfully',
+//       allocationId: result.insertId
+//     });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to create allocation' });
-  }
-});
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Failed to create allocation' });
+//   }
+// });
 
 // API routes for visitor applications
 app.get('/api/visitor-applications', async (req, res) => {
