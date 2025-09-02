@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8" />
+ <title>Show My Complaints</title>
+ <style>
+   body {
+     background: linear-gradient(to right, #c2e9fb, #a1c4fd);
+     font-family: 'Segoe UI', sans-serif;
+     margin: 0;
+     padding: 0;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     min-height: 100vh;
+     color: #333;
+   }
+
+   .header {
+     font-size: 2rem;
+     font-weight: bold;
+     padding: 20px;
+     text-align: center;
+   }
+
+   .auto-load-container {
+     background: rgba(255,255,255,0.6);
+     backdrop-filter: blur(8px);
+     padding: 25px;
+     border-radius: 20px;
+     width: 90%;
+     max-width: 600px;
+     box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+     margin-bottom: 20px;
+     text-align: center;
+   }
+
+   .student-info {
+     background: rgba(106, 130, 251, 0.1);
+     padding: 15px;
+     border-radius: 12px;
+     margin-bottom: 20px;
+     border-left: 4px solid #6a82fb;
+   }
+
+   .complaint-list {
+     background: rgba(255,255,255,0.5);
+     backdrop-filter: blur(6px);
+     border-radius: 16px;
+     padding: 20px;
+     width: 90%;
+     max-width: 700px;
+     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+     animation: fadeIn 1s ease;
+     margin-bottom: 20px;
+   }
+
+   .complaint-card {
+     background: rgba(255,255,255,0.7);
+     border-radius: 12px;
+     padding: 20px;
+     margin-bottom: 15px;
+     border-left: 5px solid #6a82fb;
+     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+     transition: transform 0.2s ease;
+   }
+
+   .complaint-card:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+   }
+
+   .complaint-card.pending {
+     border-left-color: #ffa500;
+   }
+
+   .complaint-card.resolved {
+     border-left-color: #38ef7d;
+   }
+
+   .complaint-header {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     margin-bottom: 10px;
+   }
+
+   .complaint-id {
+     font-weight: bold;
+     color: #6a82fb;
+     font-size: 1.1rem;
+   }
+
+   .status-badge {
+     display: inline-block;
+     padding: 4px 12px;
+     border-radius: 20px;
+     font-size: 0.9rem;
+     font-weight: bold;
+   }
+
+   .status-pending {
+     background: rgba(255, 165, 0, 0.2);
+     color: #ff8c00;
+   }
+
+   .status-resolved {
+     background: rgba(56, 239, 125, 0.2);
+     color: #11998e;
+   }
+
+   .complaint-title {
+     font-weight: bold;
+     font-size: 1.1rem;
+     margin-bottom: 8px;
+     color: #333;
+   }
+
+   .complaint-description {
+     color: #666;
+     margin-bottom: 10px;
+     line-height: 1.5;
+   }
+
+   .complaint-meta {
+     display: flex;
+     justify-content: space-between;
+     font-size: 0.9rem;
+     color: #888;
+     margin-top: 10px;
+   }
+
+   .no-complaints {
+     text-align: center;
+     color: #666;
+     font-style: italic;
+     padding: 40px;
+   }
+
+   .loading-message {
+     color: #6a82fb;
+     background: rgba(106, 130, 251, 0.1);
+     padding: 20px;
+     border-radius: 12px;
+     text-align: center;
+     border-left: 5px solid #6a82fb;
+   }
+
+   .error-message {
+     color: #e74c3c;
+     background: rgba(231, 76, 60, 0.1);
+     padding: 20px;
+     border-radius: 12px;
+     text-align: center;
+     border-left: 5px solid #e74c3c;
+   }
+
+   .refresh-btn {
+     background: #6a82fb;
+     color: white;
+     padding: 10px 20px;
+     border: none;
+     border-radius: 25px;
+     font-weight: bold;
+     cursor: pointer;
+     margin-top: 15px;
+     transition: all 0.3s ease;
+   }
+
+   .refresh-btn:hover {
+     background: #fc5c7d;
+     transform: scale(1.05);
+   }
+
+   .refresh-btn:disabled {
+     background: #ccc;
+     transform: none;
+     cursor: not-allowed;
+   }
+
+   .back-link {
+     margin-top: 15px;
+   }
+
+   .back-link a {
+     text-decoration: none;
+     font-weight: bold;
+     color: #0056b3;
+     padding: 10px 20px;
+     border-radius: 20px;
+     background: rgba(255, 255, 255, 0.3);
+     transition: all 0.3s ease;
+   }
+
+   .back-link a:hover {
+     background: rgba(255, 255, 255, 0.6);
+     text-decoration: none;
+   }
+
+   @keyframes fadeIn {
+     from {opacity: 0;}
+     to {opacity: 1;}
+   }
+ </style>
+</head>
+<body>
+ <div class="header">📂 View Your Complaints</div>
+
+ <div class="auto-load-container">
+   <div class="student-info">
+     <h3>Student Information</h3>
+     <p id="studentInfo">Loading student information...</p>
+     <button class="refresh-btn" id="refreshBtn" onclick="loadComplaints()">🔄 Refresh Complaints</button>
+   </div>
+ </div>
+
+ <div id="complaintsOutput" class="complaint-list"></div>
+
+ <div class="back-link">
+   <a href="dashb.html">← Back to Dashboard</a>
+ </div>
+
+ <script>
+   // Get current user data from localStorage
+   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
+   // Check if user is logged in
+   //if (!currentUser.studentId) {
+     //alert('Please log in to view your complaints');
+     //window.location.href = '/';
+   //}
+
+   // Display student information
+   document.getElementById('studentInfo').innerHTML = `
+     <strong>Student ID:</strong> ${currentUser.studentId}<br>
+     <strong>Name:</strong> ${currentUser.name || 'N/A'}<br>
+     <strong>Email:</strong> ${currentUser.email || 'N/A'}
+   `;
+
+   // Function to load complaints
+   async function loadComplaints() {
+     const outputBox = document.getElementById('complaintsOutput');
+     const refreshBtn = document.getElementById('refreshBtn');
+
+     try {
+       // Show loading state
+       refreshBtn.disabled = true;
+       refreshBtn.textContent = '🔄 Loading...';
+       
+       outputBox.innerHTML = '<div class="loading-message">🔍 Loading your complaints...</div>';
+
+       // Fetch complaints from backend
+       const response = await fetch(`/api/complaints`);
+       
+       if (!response.ok) {
+         throw new Error('Failed to fetch complaints');
+       }
+
+       const allComplaints = await response.json();
+       
+       // Filter complaints for current user
+       const userComplaints = allComplaints.filter(complaint => 
+         complaint.student_id === currentUser.studentId
+       );
+
+       if (userComplaints.length === 0) {
+         outputBox.innerHTML = `
+           <div class="no-complaints">
+             <h3>📭 No Complaints Found</h3>
+             <p>You haven't submitted any complaints yet.</p>
+             <p>If you have any issues, feel free to <a href="/complaints" style="color: #6a82fb;">submit a complaint</a>.</p>
+           </div>
+         `;
+       } else {
+         // Display complaints
+         outputBox.innerHTML = userComplaints.map(complaint => {
+           const complaintDate = new Date(complaint.complaint_date).toLocaleDateString();
+           const resolvedDate = complaint.resolved_date ? 
+             new Date(complaint.resolved_date).toLocaleDateString() : null;
+
+           return `
+             <div class="complaint-card ${complaint.status}">
+               <div class="complaint-header">
+                 <span class="complaint-id">#${complaint.complaint_id}</span>
+                 <span class="status-badge status-${complaint.status}">
+                   ${complaint.status.toUpperCase()}
+                 </span>
+               </div>
+               <div class="complaint-title">${complaint.title}</div>
+               <div class="complaint-description">${complaint.description}</div>
+               ${complaint.status === 'resolved' && complaint.resolution ? `
+                 <div style="background: rgba(56, 239, 125, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px;">
+                   <strong>Resolution:</strong> ${complaint.resolution}
+                 </div>
+               ` : ''}
+               <div class="complaint-meta">
+                 <span>Submitted: ${complaintDate}</span>
+                 ${resolvedDate ? `<span>Resolved: ${resolvedDate}</span>` : ''}
+               </div>
+             </div>
+           `;
+         }).join('');
+       }
+
+     } catch (error) {
+       console.error('Error loading complaints:', error);
+       outputBox.innerHTML = `
+         <div class="error-message">
+           <h3>❌ Error Loading Complaints</h3>
+           <p>Failed to load your complaints. Please check your connection and try again.</p>
+         </div>
+       `;
+     } finally {
+       // Reset button
+       refreshBtn.disabled = false;
+       refreshBtn.textContent = '🔄 Refresh Complaints';
+     }
+   }
+
+   // Load complaints when page loads
+   document.addEventListener('DOMContentLoaded', function() {
+     loadComplaints();
+   });
+ </script>
+</body>
+</html>
