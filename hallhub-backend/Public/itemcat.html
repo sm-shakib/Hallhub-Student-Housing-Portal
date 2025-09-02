@@ -112,7 +112,7 @@
       fetchBtn.disabled = true;
       fetchBtn.textContent = 'Loading...';
       
-      fetch('/api/items')
+      fetch('http://localhost:3000/api/items')
         .then(response => {
           console.log('Response received:', response.status, response.statusText);
           
