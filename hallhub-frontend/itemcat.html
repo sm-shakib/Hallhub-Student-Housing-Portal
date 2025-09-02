@@ -49,14 +49,19 @@
 
   <script>
      
-   function fetchCategories() {
+  function fetchCategories() {
   fetch('/api/items') // API route to fetch items
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok ' + response.statusText);
+      }
+      return response.json();
+    })
     .then(data => {
+      console.log('Fetched Items:', data); // Log fetched data to check it
       const categoriesContainer = document.getElementById("categoriesContainer");
       categoriesContainer.innerHTML = ''; // Clear existing content
 
-      // Check if data is empty
       if (data.length === 0) {
         categoriesContainer.innerHTML = '<p>No items available.</p>';
       } else {
@@ -72,9 +77,11 @@
       }
     })
     .catch(error => {
-      alert("Error fetching items: " + error);
+      console.error('Failed to fetch items:', error);
+      alert("Error fetching items: " + error.message); // Show the error to the user
     });
 }
+
 
   </script>
 </body>
