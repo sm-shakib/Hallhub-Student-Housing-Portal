@@ -177,10 +177,10 @@
         .catch(error => {
           console.error('Server connection failed:', error);
           document.getElementById("categoriesContainer").innerHTML = `
-            //<div class="error">
-             // <strong>Server Connection Failed</strong><br>
-             // Make sure your server is running on port 3000
-           // </div>
+            <div class="error">
+              <strong>Server Connection Failed</strong><br>
+              Make sure your server is running on port 3000
+            </div>
           `;
         });
     };
