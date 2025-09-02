@@ -48,9 +48,34 @@
   </div>
 
   <script>
-    function fetchCategories() {
-      alert("Category table will be loaded here from backend.");
-    }
+     
+   function fetchCategories() {
+  fetch('/api/items') // API route to fetch items
+    .then(response => response.json())
+    .then(data => {
+      const categoriesContainer = document.getElementById("categoriesContainer");
+      categoriesContainer.innerHTML = ''; // Clear existing content
+
+      // Check if data is empty
+      if (data.length === 0) {
+        categoriesContainer.innerHTML = '<p>No items available.</p>';
+      } else {
+        data.forEach(item => {
+          const itemRow = document.createElement("div");
+          itemRow.classList.add("category-item");
+          itemRow.innerHTML = `
+            <h3>Item ID: ${item.Item_ID}</h3>
+            <p><strong>Item Type:</strong> ${item.Item_Type}</p>
+          `;
+          categoriesContainer.appendChild(itemRow);
+        });
+      }
+    })
+    .catch(error => {
+      alert("Error fetching items: " + error);
+    });
+}
+
   </script>
 </body>
 </html>

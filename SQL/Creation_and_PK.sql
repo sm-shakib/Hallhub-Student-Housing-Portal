@@ -1,21 +1,3 @@
-<<<<<<< HEAD
-CREATE TABLE Student_Info (
-    Serial_No INT AUTO_INCREMENT,
-    Student_Id VARCHAR(50) NOT NULL,
-    Name VARCHAR(100) NOT NULL,
-    Email VARCHAR(100) NOT NULL,
-    Department VARCHAR(100) NOT NULL,
-    Level VARCHAR(50) NOT NULL,
-    Address TEXT NOT NULL,
-    Phone_No VARCHAR(20) NOT NULL,
-    Relative_Name VARCHAR(100) NOT NULL,
-    Relative_Relation VARCHAR(50) NOT NULL,
-    Relative_Address TEXT NOT NULL,
-    Relative_Phone_no VARCHAR(20) NOT NULL,
-    Password_Hash VARCHAR(255) NOT NULL,
-    Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (Serial_No, Student_Id)
-=======
 CREATE TABLE student_info (
   Student_ID bigint NOT NULL,
   Name varchar(40) NOT NULL,
@@ -30,7 +12,6 @@ CREATE TABLE student_info (
   Relative_Relation varchar(25) NOT NULL,
   Relative_Phone_No varchar(25) NOT NULL,
   PRIMARY KEY (Student_ID)
->>>>>>> origin/Database-Wasif
 );
 
 CREATE TABLE resident (
