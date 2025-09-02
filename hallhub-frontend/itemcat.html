@@ -11,15 +11,18 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
     }
     .container {
       background: white;
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-      width: 350px;
+      width: 100%;
+      max-width: 500px;
       text-align: center;
     }
     h2 {
@@ -35,56 +38,150 @@
       cursor: pointer;
       font-size: 16px;
       transition: background-color 0.3s ease;
+      margin-bottom: 20px;
     }
     button:hover {
       background-color: #e6676f;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .categories {
+      margin-top: 20px;
+      text-align: left;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .category-item {
+      margin-bottom: 15px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+    }
+    .category-item:hover {
+      background-color: #e9ecef;
+    }
+    .category-item h3 {
+      margin: 0 0 10px 0;
+      color: #495057;
+      font-size: 18px;
+    }
+    .category-item p {
+      margin: 5px 0;
+      color: #6c757d;
+      font-size: 14px;
+    }
+    .loading {
+      color: #666;
+      font-style: italic;
+    }
+    .error {
+      color: #dc3545;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .no-data {
+      color: #6c757d;
+      font-style: italic;
+      text-align: center;
+      padding: 20px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>See Item Categories</h2>
-    <button onclick="fetchCategories()">View Categories</button>
+    <h2>Item Categories</h2>
+    <button onclick="fetchCategories()" id="fetchBtn">View Categories</button>
     <div id="categoriesContainer" class="categories"></div>
   </div>
 
-
   <script>
-     
-  function fetchCategories() {
-  fetch('/api/items') // API route to fetch items
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok ' + response.statusText);
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Fetched Items:', data); // Log fetched data to check it
+    function fetchCategories() {
+      console.log('Starting fetch...'); // Debug log
+      
       const categoriesContainer = document.getElementById("categoriesContainer");
-      categoriesContainer.innerHTML = ''; // Clear existing content
+      const fetchBtn = document.getElementById("fetchBtn");
+      
+      // Show loading state
+      categoriesContainer.innerHTML = '<p class="loading">Loading items...</p>';
+      fetchBtn.disabled = true;
+      fetchBtn.textContent = 'Loading...';
+      
+      fetch('/api/items')
+        .then(response => {
+          console.log('Response received:', response.status, response.statusText);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Data received:', data);
+          console.log('Data length:', data ? data.length : 'null');
+          
+          categoriesContainer.innerHTML = ''; // Clear loading message
 
-      if (data.length === 0) {
-        categoriesContainer.innerHTML = '<p>No items available.</p>';
-      } else {
-        data.forEach(item => {
-          const itemRow = document.createElement("div");
-          itemRow.classList.add("category-item");
-          itemRow.innerHTML = `
-            <h3>Item ID: ${item.Item_ID}</h3>
-            <p><strong>Item Type:</strong> ${item.Item_Type}</p>
+          if (!data || data.length === 0) {
+            categoriesContainer.innerHTML = '<p class="no-data">No items found in the database.</p>';
+          } else {
+            data.forEach((item, index) => {
+              console.log(`Item ${index}:`, item); // Log each item
+              
+              const itemRow = document.createElement("div");
+              itemRow.classList.add("category-item");
+              
+              // Handle different possible column name formats
+              const itemId = item.Item_ID || item.item_id || item.id || 'Unknown ID';
+              const itemType = item.Item_Type || item.item_type || item.type || 'Unknown Type';
+              
+              itemRow.innerHTML = `
+                <h3>Item ID: ${itemId}</h3>
+                <p><strong>Item Type:</strong> ${itemType}</p>
+              `;
+              categoriesContainer.appendChild(itemRow);
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Detailed error:', error);
+          categoriesContainer.innerHTML = `
+            <div class="error">
+              <strong>Error fetching items:</strong><br>
+              ${error.message}<br>
+              <small>Check console for more details</small>
+            </div>
           `;
-          categoriesContainer.appendChild(itemRow);
+        })
+        .finally(() => {
+          // Re-enable button
+          fetchBtn.disabled = false;
+          fetchBtn.textContent = 'View Categories';
         });
-      }
-    })
-    .catch(error => {
-      console.error('Failed to fetch items:', error);
-      alert("Error fetching items: " + error.message); // Show the error to the user
-    });
-}
-
-
+    }
+    
+    // Test server connection on page load
+    window.onload = function() {
+      console.log('Page loaded, testing server connection...');
+      
+      fetch('/test-connection')
+        .then(response => response.json())
+        .then(data => {
+          console.log('Server connection test:', data);
+        })
+        .catch(error => {
+          console.error('Server connection failed:', error);
+          document.getElementById("categoriesContainer").innerHTML = `
+            <div class="error">
+              <strong>Server Connection Failed</strong><br>
+              Make sure your server is running on port 3000
+            </div>
+          `;
+        });
+    };
   </script>
-</body>
-</html>
