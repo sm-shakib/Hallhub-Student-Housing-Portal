@@ -11,15 +11,17 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
+      padding: 20px;
     }
     .wrapper {
       background-color: white;
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-      width: 400px;
+      width: 100%;
+      max-width: 600px;
       text-align: center;
     }
     h2 {
@@ -27,12 +29,13 @@
       color: #333;
     }
     input {
-      width: 100%;
-      padding: 10px;
+      width: 70%;
+      padding: 12px;
       border: 1px solid #ccc;
       border-radius: 8px;
-      margin-bottom: 16px;
+      margin-right: 10px;
       transition: 0.3s ease;
+      font-size: 16px;
     }
     input:focus {
       border-color: #a1c4fd;
@@ -41,69 +44,199 @@
     button {
       background-color: #a1c4fd;
       color: white;
-      padding: 10px;
+      padding: 12px 20px;
       border: none;
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
-      width: 100%;
       transition: background-color 0.3s ease;
     }
     button:hover {
       background-color: #86b2f0;
     }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .loading {
+      opacity: 0.6;
+    }
     .results {
-      margin-top: 15px;
+      margin-top: 25px;
       text-align: left;
       font-size: 14px;
       color: #444;
     }
     .item {
-      background-color: #f0faff;
-      padding: 10px;
+      background-color: #f8f9ff;
+      padding: 15px;
       border-radius: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-left: 4px solid #a1c4fd;
+    }
+    .item-header {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    .item-detail {
+      margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .item-detail strong {
+      color: #666;
+      min-width: 120px;
+    }
+    .message {
+      text-align: center;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .input-section {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    @media (max-width: 600px) {
+      .input-section {
+        flex-direction: column;
+      }
+      input {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
+      button {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
   <div class="wrapper">
     <h2>My Lost Items</h2>
-    <input type="text" id="studentId" placeholder="Enter Student ID" required />
-    <button onclick="fetchLostItems()">See Items</button>
+    
+    <div class="input-section">
+      <input type="number" id="studentId" placeholder="Enter Student ID" required />
+      <button onclick="fetchLostItems()" id="searchBtn">Search Items</button>
+    </div>
+    
     <div class="results" id="itemsDisplay"></div>
   </div>
 
   <script>
-    function fetchLostItems() {
-      const id = document.getElementById("studentId").value.trim();
+    async function fetchLostItems() {
+      const studentId = document.getElementById("studentId").value.trim();
       const output = document.getElementById("itemsDisplay");
+      const searchBtn = document.getElementById("searchBtn");
+      const wrapper = document.querySelector('.wrapper');
+      
+      // Clear previous results
       output.innerHTML = "";
 
-      if (!id) {
-        output.innerHTML = "Please enter a valid Student ID.";
+      // Validate input
+      if (!studentId) {
+        output.innerHTML = '<div class="message error">Please enter a valid Student ID.</div>';
         return;
       }
 
-      // Mocked lost items list
-      const mockData = [
-        { itemId: "L101", desc: "Black Wallet", date: "2025-07-22" },
-        { itemId: "L205", desc: "USB Drive 32GB", date: "2025-07-25" },
-        { itemId: "L322", desc: "Student ID Card", date: "2025-07-30" }
-      ];
+      // Show loading state
+      searchBtn.disabled = true;
+      searchBtn.textContent = "Searching...";
+      wrapper.classList.add('loading');
 
-      mockData.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "item";
-        div.innerHTML = `
-          <strong>Item ID:</strong> ${item.itemId}<br>
-          <strong>Description:</strong> ${item.desc}<br>
-          <strong>Lost Date:</strong> ${item.date}
-        `;
-        output.appendChild(div);
-      });
+      try {
+        // Fetch data from API
+        const response = await fetch(`http://localhost:3000/api/student-lostitems/${studentId}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch lost items');
+        }
+
+        if (data.success && data.items.length > 0) {
+          // Display found items
+          output.innerHTML = '<div class="message success">Found ' + data.items.length + ' lost item(s):</div>';
+          
+          data.items.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "item";
+            
+            // Format date
+            const lostDate = new Date(item.Lost_Time).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            
+            div.innerHTML = `
+              <div class="item-header">Lost Item #${item.Lost_ID}</div>
+              <div class="item-detail">
+                <strong>Item Type:</strong>
+                <span>${item.Item_Type || 'Not specified'}</span>
+              </div>
+              <div class="item-detail">
+                <strong>Description:</strong>
+                <span>${item.Description}</span>
+              </div>
+              <div class="item-detail">
+                <strong>Date Lost:</strong>
+                <span>${lostDate}</span>
+              </div>
+              <div class="item-detail">
+                <strong>Student Name:</strong>
+                <span>${item.student_name || 'Unknown'}</span>
+              </div>
+            `;
+            output.appendChild(div);
+          });
+          
+        } else {
+          // No items found
+          output.innerHTML = '<div class="message info">No lost items found for Student ID: ' + studentId + '</div>';
+        }
+        
+      } catch (error) {
+        console.error('Error fetching lost items:', error);
+        output.innerHTML = '<div class="message error">Error: ' + error.message + '</div>';
+        
+      } finally {
+        // Reset loading state
+        searchBtn.disabled = false;
+        searchBtn.textContent = "Search Items";
+        wrapper.classList.remove('loading');
+      }
     }
+
+    // Allow Enter key to trigger search
+    document.getElementById("studentId").addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        fetchLostItems();
+      }
+    });
   </script>
 </body>
 </html>
