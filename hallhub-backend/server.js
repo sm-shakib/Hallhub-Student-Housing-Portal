@@ -306,7 +306,7 @@ app.get('/api/student-lostitems/:studentId', async (req, res) => {
         li.Student_ID,
         si.Name as student_name,
         li.Item_ID,
-        li.Item_Type,
+        i.Item_Type,
         li.Description,
         li.Lost_Time
       FROM lost_item li
