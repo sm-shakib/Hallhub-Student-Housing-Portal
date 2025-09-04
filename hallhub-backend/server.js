@@ -276,14 +276,30 @@ app.get('/api/lostitems', async (req, res) => {
 
 
 // API route to get lost items for a specific student
+
 app.get('/api/student-lostitems/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
+    
+    console.log('Fetching lost items for student:', studentId); // Debug log
     
     if (!studentId) {
       return res.status(400).json({ error: 'Student ID is required' });
     }
 
+    // First check if student exists
+    const checkStudentSql = 'SELECT Student_ID FROM student_info WHERE Student_ID = ?';
+    const [studentExists] = await pool.execute(checkStudentSql, [studentId]);
+    
+    if (studentExists.length === 0) {
+      return res.json({
+        success: true,
+        message: 'Student ID not found',
+        items: []
+      });
+    }
+
+    // Query to get lost items for the student
     const sql = `
       SELECT 
         li.Lost_ID,
@@ -300,27 +316,27 @@ app.get('/api/student-lostitems/:studentId', async (req, res) => {
       ORDER BY li.Lost_Time DESC
     `;
     
+    console.log('Executing query:', sql); // Debug log
+    console.log('With parameter:', studentId); // Debug log
+    
     const [rows] = await pool.execute(sql, [studentId]);
     
-    if (rows.length === 0) {
-      return res.json({ 
-        success: true, 
-        message: 'No lost items found for this student ID',
-        items: [] 
-      });
-    }
+    console.log('Query result:', rows); // Debug log
     
     res.json({
       success: true,
-      items: rows
+      items: rows,
+      count: rows.length
     });
     
   } catch (error) {
     console.error('Error fetching student lost items:', error);
-    res.status(500).json({ error: 'Failed to fetch lost items' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch lost items: ' + error.message 
+    });
   }
 });
-
 
 // API routes for found items - Updated to match expected frontend data
 app.get('/api/founditems', async (req, res) => {
