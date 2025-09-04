@@ -122,7 +122,7 @@
      const msgElement = document.getElementById('submissionMsg');
      
      try {
-       const response = await fetch('/api/item-types');
+       const response = await fetch('http://localhost:3000/api/item-types');
        const itemTypes = await response.json();
        
        if (response.ok) {
@@ -179,7 +179,7 @@
 
      try {
        // Send data to server
-       const response = await fetch('/api/lostitems', {
+       const response = await fetch('http://localhost:3000/api/lostitems', {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
