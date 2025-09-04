@@ -31,7 +31,7 @@
      margin-bottom: 8px;
      font-weight: 600;
    }
-   input, textarea {
+   input, textarea, select {
      width: 100%;
      padding: 10px;
      border: 1px solid #ccc;
@@ -40,9 +40,12 @@
      transition: 0.3s ease;
      box-sizing: border-box;
    }
-   input:focus, textarea:focus {
+   input:focus, textarea:focus, select:focus {
      border-color: #667eea;
      outline: none;
+   }
+   select {
+     cursor: pointer;
    }
    button {
      width: 100%;
@@ -75,22 +78,27 @@
    .msg.error {
      color: #dc3545;
    }
+   .loading {
+     opacity: 0.6;
+   }
  </style>
 </head>
 <body>
  <div class="form-wrapper">
    <h2>Lost Item Report</h2>
    <form id="lostForm">
-     <label for="studentId">Student ID</label>
-     <input type="text" id="studentId" placeholder="Enter your student ID" required>
+     <label for="studentId">Student ID *</label>
+     <input type="number" id="studentId" placeholder="Enter your student ID" required>
      
-     <label for="itemId">Item ID</label>
-     <input type="text" id="itemId" placeholder="Enter Item ID" required>
+     <label for="itemId">Item Type *</label>
+     <select id="itemId" required>
+       <option value="">Loading item types...</option>
+     </select>
      
-     <label for="description">Item Description</label>
-     <textarea id="description" rows="2" placeholder="Describe the item (color, brand, distinctive features)" required></textarea>
+     <label for="description">Item Description *</label>
+     <textarea id="description" rows="3" placeholder="Describe the item (color, brand, distinctive features, etc.)" required></textarea>
      
-     <label for="lostDate">Date Lost</label>
+     <label for="lostDate">Date Lost *</label>
      <input type="date" id="lostDate" required>
      
      <button type="submit" id="submitBtn">Submit Report</button>
@@ -99,26 +107,90 @@
  </div>
 
  <script>
+   // Load item types when page loads
+   document.addEventListener('DOMContentLoaded', async function() {
+     // Set max date to today
+     const today = new Date().toISOString().split('T')[0];
+     document.getElementById('lostDate').setAttribute('max', today);
+
+     // Load item types from the API
+     await loadItemTypes();
+   });
+
+   async function loadItemTypes() {
+     const itemSelect = document.getElementById('itemId');
+     const msgElement = document.getElementById('submissionMsg');
+     
+     console.log('Loading item types...'); // Debug log
+     
+     try {
+       console.log('Fetching from /api/item-types...'); // Debug log
+       const response = await fetch('/api/item-types');
+       const itemTypes = await response.json();
+       
+       console.log('Response status:', response.status); // Debug log
+       console.log('Item types received:', itemTypes); // Debug log
+       
+       if (response.ok && Array.isArray(itemTypes)) {
+         // Clear existing options
+         itemSelect.innerHTML = '<option value="">Select an item type...</option>';
+         
+         // Add item types to dropdown
+         itemTypes.forEach(item => {
+           console.log('Adding item:', item); // Debug log
+           const option = document.createElement('option');
+           option.value = item.Item_ID;
+           option.textContent = item.Item_Type;
+           itemSelect.appendChild(option);
+         });
+         
+         console.log('Dropdown populated successfully'); // Debug log
+       } else {
+         console.error('Invalid response:', response.status, itemTypes); // Debug log
+         itemSelect.innerHTML = '<option value="">Failed to load item types</option>';
+         msgElement.textContent = "Failed to load item types. Please refresh the page.";
+         msgElement.className = "msg error";
+       }
+     } catch (error) {
+       console.error('Error loading item types:', error);
+       itemSelect.innerHTML = '<option value="">Error loading item types</option>';
+       msgElement.textContent = "Error loading item types. Please refresh the page.";
+       msgElement.className = "msg error";
+     }
+   }
+
    document.getElementById("lostForm").addEventListener("submit", async function(e) {
      e.preventDefault();
      
      const submitBtn = document.getElementById("submitBtn");
      const msgElement = document.getElementById("submissionMsg");
+     const formWrapper = document.querySelector('.form-wrapper');
      
      // Disable submit button and show loading
      submitBtn.disabled = true;
      submitBtn.textContent = "Submitting...";
+     formWrapper.classList.add('loading');
      msgElement.textContent = "";
      msgElement.className = "msg";
      
      // Get form data
      const formData = {
        studentId: document.getElementById("studentId").value.trim(),
-       itemId: document.getElementById("itemId").value.trim(),
+       itemId: document.getElementById("itemId").value,
        description: document.getElementById("description").value.trim(),
        lostDate: document.getElementById("lostDate").value
      };
      
+     console.log('Form data:', formData); // Debug log
+     
+     // Client-side validation
+     if (!formData.studentId || !formData.itemId || !formData.description || !formData.lostDate) {
+       msgElement.textContent = "Please fill in all required fields";
+       msgElement.className = "msg error";
+       resetSubmitButton();
+       return;
+     }
+
      try {
        // Send data to server
        const response = await fetch('/api/lostitems', {
@@ -130,6 +202,7 @@
        });
        
        const result = await response.json();
+       console.log('Server response:', result); // Debug log
        
        if (result.success) {
          // Show success message
@@ -139,11 +212,13 @@
          // Reset form after success
          e.target.reset();
          
-         // Optional: Redirect after a delay
+         // Reset item dropdown to default
+         document.getElementById('itemId').value = "";
+         
+         // Show additional message
          setTimeout(() => {
-           msgElement.textContent = "Redirecting to dashboard...";
-           // window.location.href = '/dashboard'; // Uncomment if you want to redirect
-         }, 2000);
+           msgElement.textContent = "You can now close this window or report another item.";
+         }, 3000);
          
        } else {
          // Show error message from server
@@ -156,16 +231,14 @@
        msgElement.textContent = "❌ Network error. Please check your connection and try again.";
        msgElement.className = "msg error";
      } finally {
-       // Re-enable submit button
+       resetSubmitButton();
+     }
+
+     function resetSubmitButton() {
        submitBtn.disabled = false;
        submitBtn.textContent = "Submit Report";
+       formWrapper.classList.remove('loading');
      }
-   });
-
-   // Set max date to today (can't report future losses)
-   document.addEventListener('DOMContentLoaded', function() {
-     const today = new Date().toISOString().split('T')[0];
-     document.getElementById('lostDate').setAttribute('max', today);
    });
  </script>
 </body>
