@@ -241,7 +241,7 @@ app.post('/api/lostitems', async (req, res) => {
 // Add a route to get available item types for the dropdown
 app.get('/api/item-types', async (req, res) => {
   try {
-    const sql = 'SELECT Item_ID, Item_Type FROM item ORDER BY Item_Type';
+    const sql = 'SELECT * FROM item';
     const [rows] = await pool.execute(sql);
     res.json(rows);
   } catch (error) {
