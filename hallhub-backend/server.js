@@ -310,7 +310,7 @@ app.get('/api/student-lostitems/:studentId', async (req, res) => {
         li.Description,
         li.Lost_Time
       FROM lost_item li
-      LEFT JOIN student_Info si ON li.Student_ID = si.Student_ID 
+      LEFT JOIN Student_Info si ON li.Student_ID = si.Student_ID 
       LEFT JOIN item i ON li.Item_ID = i.Item_ID
       WHERE li.Student_ID = ?
       ORDER BY li.Lost_Time DESC
