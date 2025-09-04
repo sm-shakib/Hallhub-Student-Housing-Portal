@@ -178,59 +178,103 @@ app.post('/api/events', async (req, res) => {
   }
 });
 
-// API routes for lost items - Updated to match your frontend form exactly
-app.get('/api/lostitems', async (req, res) => {
-  try {
-    const sql = `
-      SELECT li.*, si.name as student_name 
-      FROM Lost_Items li 
-      LEFT JOIN Student_Info si ON li.student_id = si.student_id 
-      ORDER BY li.date_lost DESC
-    `;
-    const [rows] = await pool.execute(sql);
-    res.json(rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch lost items' });
-  }
-});
-
+// Updated API route for lost items to match the lost_item table structure
 app.post('/api/lostitems', async (req, res) => {
   try {
-    // Extract data matching your frontend form field names
     const { studentId, itemId, description, lostDate } = req.body;
 
-    // Validation - check for required fields using your form's field names
-    if (!studentId || !itemId || !lostDate) {
+    // Validation - check for required fields
+    if (!studentId || !itemId || !lostDate || !description) {
       return res.status(400).json({ 
-        error: 'Please provide Student ID, Item ID, and Date Lost' 
+        error: 'Please provide Student ID, Item ID, Description, and Date Lost' 
       });
     }
 
-    // Insert into database - map your form fields to database columns
+    // First, check if the student exists in the resident table
+    const checkStudentSql = 'SELECT Student_ID FROM resident WHERE Student_ID = ?';
+    const [studentExists] = await pool.execute(checkStudentSql, [studentId]);
+    
+    if (studentExists.length === 0) {
+      return res.status(400).json({ 
+        error: 'Student ID not found or not a resident' 
+      });
+    }
+
+    // Check if the Item_ID exists in the item table
+    const checkItemSql = 'SELECT Item_ID FROM item WHERE Item_ID = ?';
+    const [itemExists] = await pool.execute(checkItemSql, [itemId]);
+    
+    if (itemExists.length === 0) {
+      return res.status(400).json({ 
+        error: 'Invalid Item ID. Please select a valid item type.' 
+      });
+    }
+
+    // Convert date string to MySQL datetime format
+    const lostDateTime = new Date(lostDate + ' 00:00:00');
+
+    // Insert into lost_item table with correct column names
     const sql = `
-      INSERT INTO Lost_Items (student_id, item_name, description, date_lost)
+      INSERT INTO lost_item (Student_ID, Item_ID, Description, Lost_Time)
       VALUES (?, ?, ?, ?)
     `;
     
     const [result] = await pool.execute(sql, [
-      studentId,           // maps to student_id in database
-      itemId,             // maps to item_name in database  
-      description || '',  // description (optional)
-      lostDate            // maps to date_lost in database
+      studentId,           // maps to Student_ID
+      itemId,             // maps to Item_ID (foreign key)
+      description,        // maps to Description
+      lostDateTime        // maps to Lost_Time
     ]);
 
     res.json({
       success: true,
       message: 'Lost item reported successfully',
-      itemId: result.insertId
+      lostId: result.insertId
     });
 
   } catch (error) {
     console.error('Error submitting lost item:', error);
-    res.status(500).json({ error: 'Failed to report lost item' });
+    res.status(500).json({ error: 'Failed to report lost item: ' + error.message });
   }
 });
+
+// Add a route to get available item types for the dropdown
+app.get('/api/item-types', async (req, res) => {
+  try {
+    const sql = 'SELECT Item_ID, Item_Type FROM item ORDER BY Item_Type';
+    const [rows] = await pool.execute(sql);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching item types:', error);
+    res.status(500).json({ error: 'Failed to fetch item types' });
+  }
+});
+
+// Updated route to get lost items with proper joins
+app.get('/api/lostitems', async (req, res) => {
+  try {
+    const sql = `
+      SELECT 
+        li.Lost_ID,
+        li.Student_ID,
+        si.Name as student_name,
+        li.Item_ID,
+        i.Item_Type,
+        li.Description,
+        li.Lost_Time
+      FROM lost_item li
+      LEFT JOIN student_info si ON li.Student_ID = si.Student_ID 
+      LEFT JOIN item i ON li.Item_ID = i.Item_ID
+      ORDER BY li.Lost_Time DESC
+    `;
+    const [rows] = await pool.execute(sql);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching lost items:', error);
+    res.status(500).json({ error: 'Failed to fetch lost items' });
+  }
+});
+
 
 // API routes for found items - Updated to match expected frontend data
 app.get('/api/founditems', async (req, res) => {
