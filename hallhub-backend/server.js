@@ -191,7 +191,7 @@ app.post('/api/lostitems', async (req, res) => {
     }
 
     // First, check if the student exists in the resident table
-    const checkStudentSql = 'SELECT Student_ID FROM resident WHERE Student_ID = ?';
+    const checkStudentSql = 'SELECT Student_ID FROM Resident WHERE Student_ID = ?';
     const [studentExists] = await pool.execute(checkStudentSql, [studentId]);
     
     if (studentExists.length === 0) {
@@ -263,7 +263,7 @@ app.get('/api/lostitems', async (req, res) => {
         li.Description,
         li.Lost_Time
       FROM lost_item li
-      LEFT JOIN student_info si ON li.Student_ID = si.Student_ID 
+      LEFT JOIN student_Info si ON li.Student_ID = si.Student_ID 
       LEFT JOIN item i ON li.Item_ID = i.Item_ID
       ORDER BY li.Lost_Time DESC
     `;
