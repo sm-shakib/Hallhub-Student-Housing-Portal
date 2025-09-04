@@ -28,14 +28,16 @@
       margin-bottom: 20px;
       color: #333;
     }
+    .input-section {
+      margin-bottom: 20px;
+    }
     input {
-      width: 70%;
       padding: 12px;
       border: 1px solid #ccc;
       border-radius: 8px;
       margin-right: 10px;
-      transition: 0.3s ease;
       font-size: 16px;
+      width: 200px;
     }
     input:focus {
       border-color: #a1c4fd;
@@ -51,21 +53,16 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-    button:hover {
+    button:hover:not(:disabled) {
       background-color: #86b2f0;
     }
     button:disabled {
       background-color: #ccc;
       cursor: not-allowed;
     }
-    .loading {
-      opacity: 0.6;
-    }
     .results {
       margin-top: 25px;
       text-align: left;
-      font-size: 14px;
-      color: #444;
     }
     .item {
       background-color: #f8f9ff;
@@ -75,63 +72,33 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       border-left: 4px solid #a1c4fd;
     }
-    .item-header {
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 8px;
-      font-size: 16px;
-    }
-    .item-detail {
-      margin: 5px 0;
-      display: flex;
-      justify-content: space-between;
-    }
-    .item-detail strong {
-      color: #666;
-      min-width: 120px;
-    }
     .message {
-      text-align: center;
-      padding: 20px;
-      margin-top: 20px;
+      padding: 15px;
       border-radius: 8px;
+      margin: 15px 0;
       font-weight: 500;
-    }
-    .success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
     }
     .error {
       background-color: #f8d7da;
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
     .info {
       background-color: #d1ecf1;
       color: #0c5460;
       border: 1px solid #bee5eb;
     }
-    .input-section {
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    @media (max-width: 600px) {
-      .input-section {
-        flex-direction: column;
-      }
-      input {
-        width: 100%;
-        margin-right: 0;
-        margin-bottom: 10px;
-      }
-      button {
-        width: 100%;
-      }
+    .debug {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+      font-size: 12px;
+      text-align: left;
     }
   </style>
 </head>
@@ -152,7 +119,6 @@
       const studentId = document.getElementById("studentId").value.trim();
       const output = document.getElementById("itemsDisplay");
       const searchBtn = document.getElementById("searchBtn");
-      const wrapper = document.querySelector('.wrapper');
       
       // Clear previous results
       output.innerHTML = "";
@@ -166,68 +132,80 @@
       // Show loading state
       searchBtn.disabled = true;
       searchBtn.textContent = "Searching...";
-      wrapper.classList.add('loading');
+      output.innerHTML = '<div class="message info">Searching for lost items...</div>';
 
       try {
-        // Fetch data from API
+        console.log('Making request to:', `http://localhost:3000/api/student-lostitems/${studentId}`);
+        
         const response = await fetch(`http://localhost:3000/api/student-lostitems/${studentId}`);
-        const data = await response.json();
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
         
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch lost items');
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-
-        if (data.success && data.items.length > 0) {
-          // Display found items
-          output.innerHTML = '<div class="message success">Found ' + data.items.length + ' lost item(s):</div>';
-          
-          data.items.forEach(item => {
-            const div = document.createElement("div");
-            div.className = "item";
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        // Clear loading message
+        output.innerHTML = "";
+        
+        if (data.success) {
+          if (data.items && data.items.length > 0) {
+            // Display items
+            output.innerHTML = `<div class="message success">Found ${data.items.length} lost item(s) for Student ID: ${studentId}</div>`;
             
-            // Format date
-            const lostDate = new Date(item.Lost_Time).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
+            data.items.forEach(item => {
+              const div = document.createElement("div");
+              div.className = "item";
+              
+              const lostDate = new Date(item.Lost_Time).toLocaleString();
+              
+              div.innerHTML = `
+                <h4>Lost Item #${item.Lost_ID}</h4>
+                <p><strong>Item Type:</strong> ${item.Item_Type || 'Not specified'}</p>
+                <p><strong>Description:</strong> ${item.Description}</p>
+                <p><strong>Date Lost:</strong> ${lostDate}</p>
+                <p><strong>Student Name:</strong> ${item.student_name || 'Unknown'}</p>
+              `;
+              output.appendChild(div);
             });
-            
-            div.innerHTML = `
-              <div class="item-header">Lost Item #${item.Lost_ID}</div>
-              <div class="item-detail">
-                <strong>Item Type:</strong>
-                <span>${item.Item_Type || 'Not specified'}</span>
-              </div>
-              <div class="item-detail">
-                <strong>Description:</strong>
-                <span>${item.Description}</span>
-              </div>
-              <div class="item-detail">
-                <strong>Date Lost:</strong>
-                <span>${lostDate}</span>
-              </div>
-              <div class="item-detail">
-                <strong>Student Name:</strong>
-                <span>${item.student_name || 'Unknown'}</span>
-              </div>
-            `;
-            output.appendChild(div);
-          });
-          
+          } else {
+            output.innerHTML = `<div class="message info">No lost items found for Student ID: ${studentId}</div>`;
+          }
         } else {
-          // No items found
-          output.innerHTML = '<div class="message info">No lost items found for Student ID: ' + studentId + '</div>';
+          output.innerHTML = `<div class="message error">Error: ${data.error || 'Unknown error occurred'}</div>`;
         }
         
       } catch (error) {
-        console.error('Error fetching lost items:', error);
-        output.innerHTML = '<div class="message error">Error: ' + error.message + '</div>';
+        console.error('Fetch error:', error);
+        
+        let errorMessage = 'Unknown error occurred';
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          errorMessage = 'Cannot connect to server. Make sure the server is running on http://localhost:3000';
+        } else {
+          errorMessage = error.message;
+        }
+        
+        output.innerHTML = `
+          <div class="message error">
+            <strong>Error:</strong> ${errorMessage}
+          </div>
+          <div class="message debug">
+            <strong>Debug Info:</strong><br>
+            • Make sure your server is running<br>
+            • Check if the API endpoint exists<br>
+            • Open browser console (F12) for more details<br>
+            • Verify Student ID exists in database
+          </div>
+        `;
         
       } finally {
-        // Reset loading state
+        // Reset button state
         searchBtn.disabled = false;
         searchBtn.textContent = "Search Items";
-        wrapper.classList.remove('loading');
       }
     }
 
@@ -236,6 +214,20 @@
       if (event.key === "Enter") {
         fetchLostItems();
       }
+    });
+
+    // Test connection on page load
+    window.addEventListener('load', function() {
+      fetch('http://localhost:3000/test-connection')
+        .then(response => response.json())
+        .then(data => {
+          console.log('Server connection test:', data);
+        })
+        .catch(error => {
+          console.error('Server connection failed:', error);
+          document.getElementById('itemsDisplay').innerHTML = 
+            '<div class="message error">Cannot connect to server. Please make sure your server is running on port 3000.</div>';
+        });
     });
   </script>
 </body>
