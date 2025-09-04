@@ -288,7 +288,7 @@ app.get('/api/student-lostitems/:studentId', async (req, res) => {
     }
 
     // First check if student exists
-    const checkStudentSql = 'SELECT Student_ID FROM student_info WHERE Student_ID = ?';
+    const checkStudentSql = 'SELECT Student_ID FROM Student_Info WHERE Student_ID = ?';
     const [studentExists] = await pool.execute(checkStudentSql, [studentId]);
     
     if (studentExists.length === 0) {
