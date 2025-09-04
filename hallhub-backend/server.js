@@ -275,6 +275,53 @@ app.get('/api/lostitems', async (req, res) => {
 });
 
 
+// API route to get lost items for a specific student
+app.get('/api/student-lostitems/:studentId', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    
+    if (!studentId) {
+      return res.status(400).json({ error: 'Student ID is required' });
+    }
+
+    const sql = `
+      SELECT 
+        li.Lost_ID,
+        li.Student_ID,
+        si.Name as student_name,
+        li.Item_ID,
+        i.Item_Type,
+        li.Description,
+        li.Lost_Time
+      FROM lost_item li
+      LEFT JOIN student_info si ON li.Student_ID = si.Student_ID 
+      LEFT JOIN item i ON li.Item_ID = i.Item_ID
+      WHERE li.Student_ID = ?
+      ORDER BY li.Lost_Time DESC
+    `;
+    
+    const [rows] = await pool.execute(sql, [studentId]);
+    
+    if (rows.length === 0) {
+      return res.json({ 
+        success: true, 
+        message: 'No lost items found for this student ID',
+        items: [] 
+      });
+    }
+    
+    res.json({
+      success: true,
+      items: rows
+    });
+    
+  } catch (error) {
+    console.error('Error fetching student lost items:', error);
+    res.status(500).json({ error: 'Failed to fetch lost items' });
+  }
+});
+
+
 // API routes for found items - Updated to match expected frontend data
 app.get('/api/founditems', async (req, res) => {
   try {
