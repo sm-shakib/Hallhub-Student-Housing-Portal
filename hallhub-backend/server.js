@@ -360,7 +360,7 @@ app.get('/api/founditems/:lostId', async (req, res) => {
         i.Item_Type
       FROM found_item fi
       JOIN lost_item li ON fi.Lost_ID = li.Lost_ID
-      LEFT JOIN student_info si ON li.Student_ID = si.Student_ID
+      LEFT JOIN Student_Info si ON li.Student_ID = si.Student_ID
       LEFT JOIN item i ON li.Item_ID = i.Item_ID
       WHERE fi.Lost_ID = ?
       ORDER BY fi.Found_Time DESC
