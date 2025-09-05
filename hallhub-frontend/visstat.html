@@ -54,9 +54,11 @@
    }
 
    input[readonly] {
-     background-color: #f8f9fa;
-     color: #6c757d;
-   }
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  border-color: #e9ecef !important;
+}
 
    button {
      width: 100%;
@@ -182,10 +184,36 @@
     // window.location.href = '/';
    //}
 
+   // Session helper functions
+function getCurrentUser() {
+  try {
+    const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+    return userSession ? JSON.parse(userSession) : null;
+  } catch (error) {
+    console.error('Error parsing user session:', error);
+    return null;
+  }
+}
+
+// Initialize with current user's student ID
+document.addEventListener('DOMContentLoaded', function() {
+  const currentUser = getCurrentUser();
+  
+  if (!currentUser || !currentUser.studentId) {
+    alert('Please log in to check visitor status');
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  const checkIdField = document.getElementById('checkId');
+  checkIdField.value = currentUser.studentId;
+  checkIdField.readOnly = true;
+});
+
    // Initialize with current user's student ID
-   document.addEventListener('DOMContentLoaded', function() {
-     document.getElementById('checkId').value = currentUser.studentId;
-   });
+  // document.addEventListener('DOMContentLoaded', function() {
+    // document.getElementById('checkId').value = currentUser.studentId;
+   //});
 
    async function checkStatus() {
      const id = document.getElementById('checkId').value.trim();
