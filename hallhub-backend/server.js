@@ -341,26 +341,42 @@ app.get('/api/student-lostitems/:studentId', async (req, res) => {
 
 // API route to fetch found items by Lost ID
 
+// Replace the existing /api/founditems/:lostId endpoint in your server.js with this corrected version
 
 app.get('/api/founditems/:lostId', async (req, res) => {
   try {
     const { lostId } = req.params;
     
+    console.log('Looking up Lost ID:', lostId); // Debug log
+    
     const sql = `
-      SELECT fi.*, si.name as student_name
+      SELECT 
+        fi.Found_ID,
+        fi.Lost_ID,
+        fi.Found_Time,
+        li.Student_ID,
+        si.Name as student_name,
+        li.Description,
+        li.Lost_Time,
+        i.Item_Type
       FROM found_item fi
-      LEFT JOIN Student_Info si ON fi.student_id = si.student_id
-      WHERE fi.lost_id = ?
+      JOIN lost_item li ON fi.Lost_ID = li.Lost_ID
+      LEFT JOIN Student_Info si ON li.Student_ID = si.Student_ID
+      LEFT JOIN item i ON li.Item_ID = i.Item_ID
+      WHERE fi.Lost_ID = ?
       ORDER BY fi.Found_Time DESC
     `;
+    
     const [rows] = await pool.execute(sql, [lostId]);
+    
+    console.log('Query result:', rows); // Debug log
+    
     res.json(rows);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch found items' });
+    console.error('Error fetching found items:', error);
+    res.status(500).json({ error: 'Failed to fetch found items: ' + error.message });
   }
 });
-
 
 // API routes for complaints
 app.get('/api/complaints', async (req, res) => {
