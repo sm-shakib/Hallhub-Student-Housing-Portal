@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const port = 3000;
@@ -25,6 +27,19 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0
 });
+
+// Configure email transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'hallhub00@gmail.com',      
+    pass: 'hrvv skyo ffqf pgwv'           // app password
+  }
+});
+
+
+// Temporary in-memory OTP store (production: use Redis or DB)
+const otpStore = new Map();
 
 app.get('/test-connection', async (req, res) => {
   try {
@@ -166,6 +181,149 @@ app.post('/api/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ success:false, message:'Server error occurred', error: err.message });
+  }
+});
+
+app.post('/api/forgot-password', async (req, res) => {
+  try {
+    const { email, student_id } = req.body;
+
+    if (!email || !student_id) {
+      return res.status(400).json({ success: false, message: 'Email and Student ID are required' });
+    }
+
+    const sql = `SELECT student_id, name, email FROM Student_Info WHERE email = ? AND student_id = ?`;
+    const [rows] = await pool.execute(sql, [email, student_id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'No account found with this email and student ID combination' });
+    }
+
+    const student = rows[0];
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store OTP with 5 min expiry
+    const otpKey = `${email}_${student_id}`;
+    otpStore.set(otpKey, {
+      otp,
+      expires: Date.now() + 5 * 60 * 1000,
+      student_id,
+      email
+    });
+
+    // Send email
+    const mailOptions = {
+      from: 'hallhub00@gmail.com',
+      to: email,
+      subject: 'HallHub - Password Reset Code',
+      html: `
+        <h2>Password Reset Request</h2>
+        <p>Hello ${student.name},</p>
+        <p>Your password reset code is:</p>
+        <h1 style="color:#3b82f6;letter-spacing:5px;">${otp}</h1>
+        <p>This code will expire in 5 minutes.</p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ success: true, message: 'Reset code sent to your email' });
+  } catch (err) {
+    console.error('Forgot-password error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+
+app.post('/api/verify-otp', async (req, res) => {
+  const { email, student_id, otp } = req.body;
+
+  if (!email || !student_id || !otp) {
+    return res.status(400).json({ success: false, message: 'Email, Student ID, and OTP are required' });
+  }
+
+  const otpKey = `${email}_${student_id}`;
+  const stored = otpStore.get(otpKey);
+
+  if (!stored) {
+    return res.status(400).json({ success: false, message: 'OTP not found or expired' });
+  }
+
+  if (Date.now() > stored.expires) {
+    otpStore.delete(otpKey);
+    return res.status(400).json({ success: false, message: 'OTP has expired' });
+  }
+
+  if (stored.otp !== otp) {
+    return res.status(400).json({ success: false, message: 'Invalid OTP' });
+  }
+
+  // OTP verified → issue reset token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  otpStore.set(otpKey, {
+    token: resetToken,
+    expires: Date.now() + 15 * 60 * 1000,
+    student_id,
+    email
+  });
+
+  res.json({ success: true, message: 'OTP verified successfully', token: resetToken });
+});
+
+
+app.post('/api/reset-password', async (req, res) => {
+  try {
+    const { token, new_password } = req.body;
+
+    if (!token || !new_password) {
+      return res.status(400).json({ success: false, message: 'Token and new password are required' });
+    }
+
+    if (new_password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
+    }
+
+    // Find token in store
+    let tokenData = null;
+    let tokenKey = null;
+
+    for (const [key, data] of otpStore.entries()) {
+      if (data.token === token) {
+        tokenData = data;
+        tokenKey = key;
+        break;
+      }
+    }
+
+    if (!tokenData) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
+    }
+
+    if (Date.now() > tokenData.expires) {
+      otpStore.delete(tokenKey);
+      return res.status(400).json({ success: false, message: 'Reset token has expired' });
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(new_password, 10);
+
+    // Update DB
+    const sql = `UPDATE Student_Info SET password_hash = ? WHERE student_id = ? AND email = ?`;
+    const [result] = await pool.execute(sql, [passwordHash, tokenData.student_id, tokenData.email]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
+    otpStore.delete(tokenKey);
+
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (err) {
+    console.error('Reset-password error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
