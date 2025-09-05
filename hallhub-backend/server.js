@@ -346,11 +346,21 @@ app.get('/api/founditems/:lostId', async (req, res) => {
     const { lostId } = req.params;
     
     const sql = `
-      SELECT fi.*, si.name as student_name
-      FROM found_item fi
-      LEFT JOIN Student_Info si ON fi.student_id = si.student_id
-      WHERE fi.lost_id = ?
-      ORDER BY fi.Found_Time DESC
+      SELECT 
+  fi.Found_ID,
+  fi.Lost_ID,
+  fi.Found_Time,
+  li.Student_ID,
+  si.name as student_name,
+  li.Description,
+  li.Lost_Time,
+  i.Item_Type
+FROM found_item fi
+JOIN lost_item li ON fi.Lost_ID = li.Lost_ID
+LEFT JOIN Student_Info si ON li.Student_ID = si.Student_ID
+LEFT JOIN item i ON li.Item_ID = i.Item_ID
+WHERE fi.Lost_ID = ?
+ORDER BY fi.Found_Time DESC
     `;
     const [rows] = await pool.execute(sql, [lostId]);
     res.json(rows);
