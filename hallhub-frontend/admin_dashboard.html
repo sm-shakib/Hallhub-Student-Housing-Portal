@@ -82,6 +82,86 @@
                 <p class="text-gray-600 text-lg max-w-2xl mx-auto">Manage student records, oversee hall operations, and maintain comprehensive oversight of all activities.</p>
             </div>
 
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Students</p>
+                            <p id="totalStudents" class="text-2xl font-bold text-gray-900">Loading...</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">👥</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Resident Students</p>
+                            <p id="residentStudents" class="text-2xl font-bold text-gray-900">Loading...</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🏠</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Non-Resident</p>
+                            <p id="nonResidentStudents" class="text-2xl font-bold text-gray-900">Loading...</p>
+                        </div>
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🚶</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Pending Issues</p>
+                            <p id="pendingComplaints" class="text-2xl font-bold text-gray-900">Loading...</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">⚠️</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-12">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">System Overview</h3>
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Active</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold">REGISTRATIONS</span>
+                            <span class="text-sm text-gray-500">Today</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-2">New Student Registrations</h4>
+                        <p class="text-gray-600 text-sm"><!-- 5 new students registered today - -->Review pending applications</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-semibold">MAINTENANCE</span>
+                            <span class="text-sm text-gray-500">In Progress</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-2">Facility Maintenance</h4>
+                        <p class="text-gray-600 text-sm"><!-- 3 maintenance requests being processed - -->Monitor completion status</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-lg text-xs font-semibold">REPORTS</span>
+                            <span class="text-sm text-gray-500">Weekly</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-2">System Reports</h4>
+                        <p class="text-gray-600 text-sm">Generate weekly activity reports and analytics dashboard</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
                 <a href="#" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
                     <div class="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
@@ -275,43 +355,53 @@
     </footer>
 
     <script>
-        // Fetch student statistics from database
-        async function loadStudentStats() {
+        // Fetch student and complaint statistics
+        async function loadDashboardStats() {
             try {
-                // Fetch resident students count
+                // --- Fetch resident students count ---
                 const residentResponse = await fetch('http://127.0.0.1:3000/api/resident-students');
                 const residentData = await residentResponse.json();
-                
-                // Fetch non-resident students count  
+
+                // --- Fetch non-resident students count ---
                 const nonResidentResponse = await fetch('http://127.0.0.1:3000/api/nonresident-students');
                 const nonResidentData = await nonResidentResponse.json();
-                
-                if (residentData.success && nonResidentData.success) {
+
+                // --- Fetch complaints ---
+                const complaintsResponse = await fetch('http://127.0.0.1:3000/api/complaints');
+                const complaintsData = await complaintsResponse.json();
+
+                if (residentData.success && nonResidentData.success && complaintsData.success) {
                     const residentCount = residentData.count || 0;
                     const nonResidentCount = nonResidentData.count || 0;
                     const totalCount = residentCount + nonResidentCount;
-                    
-                    // Update the display
+
+                    // Count complaints where status = 0
+                    const pendingCount = complaintsData.complaints.filter(c => c.status === 0).length;
+
+                    // --- Update dashboard cards ---
                     document.getElementById('totalStudents').textContent = totalCount;
                     document.getElementById('residentStudents').textContent = residentCount;
                     document.getElementById('nonResidentStudents').textContent = nonResidentCount;
+                    document.getElementById('pendingComplaints').textContent = pendingCount;
                 } else {
-                    // Show error state
-                    document.getElementById('totalStudents').textContent = 'Error';
-                    document.getElementById('residentStudents').textContent = 'Error';
-                    document.getElementById('nonResidentStudents').textContent = 'Error';
+                    showError();
                 }
             } catch (error) {
-                console.error('Error fetching student stats:', error);
-                // Show error state
-                document.getElementById('totalStudents').textContent = 'Error';
-                document.getElementById('residentStudents').textContent = 'Error';
-                document.getElementById('nonResidentStudents').textContent = 'Error';
+                console.error('Error fetching dashboard stats:', error);
+                showError();
             }
         }
-        
+
+        function showError() {
+            document.getElementById('totalStudents').textContent = 'Error';
+            document.getElementById('residentStudents').textContent = 'Error';
+            document.getElementById('nonResidentStudents').textContent = 'Error';
+            document.getElementById('pendingComplaints').textContent = 'Error';
+        }
+
         // Load stats when page loads
-        document.addEventListener('DOMContentLoaded', loadStudentStats);
+        document.addEventListener('DOMContentLoaded', loadDashboardStats);
     </script>
+
 </body>
 </html>

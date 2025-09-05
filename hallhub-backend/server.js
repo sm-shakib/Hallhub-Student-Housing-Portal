@@ -327,6 +327,109 @@ app.post('/api/reset-password', async (req, res) => {
   }
 });
 
+// API route for non-resident students
+app.get('/api/nonresident-students', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        student_id,
+        name,
+        email,
+        department,
+        level,
+        address,
+        phone_no AS phone,
+        relative_name,
+        relative_relation,
+        relative_address,
+        relative_phone_no AS relative_phone
+      FROM Student_Info
+      WHERE resident_status = 0
+    `;
+
+    const [results] = await pool.query(query);
+
+    res.json({
+      success: true,
+      students: results,
+      count: results.length
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
+// Get resident students by joining Resident with Student_Info
+app.get('/api/resident-students', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+          s.student_id,
+          s.name AS full_name,
+          s.email,
+          s.department,
+          s.level,
+          s.address,
+          s.phone_no AS phone,
+          s.relative_name,
+          s.relative_relation,
+          s.relative_address,
+          s.relative_phone_no AS relative_phone
+      FROM Student_Info s
+      INNER JOIN Resident r ON s.student_id = r.student_id
+      ORDER BY s.Created_At ASC
+    `;
+
+    const [results] = await pool.query(query);
+
+    res.json({
+      success: true,
+      students: results,
+      count: results.length
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
+// Get all complaints ordered by time descending
+app.get('/api/complaints', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+          complaint_id,
+          student_id,
+          title,
+          description,
+          time,
+          status
+      FROM complaint 
+      ORDER BY time DESC
+    `;
+    
+    const [results] = await pool.query(query);
+
+    res.json({
+      success: true,
+      complaints: results,
+      count: results.length
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
 
 // API routes for events
 app.get('/api/events', async (req, res) => {
