@@ -42,6 +42,14 @@
       margin-bottom: 20px;
       color: #333;
     }
+    
+    input[readonly] {
+      background-color: #f8f9fa !important;
+      color: #495057 !important;
+      cursor: not-allowed;
+      border-color: #e9ecef !important;
+      opacity: 0.9;
+    }
 
     input {
       width: 100%;
@@ -56,6 +64,14 @@
     input:focus {
       border-color: #87CEFA;
       outline: none;
+    }
+
+    .student-id-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+      text-align: left;
+      display: block;
     }
 
     button {
@@ -128,7 +144,7 @@
       color: #555;
     }
 
-    .fee-status {
+    .allocStatus {
       display: inline-block;
       padding: 4px 8px;
       border-radius: 4px;
@@ -136,12 +152,12 @@
       font-weight: bold;
     }
 
-    .paid {
+    .current {
       background-color: #d4edda;
       color: #155724;
     }
 
-    .unpaid {
+    .former {
       background-color: #f8d7da;
       color: #721c24;
     }
@@ -157,51 +173,63 @@
     .back-btn:hover {
       background-color: #5a6268;
     }
+
+    .info-note {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 10px;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
   <div class="info-box">
     <h2>🏠 Room Allocation Info</h2>
-    <input type="text" id="studentIdInput" placeholder="Enter Student ID (optional - leave blank for your allocations)" />
+    <label for="studentIdInput" class="student-id-label">Your Student ID</label>
+    <input type="text" id="studentIdInput" readonly />
     <div>
-      <button onclick="getSpecificAllocation()" id="getInfoBtn">Get Specific Info</button>
-      <button onclick="getMyAllocations()" id="getMyBtn">My Allocations</button>
-      <button onclick="getAllAllocations()" id="getAllBtn">All Allocations</button>
+      <button onclick="getMyAllocations()" id="getInfoBtn">View My Allocations</button>
     </div>
     <div class="details" id="allocationDetails"></div>
+    <p class="info-note">You can only view your own allocation information</p>
     
     <div class="nav-buttons">
       <button class="back-btn" onclick="goBack()">← Back to Dashboard</button>
     </div>
   </div>
 
-  <div class="allocations-list" id="allocationsList">
-    <h2>Room Allocations</h2>
-    <div id="allocationsContainer"></div>
-    <button class="back-btn" onclick="hideAllocationsList()">Hide List</button>
-  </div>
-
   <script>
-    // Get current user data from localStorage
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    // Session helper functions
+    function getCurrentUser() {
+      try {
+        const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+        return userSession ? JSON.parse(userSession) : null;
+      } catch (error) {
+        console.error('Error parsing user session:', error);
+        return null;
+      }
+    }
 
-    // Function to get specific student allocation
-    async function getSpecificAllocation() {
-      const inputId = document.getElementById('studentIdInput').value.trim();
+    // Function to get current user's allocations
+    async function getMyAllocations() {
+      const currentUser = getCurrentUser();
       const output = document.getElementById('allocationDetails');
       const btn = document.getElementById('getInfoBtn');
       
-      if (!inputId) {
-        output.innerHTML = '<div class="error">Please enter a valid Student ID.</div>';
+      if (!currentUser || !currentUser.studentId) {
+        output.innerHTML = '<div class="error">Session expired. Please log in again.</div>';
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
         return;
       }
 
       btn.disabled = true;
       btn.textContent = 'Loading...';
-      output.innerHTML = '<div class="loading">Fetching allocation information...</div>';
+      output.innerHTML = '<div class="loading">Fetching your allocation information...</div>';
 
       try {
-        const response = await fetch(`/api/allocations?student_id=${inputId}`);
+        const response = await fetch(`http://localhost:3000/api/allocations?student_id=${currentUser.studentId}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch allocation information');
@@ -210,9 +238,9 @@
         const allocations = await response.json();
         
         if (allocations.length === 0) {
-          output.innerHTML = '<div class="error">No allocation found for this Student ID.</div>';
+          output.innerHTML = '<div class="error">No allocation found for your Student ID.</div>';
         } else {
-          displaySingleAllocation(allocations[0], output);
+          displayAllocations(allocations, output);
         }
 
       } catch (error) {
@@ -220,155 +248,55 @@
         output.innerHTML = '<div class="error">Failed to fetch allocation information. Please try again.</div>';
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Get Specific Info';
+        btn.textContent = 'View My Allocations';
       }
     }
 
-    // Function to get current user's allocations
-    async function getMyAllocations() {
-      const output = document.getElementById('allocationDetails');
-      const btn = document.getElementById('getMyBtn');
-      
-      if (!currentUser.studentId) {
-        output.innerHTML = '<div class="error">Please log in to view your allocations.</div>';
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Loading...';
-      output.innerHTML = '<div class="loading">Fetching your allocations...</div>';
-
-      try {
-        const response = await fetch(`/api/allocations?student_id=${currentUser.studentId}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch your allocations');
-        }
-
-        const allocations = await response.json();
-        
-        if (allocations.length === 0) {
-          output.innerHTML = '<div class="error">No allocations found for your account.</div>';
-        } else if (allocations.length === 1) {
-          displaySingleAllocation(allocations[0], output);
-        } else {
-          displayMultipleAllocations(allocations, output);
-        }
-
-      } catch (error) {
-        console.error('Error fetching allocations:', error);
-        output.innerHTML = '<div class="error">Failed to fetch your allocations. Please try again.</div>';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'My Allocations';
-      }
+    // Function to format date in Bangladesh Standard Time
+    function formatBDTime(dateString) {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Dhaka',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(date);
     }
 
-    // Function to get all allocations
-    async function getAllAllocations() {
-      const btn = document.getElementById('getAllBtn');
-      const container = document.getElementById('allocationsContainer');
-      const listDiv = document.getElementById('allocationsList');
-      
-      btn.disabled = true;
-      btn.textContent = 'Loading...';
-      container.innerHTML = '<div class="loading">Fetching all allocations...</div>';
-      listDiv.style.display = 'block';
-
-      try {
-        const response = await fetch('/api/allocations');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch allocations');
-        }
-
-        const allocations = await response.json();
-        
-        if (allocations.length === 0) {
-          container.innerHTML = '<div class="error">No allocations found.</div>';
-        } else {
-          displayAllAllocations(allocations, container);
-        }
-
-      } catch (error) {
-        console.error('Error fetching all allocations:', error);
-        container.innerHTML = '<div class="error">Failed to fetch allocations. Please try again.</div>';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'All Allocations';
-      }
-    }
-
-    // Function to display single allocation
-    function displaySingleAllocation(allocation, container) {
-      const allocationDate = allocation.allocation_date ? 
-        new Date(allocation.allocation_date).toLocaleDateString() : 'Not specified';
-      
-      const feeStatusClass = allocation.fee_status === 'paid' ? 'paid' : 'unpaid';
-      
-      container.innerHTML = `
-        <div class="success">
-          <strong>Student ID:</strong> ${allocation.student_id}<br>
-          <strong>Room Number:</strong> ${allocation.room_number}<br>
-          <strong>Building:</strong> ${allocation.building}<br>
-          <strong>Allocation Date:</strong> ${allocationDate}<br>
-          <strong>Fee Status:</strong> 
-          <span class="fee-status ${feeStatusClass}">${allocation.fee_status || 'unpaid'}</span>
-        </div>
-      `;
-    }
-
-    // Function to display multiple allocations for one user
-    function displayMultipleAllocations(allocations, container) {
+    // Function to display allocations
+    function displayAllocations(allocations, container) {
       let html = '<div class="success"><strong>Your Allocations:</strong><br><br>';
-      
+
       allocations.forEach((allocation, index) => {
-        const allocationDate = allocation.allocation_date ? 
-          new Date(allocation.allocation_date).toLocaleDateString() : 'Not specified';
-        const feeStatusClass = allocation.fee_status === 'paid' ? 'paid' : 'unpaid';
+        const formattedStart = allocation.Alloc_Start_Time
+          ? formatBDTime(allocation.Alloc_Start_Time)
+          : 'Not specified';
         
+        const formattedEnd = allocation.Alloc_End_Time
+          ? formatBDTime(allocation.Alloc_End_Time)
+          : 'Not specified';
+
+        const allocStatus = allocation.Alloc_End_Time === null ? 'Current' : 'Former';
+        const allocClass = allocation.Alloc_End_Time === null ? 'current' : 'former';
+
         html += `
           <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-            <strong>Allocation ${index + 1}:</strong><br>
-            Room: ${allocation.room_number}, Building: ${allocation.building}<br>
-            Date: ${allocationDate}<br>
-            Fee Status: <span class="fee-status ${feeStatusClass}">${allocation.fee_status || 'unpaid'}</span>
+            <strong>Hall No.:</strong> ${allocation.Hall_No}<br>
+            <strong>Hall Location:</strong> ${allocation.Hall_Place}<br>
+            <strong>Room No.:</strong> ${allocation.Room_No}<br>
+            <strong>Allocated Start:</strong> ${formattedStart}<br>
+            <strong>Allocation End:</strong> ${formattedEnd}<br>
+            <strong>Status:</strong> 
+            <span class="allocStatus ${allocClass}">${allocStatus}</span>
           </div>
         `;
       });
-      
+
       html += '</div>';
       container.innerHTML = html;
-    }
-
-    // Function to display all allocations
-    function displayAllAllocations(allocations, container) {
-      let html = '';
-      
-      allocations.forEach(allocation => {
-        const allocationDate = allocation.allocation_date ? 
-          new Date(allocation.allocation_date).toLocaleDateString() : 'Not specified';
-        const feeStatusClass = allocation.fee_status === 'paid' ? 'paid' : 'unpaid';
-        
-        html += `
-          <div class="allocation-card">
-            <div class="allocation-header">Room ${allocation.room_number} - ${allocation.building}</div>
-            <div class="allocation-detail"><strong>Student ID:</strong> ${allocation.student_id}</div>
-            <div class="allocation-detail"><strong>Allocation Date:</strong> ${allocationDate}</div>
-            <div class="allocation-detail">
-              <strong>Fee Status:</strong> 
-              <span class="fee-status ${feeStatusClass}">${allocation.fee_status || 'unpaid'}</span>
-            </div>
-          </div>
-        `;
-      });
-      
-      container.innerHTML = html;
-    }
-
-    // Function to hide allocations list
-    function hideAllocationsList() {
-      document.getElementById('allocationsList').style.display = 'none';
     }
 
     // Function to go back to dashboard
@@ -378,10 +306,20 @@
 
     // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
-      // If user is logged in, show their student ID as placeholder
-      if (currentUser.studentId) {
-        document.getElementById('studentIdInput').placeholder = `Enter Student ID (Your ID: ${currentUser.studentId})`;
+      const currentUser = getCurrentUser();
+      
+      if (!currentUser || !currentUser.studentId) {
+        alert('Please log in to view allocation information');
+        window.location.href = 'login.html';
+        return;
       }
+      
+      // Set the read-only student ID field
+      const studentIdInput = document.getElementById('studentIdInput');
+      studentIdInput.value = currentUser.studentId;
+      
+      // Auto-load allocations on page load
+      getMyAllocations();
     });
   </script>
 </body>
