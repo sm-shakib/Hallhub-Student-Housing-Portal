@@ -97,47 +97,78 @@ app.post('/register', async (req, res) => {
 });
 
 // API route to handle student login
+// app.post('/api/login', async (req, res) => {
+//   try {
+//     const { studentId, password } = req.body;
+
+//     if (!studentId || !password) {
+//       return res.status(400).json({ error: 'Please provide student ID and password' });
+//     }
+
+//     // Find student by ID
+//     const sql = 'SELECT student_id, name, email, password_hash FROM Student_Info WHERE student_id = ?';
+//     const [rows] = await pool.execute(sql, [studentId]);
+
+//     if (rows.length === 0) {
+//       return res.status(401).json({ error: 'Invalid student ID or password' });
+//     }
+
+//     const student = rows[0];
+
+//     // Verify password
+//     const passwordMatch = await bcrypt.compare(password, student.password_hash);
+    
+//     if (!passwordMatch) {
+//       return res.status(401).json({ error: 'Invalid student ID or password' });
+//     }
+
+//     // Return success with student info (exclude password hash)
+//     res.json({
+//       success: true,
+//       message: 'Login successful',
+//       student: {
+//         studentId: student.student_id,
+//         name: student.name,
+//         email: student.email
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
+
 app.post('/api/login', async (req, res) => {
   try {
-    const { studentId, password } = req.body;
+    console.log('POST /api/login body:', req.body);
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ success:false, message:'Username and password are required' });
 
-    if (!studentId || !password) {
-      return res.status(400).json({ error: 'Please provide student ID and password' });
-    }
-
-    // Find student by ID
-    const sql = 'SELECT student_id, name, email, password_hash FROM Student_Info WHERE student_id = ?';
-    const [rows] = await pool.execute(sql, [studentId]);
-
-    if (rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid student ID or password' });
-    }
+    const query = `SELECT student_id, name, email, password_hash, resident_status FROM Student_Info WHERE student_id = ? LIMIT 1`;
+    const [rows] = await pool.query(query, [username]);
+    if (rows.length === 0) return res.status(401).json({ success:false, message:'Student not found' });
 
     const student = rows[0];
-
-    // Verify password
-    const passwordMatch = await bcrypt.compare(password, student.password_hash);
-    
-    if (!passwordMatch) {
-      return res.status(401).json({ error: 'Invalid student ID or password' });
+    if (!student.password_hash) {
+      console.error('No password_hash for student:', student.student_id);
+      return res.status(500).json({ success:false, message:'User has no password set. Check registration data.' });
     }
 
-    // Return success with student info (exclude password hash)
-    res.json({
-      success: true,
-      message: 'Login successful',
-      student: {
-        studentId: student.student_id,
-        name: student.name,
-        email: student.email
-      }
-    });
+    const passwordMatch = await bcrypt.compare(password, student.password_hash);
+    if (!passwordMatch) return res.status(401).json({ success:false, message:'Incorrect password' });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    if (!student.resident_status || Number(student.resident_status) !== 1) {
+      return res.status(403).json({ success:false, message:'You are not a hall resident yet' });
+    }
+
+    res.json({ success:true, message:'Login successful', student:{ studentId: student.student_id, name: student.name, email: student.email, userType: 'student'} });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ success:false, message:'Server error occurred', error: err.message });
   }
 });
+
 
 // API routes for events
 app.get('/api/events', async (req, res) => {
