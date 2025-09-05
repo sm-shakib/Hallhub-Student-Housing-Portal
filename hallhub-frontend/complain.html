@@ -150,7 +150,6 @@
  <div class="form-container">
    <h2>Complaint Form</h2>
    <form id="complainForm">
-     <input type="text" id="studentId" placeholder="Your Student ID" required readonly />
      <input type="text" id="complaintTitle" placeholder="Complaint Title/Subject" required />
      <textarea id="complainDesc" placeholder="Write your complaint here..." required></textarea>
      <button type="submit" id="submitBtn">🚀 Submit Complaint</button>
@@ -207,9 +206,15 @@
      
      const submitBtn = document.getElementById('submitBtn');
      const confirmationDiv = document.getElementById('confirmationBox');
+
+     // Check if logged in
+      if (!currentUser || !currentUser.studentId) {
+        showMessage("❌ You must be logged in to file a complaint.", "error");
+        return;
+      }
      
      // Get form data
-     const studentId = document.getElementById("studentId").value;
+     const studentId = currentUser.studentId;
      const title = document.getElementById("complaintTitle").value.trim();
      const description = document.getElementById("complainDesc").value.trim();
 
@@ -219,7 +224,7 @@
      showMessage('Submitting your complaint...', 'loading');
 
      try {
-       const response = await fetch('/api/complaints', {
+       const response = await fetch('http://localhost:3000/api/complaints', {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
@@ -241,7 +246,6 @@
            <p><strong>Title:</strong> ${title}</p>
            <p><strong>Status:</strong> Pending</p>
            <p><strong>Submitted by:</strong> ${studentId}</p>
-           <p><em>You will be notified once your complaint is resolved.</em></p>
          `, 'success');
 
          // Reset form but keep student ID

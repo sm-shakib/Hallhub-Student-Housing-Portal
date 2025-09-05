@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const port = 3000;
@@ -25,6 +27,19 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0
 });
+
+// Configure email transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'hallhub00@gmail.com',      
+    pass: 'hrvv skyo ffqf pgwv'           // app password
+  }
+});
+
+
+// Temporary in-memory OTP store (production: use Redis or DB)
+const otpStore = new Map();
 
 app.get('/test-connection', async (req, res) => {
   try {
@@ -97,47 +112,221 @@ app.post('/register', async (req, res) => {
 });
 
 // API route to handle student login
+// app.post('/api/login', async (req, res) => {
+//   try {
+//     const { studentId, password } = req.body;
+
+//     if (!studentId || !password) {
+//       return res.status(400).json({ error: 'Please provide student ID and password' });
+//     }
+
+//     // Find student by ID
+//     const sql = 'SELECT student_id, name, email, password_hash FROM Student_Info WHERE student_id = ?';
+//     const [rows] = await pool.execute(sql, [studentId]);
+
+//     if (rows.length === 0) {
+//       return res.status(401).json({ error: 'Invalid student ID or password' });
+//     }
+
+//     const student = rows[0];
+
+//     // Verify password
+//     const passwordMatch = await bcrypt.compare(password, student.password_hash);
+    
+//     if (!passwordMatch) {
+//       return res.status(401).json({ error: 'Invalid student ID or password' });
+//     }
+
+//     // Return success with student info (exclude password hash)
+//     res.json({
+//       success: true,
+//       message: 'Login successful',
+//       student: {
+//         studentId: student.student_id,
+//         name: student.name,
+//         email: student.email
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
+
 app.post('/api/login', async (req, res) => {
   try {
-    const { studentId, password } = req.body;
+    console.log('POST /api/login body:', req.body);
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ success:false, message:'Username and password are required' });
 
-    if (!studentId || !password) {
-      return res.status(400).json({ error: 'Please provide student ID and password' });
+    const query = `SELECT student_id, name, email, password_hash, resident_status FROM Student_Info WHERE student_id = ? LIMIT 1`;
+    const [rows] = await pool.query(query, [username]);
+    if (rows.length === 0) return res.status(401).json({ success:false, message:'Student not found' });
+
+    const student = rows[0];
+    if (!student.password_hash) {
+      console.error('No password_hash for student:', student.student_id);
+      return res.status(500).json({ success:false, message:'User has no password set. Check registration data.' });
     }
 
-    // Find student by ID
-    const sql = 'SELECT student_id, name, email, password_hash FROM Student_Info WHERE student_id = ?';
-    const [rows] = await pool.execute(sql, [studentId]);
+    const passwordMatch = await bcrypt.compare(password, student.password_hash);
+    if (!passwordMatch) return res.status(401).json({ success:false, message:'Incorrect password' });
+
+    if (!student.resident_status || Number(student.resident_status) !== 1) {
+      return res.status(403).json({ success:false, message:'You are not a hall resident yet' });
+    }
+
+    res.json({ success:true, message:'Login successful', student:{ studentId: student.student_id, name: student.name, email: student.email, userType: 'student'} });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ success:false, message:'Server error occurred', error: err.message });
+  }
+});
+
+app.post('/api/forgot-password', async (req, res) => {
+  try {
+    const { email, student_id } = req.body;
+
+    if (!email || !student_id) {
+      return res.status(400).json({ success: false, message: 'Email and Student ID are required' });
+    }
+
+    const sql = `SELECT student_id, name, email FROM Student_Info WHERE email = ? AND student_id = ?`;
+    const [rows] = await pool.execute(sql, [email, student_id]);
 
     if (rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid student ID or password' });
+      return res.status(404).json({ success: false, message: 'No account found with this email and student ID combination' });
     }
 
     const student = rows[0];
 
-    // Verify password
-    const passwordMatch = await bcrypt.compare(password, student.password_hash);
-    
-    if (!passwordMatch) {
-      return res.status(401).json({ error: 'Invalid student ID or password' });
-    }
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Return success with student info (exclude password hash)
-    res.json({
-      success: true,
-      message: 'Login successful',
-      student: {
-        studentId: student.student_id,
-        name: student.name,
-        email: student.email
-      }
+    // Store OTP with 5 min expiry
+    const otpKey = `${email}_${student_id}`;
+    otpStore.set(otpKey, {
+      otp,
+      expires: Date.now() + 5 * 60 * 1000,
+      student_id,
+      email
     });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    // Send email
+    const mailOptions = {
+      from: 'hallhub00@gmail.com',
+      to: email,
+      subject: 'HallHub - Password Reset Code',
+      html: `
+        <h2>Password Reset Request</h2>
+        <p>Hello ${student.name},</p>
+        <p>Your password reset code is:</p>
+        <h1 style="color:#3b82f6;letter-spacing:5px;">${otp}</h1>
+        <p>This code will expire in 5 minutes.</p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ success: true, message: 'Reset code sent to your email' });
+  } catch (err) {
+    console.error('Forgot-password error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
+
+app.post('/api/verify-otp', async (req, res) => {
+  const { email, student_id, otp } = req.body;
+
+  if (!email || !student_id || !otp) {
+    return res.status(400).json({ success: false, message: 'Email, Student ID, and OTP are required' });
+  }
+
+  const otpKey = `${email}_${student_id}`;
+  const stored = otpStore.get(otpKey);
+
+  if (!stored) {
+    return res.status(400).json({ success: false, message: 'OTP not found or expired' });
+  }
+
+  if (Date.now() > stored.expires) {
+    otpStore.delete(otpKey);
+    return res.status(400).json({ success: false, message: 'OTP has expired' });
+  }
+
+  if (stored.otp !== otp) {
+    return res.status(400).json({ success: false, message: 'Invalid OTP' });
+  }
+
+  // OTP verified → issue reset token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  otpStore.set(otpKey, {
+    token: resetToken,
+    expires: Date.now() + 15 * 60 * 1000,
+    student_id,
+    email
+  });
+
+  res.json({ success: true, message: 'OTP verified successfully', token: resetToken });
+});
+
+
+app.post('/api/reset-password', async (req, res) => {
+  try {
+    const { token, new_password } = req.body;
+
+    if (!token || !new_password) {
+      return res.status(400).json({ success: false, message: 'Token and new password are required' });
+    }
+
+    if (new_password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
+    }
+
+    // Find token in store
+    let tokenData = null;
+    let tokenKey = null;
+
+    for (const [key, data] of otpStore.entries()) {
+      if (data.token === token) {
+        tokenData = data;
+        tokenKey = key;
+        break;
+      }
+    }
+
+    if (!tokenData) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
+    }
+
+    if (Date.now() > tokenData.expires) {
+      otpStore.delete(tokenKey);
+      return res.status(400).json({ success: false, message: 'Reset token has expired' });
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(new_password, 10);
+
+    // Update DB
+    const sql = `UPDATE Student_Info SET password_hash = ? WHERE student_id = ? AND email = ?`;
+    const [result] = await pool.execute(sql, [passwordHash, tokenData.student_id, tokenData.email]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
+    otpStore.delete(tokenKey);
+
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (err) {
+    console.error('Reset-password error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 
 // API routes for events
 app.get('/api/events', async (req, res) => {
@@ -406,7 +595,10 @@ app.post('/api/complaints', async (req, res) => {
   try {
     const { title, description, student_id } = req.body;
 
+    //console.log("📩 Incoming complaint request:", { title, description, student_id });
+
     if (!title || !description || !student_id) {
+      //console.warn("⚠️ Missing fields:", { title, description, student_id });
       return res.status(400).json({ error: 'Please provide title, description, and student_id' });
     }
 
@@ -414,7 +606,13 @@ app.post('/api/complaints', async (req, res) => {
       INSERT INTO complaint (title, description, student_id)
       VALUES (?, ?, ?)
     `;
+
+    //console.log("📝 Executing SQL:", sql);
+    //console.log("🔢 With values:", [title, description, student_id]);
+
     const [result] = await pool.execute(sql, [title, description, student_id]);
+
+    //console.log("✅ Insert result:", result);
 
     res.json({
       success: true,
@@ -423,34 +621,15 @@ app.post('/api/complaints', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to submit complaint' });
-  }
-});
-
-
-app.put('/api/complaints/:id/resolve', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { resolution } = req.body;
-
-    const sql = `
-      UPDATE Complaints 
-      SET status = 1, resolution = ?, resolved_date = NOW()
-      WHERE complaint_id = ?
-    `;
-    await pool.execute(sql, [resolution, id]);
-
-    res.json({
-      success: true,
-      message: 'Complaint resolved successfully'
+    console.error("❌ Error inserting complaint:", error);
+    res.status(500).json({ 
+      error: 'Failed to submit complaint',
+      details: error.message,   // <-- return actual error message (for debugging only!)
+      code: error.code          // <-- useful MySQL error code
     });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to resolve complaint' });
   }
 });
+
 
 // API routes for allocation info
 app.get('/api/allocations', async (req, res) => {
