@@ -43,6 +43,82 @@
      border-left: 4px solid #6a82fb;
    }
 
+   /* DEBUG STYLES - COMMENTED OUT
+   .debug-info {
+     background: rgba(255, 193, 7, 0.1);
+     padding: 15px;
+     border-radius: 12px;
+     margin-bottom: 20px;
+     border-left: 4px solid #ffc107;
+     font-family: monospace;
+     font-size: 0.9rem;
+     text-align: left;
+   }
+   */
+
+   .filter-container {
+     background: rgba(255,255,255,0.6);
+     backdrop-filter: blur(8px);
+     padding: 20px;
+     border-radius: 20px;
+     width: 90%;
+     max-width: 700px;
+     box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+     margin-bottom: 20px;
+     text-align: center;
+   }
+
+   .filter-buttons {
+     display: flex;
+     justify-content: center;
+     gap: 10px;
+     flex-wrap: wrap;
+   }
+
+   .filter-btn {
+     background: rgba(255, 255, 255, 0.5);
+     border: 2px solid #6a82fb;
+     color: #6a82fb;
+     padding: 10px 20px;
+     border-radius: 25px;
+     font-weight: bold;
+     cursor: pointer;
+     transition: all 0.3s ease;
+     font-size: 0.9rem;
+   }
+
+   .filter-btn:hover {
+     background: rgba(106, 130, 251, 0.1);
+     transform: translateY(-2px);
+   }
+
+   .filter-btn.active {
+     background: #6a82fb;
+     color: white;
+     box-shadow: 0 4px 12px rgba(106, 130, 251, 0.3);
+   }
+
+   .filter-stats {
+     margin-top: 15px;
+     font-size: 0.9rem;
+     color: #666;
+     display: flex;
+     justify-content: center;
+     gap: 20px;
+     flex-wrap: wrap;
+   }
+
+   .stat-item {
+     background: rgba(255, 255, 255, 0.7);
+     padding: 8px 15px;
+     border-radius: 15px;
+     font-weight: bold;
+   }
+
+   .stat-all { border-left: 4px solid #6a82fb; }
+   .stat-pending { border-left: 4px solid #ffa500; }
+   .stat-solved { border-left: 4px solid #38ef7d; }
+
    .complaint-list {
      background: rgba(255,255,255,0.5);
      backdrop-filter: blur(6px);
@@ -63,6 +139,11 @@
      border-left: 5px solid #6a82fb;
      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
      transition: transform 0.2s ease;
+     display: block;
+   }
+
+   .complaint-card.hidden {
+     display: none;
    }
 
    .complaint-card:hover {
@@ -74,7 +155,7 @@
      border-left-color: #ffa500;
    }
 
-   .complaint-card.resolved {
+   .complaint-card.solved {
      border-left-color: #38ef7d;
    }
 
@@ -104,7 +185,7 @@
      color: #ff8c00;
    }
 
-   .status-resolved {
+   .status-solved {
      background: rgba(56, 239, 125, 0.2);
      color: #11998e;
    }
@@ -212,6 +293,28 @@
      <p id="studentInfo">Loading student information...</p>
      <button class="refresh-btn" id="refreshBtn" onclick="loadComplaints()">🔄 Refresh Complaints</button>
    </div>
+   
+   <!-- DEBUG INFO CONTAINER - COMMENTED OUT
+   <div class="debug-info" id="debugInfo">
+     <h4>Debug Information:</h4>
+     <p>Initializing...</p>
+   </div>
+   -->
+ </div>
+
+ <div class="filter-container">
+   <h3>📊 Filter Complaints</h3>
+   <div class="filter-buttons">
+     <button class="filter-btn active" onclick="filterComplaints('all')">🔍 All Complaints</button>
+     <button class="filter-btn" onclick="filterComplaints('pending')">⏳ Pending</button>
+     <button class="filter-btn" onclick="filterComplaints('solved')">✅ Solved</button>
+   </div>
+   
+   <div class="filter-stats" id="filterStats">
+     <div class="stat-item stat-all">Total: <span id="totalCount">0</span></div>
+     <div class="stat-item stat-pending">Pending: <span id="pendingCount">0</span></div>
+     <div class="stat-item stat-solved">Solved: <span id="solvedCount">0</span></div>
+   </div>
  </div>
 
  <div id="complaintsOutput" class="complaint-list"></div>
@@ -221,26 +324,134 @@
  </div>
 
  <script>
-   // Get current user data from localStorage
-   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+   let currentUser = null;
+   // DEBUG VARIABLES - COMMENTED OUT
+   // let debugLog = [];
+   let allComplaints = [];
+   let currentFilter = 'all';
 
-   // Check if user is logged in
-   //if (!currentUser.studentId) {
-     //alert('Please log in to view your complaints');
-     //window.location.href = '/';
-   //}
+   // DEBUG FUNCTION - COMMENTED OUT
+   /*
+   function addDebugInfo(message) {
+     debugLog.push(`[${new Date().toLocaleTimeString()}] ${message}`);
+     const debugElement = document.getElementById('debugInfo');
+     debugElement.innerHTML = `
+       <h4>Debug Information:</h4>
+       ${debugLog.slice(-10).map(log => `<p>${log}</p>`).join('')}
+     `;
+   }
+   */
 
-   // Display student information
-   document.getElementById('studentInfo').innerHTML = `
-     <strong>Student ID:</strong> ${currentUser.studentId}<br>
-     <strong>Name:</strong> ${currentUser.name || 'N/A'}<br>
-     <strong>Email:</strong> ${currentUser.email || 'N/A'}
-   `;
+   function updateStats() {
+     const totalCount = allComplaints.length;
+     const pendingCount = allComplaints.filter(c => c.status === 0).length;
+     const solvedCount = allComplaints.filter(c => c.status === 1).length;
+
+     document.getElementById('totalCount').textContent = totalCount;
+     document.getElementById('pendingCount').textContent = pendingCount;
+     document.getElementById('solvedCount').textContent = solvedCount;
+
+     // DEBUG - COMMENTED OUT
+     // addDebugInfo(`Stats updated - Total: ${totalCount}, Pending: ${pendingCount}, Solved: ${solvedCount}`);
+   }
+
+   function filterComplaints(filter) {
+     currentFilter = filter;
+     
+     // Update active filter button
+     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+     event.target.classList.add('active');
+
+     const complaintCards = document.querySelectorAll('.complaint-card');
+     let visibleCount = 0;
+
+     complaintCards.forEach(card => {
+       const status = card.classList.contains('solved') ? 'solved' : 'pending';
+       
+       if (filter === 'all' || 
+           (filter === 'pending' && status === 'pending') ||
+           (filter === 'solved' && status === 'solved')) {
+         card.classList.remove('hidden');
+         visibleCount++;
+       } else {
+         card.classList.add('hidden');
+       }
+     });
+
+     // DEBUG - COMMENTED OUT
+     // addDebugInfo(`Filter applied: ${filter}, showing ${visibleCount} complaints`);
+
+     // Show appropriate message if no complaints match filter
+     const outputBox = document.getElementById('complaintsOutput');
+     if (visibleCount === 0 && allComplaints.length > 0) {
+       const filterMessage = filter === 'pending' ? 'pending' : filter === 'solved' ? 'solved' : '';
+       outputBox.innerHTML += `
+         <div class="no-complaints" id="filterMessage">
+           <h3>📭 No ${filterMessage} Complaints</h3>
+           <p>You don't have any ${filterMessage} complaints at the moment.</p>
+         </div>
+       `;
+     } else {
+       // Remove filter message if it exists
+       const filterMessage = document.getElementById('filterMessage');
+       if (filterMessage) filterMessage.remove();
+     }
+   }
+
+   document.addEventListener('DOMContentLoaded', () => {
+     // DEBUG - COMMENTED OUT
+     // addDebugInfo('Page loaded, checking session...');
+     
+     const sessionData = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+     // DEBUG - COMMENTED OUT
+     // addDebugInfo(`Session data found: ${sessionData ? 'Yes' : 'No'}`);
+
+     if (!sessionData) {
+       // DEBUG - COMMENTED OUT
+       // addDebugInfo('No session data found, would redirect to login');
+       // For demo purposes, create mock user data
+       currentUser = {
+         name: 'Demo User',
+         studentId: '12345',
+         email: 'demo@university.edu'
+       };
+       // DEBUG - COMMENTED OUT
+       // addDebugInfo('Using demo user data for testing');
+     } else {
+       try {
+         currentUser = JSON.parse(sessionData);
+         // DEBUG - COMMENTED OUT
+         // addDebugInfo(`User data parsed: ID=${currentUser.studentId}`);
+       } catch (e) {
+         // DEBUG - COMMENTED OUT
+         // addDebugInfo(`Error parsing session data: ${e.message}`);
+         return;
+       }
+     }
+
+     // Show student info
+     document.getElementById('studentInfo').innerHTML = `
+       <strong>Name:</strong> ${currentUser.name}<br>
+       <strong>ID:</strong> ${currentUser.studentId}<br>
+       <strong>Email:</strong> ${currentUser.email}
+     `;
+     
+     // DEBUG - COMMENTED OUT
+     // addDebugInfo('Student info displayed, loading complaints...');
+     loadComplaints();
+   });
 
    // Function to load complaints
    async function loadComplaints() {
      const outputBox = document.getElementById('complaintsOutput');
      const refreshBtn = document.getElementById('refreshBtn');
+
+     if (!currentUser || !currentUser.studentId) {
+       // DEBUG - COMMENTED OUT
+       // addDebugInfo('ERROR: No current user or student ID');
+       outputBox.innerHTML = '<div class="error-message">No user session found</div>';
+       return;
+     }
 
      try {
        // Show loading state
@@ -248,22 +459,34 @@
        refreshBtn.textContent = '🔄 Loading...';
        
        outputBox.innerHTML = '<div class="loading-message">🔍 Loading your complaints...</div>';
+       // DEBUG - COMMENTED OUT
+       // addDebugInfo(`Making API request to: http://localhost:3000/api/complaints/${currentUser.studentId}`);
 
        // Fetch complaints from backend
-       const response = await fetch(`/api/complaints`);
+       const response = await fetch(`http://localhost:3000/api/complaints/${currentUser.studentId}`);
        
+       // DEBUG - COMMENTED OUT
+       // addDebugInfo(`API response status: ${response.status} ${response.statusText}`);
+
        if (!response.ok) {
-         throw new Error('Failed to fetch complaints');
+         const errorText = await response.text();
+         // DEBUG - COMMENTED OUT
+         // addDebugInfo(`API Error Response: ${errorText}`);
+         throw new Error(`Failed to fetch complaints: ${response.status}`);
        }
 
-       const allComplaints = await response.json();
+       const data = await response.json();
+       // DEBUG - COMMENTED OUT
+       // addDebugInfo(`API response received: ${JSON.stringify(data)}`);
        
-       // Filter complaints for current user
-       const userComplaints = allComplaints.filter(complaint => 
-         complaint.student_id === currentUser.studentId
-       );
+       allComplaints = data.complaints || [];
+       // DEBUG - COMMENTED OUT
+       // addDebugInfo(`Number of complaints found: ${allComplaints.length}`);
 
-       if (userComplaints.length === 0) {
+       // Update statistics
+       updateStats();
+
+       if (allComplaints.length === 0) {
          outputBox.innerHTML = `
            <div class="no-complaints">
              <h3>📭 No Complaints Found</h3>
@@ -271,43 +494,64 @@
              <p>If you have any issues, feel free to <a href="/complaints" style="color: #6a82fb;">submit a complaint</a>.</p>
            </div>
          `;
+         // DEBUG - COMMENTED OUT
+         // addDebugInfo('Displayed no complaints message');
        } else {
          // Display complaints
-         outputBox.innerHTML = userComplaints.map(complaint => {
-           const complaintDate = new Date(complaint.complaint_date).toLocaleDateString();
-           const resolvedDate = complaint.resolved_date ? 
-             new Date(complaint.resolved_date).toLocaleDateString() : null;
+         const complaintsHtml = allComplaints.map(complaint => {
+           const complaintDate = new Date(complaint.time).toLocaleDateString();
+           const statusText = complaint.status === 1 ? 'solved' : 'pending';
 
            return `
-             <div class="complaint-card ${complaint.status}">
+             <div class="complaint-card ${statusText}">
                <div class="complaint-header">
                  <span class="complaint-id">#${complaint.complaint_id}</span>
-                 <span class="status-badge status-${complaint.status}">
-                   ${complaint.status.toUpperCase()}
+                 <span class="status-badge status-${statusText}">
+                   ${(statusText).toUpperCase()}
                  </span>
                </div>
                <div class="complaint-title">${complaint.title}</div>
+               
                <div class="complaint-description">${complaint.description}</div>
-               ${complaint.status === 'resolved' && complaint.resolution ? `
+
+               ${complaint.status === 1 && complaint.resolution ? `
                  <div style="background: rgba(56, 239, 125, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px;">
                    <strong>Resolution:</strong> ${complaint.resolution}
                  </div>
                ` : ''}
+               
                <div class="complaint-meta">
                  <span>Submitted: ${complaintDate}</span>
-                 ${resolvedDate ? `<span>Resolved: ${resolvedDate}</span>` : ''}
+                 <span>Student ID: ${complaint.student_id}</span>
                </div>
              </div>
            `;
          }).join('');
+         
+         outputBox.innerHTML = complaintsHtml;
+         // DEBUG - COMMENTED OUT
+         // addDebugInfo(`Displayed ${allComplaints.length} complaints`);
+
+         // Apply current filter
+         setTimeout(() => {
+           const activeFilterBtn = document.querySelector('.filter-btn.active');
+           if (activeFilterBtn) {
+             const filterType = activeFilterBtn.textContent.includes('All') ? 'all' :
+                               activeFilterBtn.textContent.includes('Pending') ? 'pending' : 'solved';
+             filterComplaints(filterType);
+           }
+         }, 100);
        }
 
      } catch (error) {
        console.error('Error loading complaints:', error);
+       // DEBUG - COMMENTED OUT
+       // addDebugInfo(`ERROR: ${error.message}`);
        outputBox.innerHTML = `
          <div class="error-message">
            <h3>❌ Error Loading Complaints</h3>
-           <p>Failed to load your complaints. Please check your connection and try again.</p>
+           <p>Failed to load your complaints: ${error.message}</p>
+           <p>Please check the console for more details.</p>
          </div>
        `;
      } finally {
@@ -316,11 +560,6 @@
        refreshBtn.textContent = '🔄 Refresh Complaints';
      }
    }
-
-   // Load complaints when page loads
-   document.addEventListener('DOMContentLoaded', function() {
-     loadComplaints();
-   });
  </script>
 </body>
 </html>

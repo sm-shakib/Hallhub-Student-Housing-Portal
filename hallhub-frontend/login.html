@@ -159,6 +159,11 @@
   </footer>
 
   <script>
+
+    // Always clear session when visiting login page
+localStorage.removeItem('userSession');
+sessionStorage.removeItem('userSession');
+
     // Theme toggle script
     const themeToggleBtn = document.getElementById('theme-toggle');
     themeToggleBtn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
