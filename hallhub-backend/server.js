@@ -390,30 +390,29 @@ app.post('/api/founditems', async (req, res) => {
   }
 });
 
-// API routes for complaints
-app.get('/api/complaints', async (req, res) => {
+// Get complaints for a specific student
+app.get('/api/complaints/:studentId', async (req, res) => {
   try {
-    const { status } = req.query;
-    let sql = `
-      SELECT c.*, si.name as student_name 
-      FROM Complaints c 
-      LEFT JOIN Student_Info si ON c.student_id = si.student_id
+    const { studentId } = req.params;
+    const query = `
+      SELECT complaint_id, student_id, title, description, time, status
+      FROM complaint 
+      WHERE student_id = ?
+      ORDER BY time DESC
     `;
-    let params = [];
-    
-    if (status) {
-      sql += ' WHERE c.status = ?';
-      params.push(status);
-    }
-    
-    sql += ' ORDER BY c.complaint_date DESC';
-    const [rows] = await pool.execute(sql, params);
-    res.json(rows);
+    const [results] = await pool.execute(query, [studentId]);
+
+    res.json({
+      success: true,
+      complaints: results,
+      count: results.length
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch complaints' });
+    console.error("Database error:", error);
+    res.status(500).json({ success: false, message: "Database error occurred" });
   }
 });
+
 
 app.post('/api/complaints', async (req, res) => {
   try {
@@ -640,53 +639,74 @@ app.get('/api/items', async (req, res) => {
 });
 
 
-// API route for dashboard statistics
+// Clean API route for dashboard statistics
 app.get('/api/dashboard-stats', async (req, res) => {
   try {
     const { student_id } = req.query;
-    
     const stats = {};
-    
-    // Total lost items
-    const [lostItems] = await pool.execute('SELECT COUNT(*) as count FROM Lost_Items');
+
+     const [lostItems] = await pool.execute('SELECT COUNT(*) as count FROM lost_item WHERE student_id = ?', [student_id]);
     stats.totalLostItems = lostItems[0].count;
-    
-    // Total found items
-    const [foundItems] = await pool.execute('SELECT COUNT(*) as count FROM Found_Items');
+
+    const [foundItems] = await pool.execute(
+    `SELECT COUNT(*) as count 
+    FROM found_item f
+    JOIN lost_item l ON f.lost_id = l.lost_id
+    WHERE l.student_id = ?`, [student_id]);
     stats.totalFoundItems = foundItems[0].count;
-    
-    // Total events
+
     const [events] = await pool.execute('SELECT COUNT(*) as count FROM events');
     stats.totalEvents = events[0].count;
-    
-    // Total complaints
-    const [complaints] = await pool.execute('SELECT COUNT(*) as count FROM Complaints');
+
+    const [complaints] = await pool.execute('SELECT COUNT(*) as count FROM complaint WHERE student_id = ?', [student_id]);
     stats.totalComplaints = complaints[0].count;
-    
-    // Pending complaints
-    const [pendingComplaints] = await pool.execute('SELECT COUNT(*) as count FROM Complaints WHERE status = "pending"');
+
+    const [pendingComplaints] = await pool.execute('SELECT COUNT(*) as count FROM complaint WHERE status = 0 AND student_id = ?', [student_id]);
     stats.pendingComplaints = pendingComplaints[0].count;
     
+    
+    
     // Total students
-    const [totalStudents] = await pool.execute('SELECT COUNT(*) as count FROM Student_Info');
-    stats.totalStudents = totalStudents[0].count;
+    try {
+      const [totalStudents] = await pool.execute('SELECT COUNT(*) as count FROM Student_Info');
+      stats.totalStudents = totalStudents[0].count;
+    } catch (studentsError) {
+      try {
+        const [totalStudents] = await pool.execute('SELECT COUNT(*) as count FROM student_info');
+        stats.totalStudents = totalStudents[0].count;
+      } catch (altError) {
+        stats.totalStudents = 0;
+      }
+    }
     
     // User specific stats if student_id provided
     if (student_id) {
-      const [userLostItems] = await pool.execute('SELECT COUNT(*) as count FROM Lost_Items WHERE student_id = ?', [student_id]);
-      stats.userLostItems = userLostItems[0].count;
+      try {
+        const [userLostItems] = await pool.execute('SELECT COUNT(*) as count FROM lost_item WHERE Student_ID = ?', [student_id]);
+        stats.userLostItems = userLostItems[0].count;
+      } catch (error) {
+        stats.userLostItems = 0;
+      }
       
-      const [userFoundItems] = await pool.execute('SELECT COUNT(*) as count FROM Found_Items WHERE student_id = ?', [student_id]);
-      stats.userFoundItems = userFoundItems[0].count;
+      try {
+        const [userFoundItems] = await pool.execute('SELECT COUNT(*) as count FROM Found_Items WHERE student_id = ?', [student_id]);
+        stats.userFoundItems = userFoundItems[0].count;
+      } catch (error) {
+        stats.userFoundItems = 0;
+      }
       
-      const [userComplaints] = await pool.execute('SELECT COUNT(*) as count FROM Complaints WHERE student_id = ?', [student_id]);
-      stats.userComplaints = userComplaints[0].count;
+      try {
+        const [userComplaints] = await pool.execute('SELECT COUNT(*) as count FROM complaint WHERE student_id = ?', [student_id]);
+        stats.userComplaints = userComplaints[0].count;
+      } catch (error) {
+        stats.userComplaints = 0;
+      }
     }
     
     res.json(stats);
+    
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch dashboard statistics' });
+    res.status(500).json({ error: 'Failed to fetch dashboard statistics: ' + error.message });
   }
 });
 
