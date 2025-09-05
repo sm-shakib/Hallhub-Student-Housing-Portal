@@ -338,55 +338,43 @@ app.get('/api/student-lostitems/:studentId', async (req, res) => {
   }
 });
 
-// API routes for found items - Updated to match expected frontend data
-app.get('/api/founditems', async (req, res) => {
+
+// API route to fetch found items by Lost ID
+
+// Replace the existing /api/founditems/:lostId endpoint in your server.js with this corrected version
+
+app.get('/api/founditems/:lostId', async (req, res) => {
   try {
+    const { lostId } = req.params;
+    
+    console.log('Looking up Lost ID:', lostId); // Debug log
+    
     const sql = `
-      SELECT fi.*, si.name as student_name 
-      FROM Found_Items fi 
-      LEFT JOIN Student_Info si ON fi.student_id = si.student_id 
-      ORDER BY fi.date_found DESC
-    `;
-    const [rows] = await pool.execute(sql);
-    res.json(rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch found items' });
-  }
-});
-
-app.post('/api/founditems', async (req, res) => {
-  try {
-    // Assuming similar field names for found items form
-    const { studentId, itemId, description, foundDate } = req.body;
-
-    if (!studentId || !itemId || !foundDate) {
-      return res.status(400).json({ 
-        error: 'Please provide Student ID, Item ID, and Date Found' 
-      });
-    }
-
-    const sql = `
-      INSERT INTO Found_Items (student_id, item_name, description, date_found)
-      VALUES (?, ?, ?, ?)
+      SELECT 
+        fi.Found_ID,
+        fi.Lost_ID,
+        fi.Found_Time,
+        li.Student_ID,
+        si.Name as student_name,
+        li.Description,
+        li.Lost_Time,
+        i.Item_Type
+      FROM found_item fi
+      JOIN lost_item li ON fi.Lost_ID = li.Lost_ID
+      LEFT JOIN Student_Info si ON li.Student_ID = si.Student_ID
+      LEFT JOIN item i ON li.Item_ID = i.Item_ID
+      WHERE fi.Lost_ID = ?
+      ORDER BY fi.Found_Time DESC
     `;
     
-    const [result] = await pool.execute(sql, [
-      studentId,           // maps to student_id in database
-      itemId,             // maps to item_name in database  
-      description || '',  // description (optional)
-      foundDate           // maps to date_found in database
-    ]);
-
-    res.json({
-      success: true,
-      message: 'Found item reported successfully',
-      itemId: result.insertId
-    });
-
+    const [rows] = await pool.execute(sql, [lostId]);
+    
+    console.log('Query result:', rows); // Debug log
+    
+    res.json(rows);
   } catch (error) {
-    console.error('Error submitting found item:', error);
-    res.status(500).json({ error: 'Failed to report found item' });
+    console.error('Error fetching found items:', error);
+    res.status(500).json({ error: 'Failed to fetch found items: ' + error.message });
   }
 });
 

@@ -33,6 +33,7 @@
       border: 1px solid #ccc;
       margin-bottom: 16px;
       transition: 0.3s ease;
+      box-sizing: border-box;
     }
     input:focus {
       border-color: #A18CD1;
@@ -55,10 +56,23 @@
     .result {
       margin-top: 15px;
       background-color: #FBC2EB;
-      padding: 10px;
+      padding: 15px;
       border-radius: 10px;
       color: #444;
       font-weight: 500;
+      text-align: left;
+    }
+    .loading {
+      background-color: #e3f2fd;
+      color: #1976d2;
+    }
+    .error {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+    .success {
+      background-color: #e8f5e8;
+      color: #2e7d32;
     }
   </style>
 </head>
@@ -76,28 +90,54 @@
       const statusBox = document.getElementById('statusBox');
 
       if (!id) {
+        statusBox.className = "result error";
         statusBox.textContent = "Please enter a valid Lost Item ID.";
         return;
       }
 
-      // Mock found item check
-      const foundItems = {
-        "L101": { desc: "Black Wallet", location: "Security Office", date: "2025-08-02" },
-        "L322": { desc: "Student ID Card", location: "Reception Desk", date: "2025-08-01" }
-      };
+      // Show loading state
+      statusBox.className = "result loading";
+      statusBox.textContent = "Searching for found items...";
 
-      if (foundItems[id]) {
-        const item = foundItems[id];
-        statusBox.innerHTML = `
-          ✅ <strong>Found Match</strong><br>
-          <strong>Description:</strong> ${item.desc}<br>
-          <strong>Location:</strong> ${item.location}<br>
-          <strong>Date Found:</strong> ${item.date}
-        `;
-      } else {
-        statusBox.textContent = "❌ No match found for this Lost ID.";
-      }
+      // Fetch the found items from the backend API
+      fetch(`http://localhost:3000/api/founditems/${id}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.length > 0) {
+            const item = data[0]; // Get the first found item
+            statusBox.className = "result success";
+            statusBox.innerHTML = `
+              <strong>✅ Found Match!</strong><br><br>
+              <strong>Student Name:</strong> ${item.student_name || 'N/A'}<br>
+              <strong>Item Type:</strong> ${item.Item_Type || 'N/A'}<br>
+              <strong>Description:</strong> ${item.Description || 'N/A'}<br>
+              <strong>Lost Date:</strong> ${item.Lost_Time ? new Date(item.Lost_Time).toLocaleString() : 'N/A'}<br>
+              <strong>Found Date:</strong> ${item.Found_Time ? new Date(item.Found_Time).toLocaleString() : 'N/A'}<br>
+              <strong>Found ID:</strong> ${item.Found_ID || 'N/A'}
+            `;
+          } else {
+            statusBox.className = "result error";
+            statusBox.textContent = "❌ No match found for this Lost ID.";
+          }
+        })
+        .catch(error => {
+          console.error('Fetch error:', error);
+          statusBox.className = "result error";
+          statusBox.textContent = "❌ Error fetching data. Please check your connection and try again.";
+        });
     }
+
+    // Allow Enter key to trigger search
+    document.getElementById('lostId').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        lookupFoundItem();
+      }
+    });
   </script>
 </body>
 </html>
