@@ -56,6 +56,12 @@
      box-shadow: 0 0 10px rgba(255, 110, 196, 0.3);
    }
 
+   input[readonly] {
+     background: #f8f9fa !important;
+     color: #6c757d !important;
+     cursor: not-allowed;
+   }
+
    textarea {
      height: 100px;
      resize: vertical;
@@ -158,17 +164,40 @@
  </div>
 
  <script>
-   // Get current user data from localStorage
-   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+   // Session helper functions
+   function getCurrentUser() {
+     try {
+       const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+       return userSession ? JSON.parse(userSession) : null;
+     } catch (error) {
+       console.error('Error parsing user session:', error);
+       return null;
+     }
+   }
+
+   function initializeStudentIdField() {
+     const currentUser = getCurrentUser();
+     const studentIdField = document.getElementById('studentId');
+     
+     if (!currentUser || !currentUser.studentId) {
+       alert('Please log in to file a complaint');
+       window.location.href = 'login.html';
+       return null;
+     }
+     
+     if (studentIdField) {
+       studentIdField.value = currentUser.studentId;
+       studentIdField.readOnly = true;
+     }
+     
+     return currentUser;
+   }
 
    // Initialize form
    document.addEventListener('DOMContentLoaded', function() {
-     if (currentUser.studentId) {
-       document.getElementById('studentId').value = currentUser.studentId;
-     } else {
-       //alert('Please log in to file a complaint');
-       //window.location.href = '/';
-       //return;
+     const currentUser = initializeStudentIdField();
+     if (currentUser) {
+       console.log('Logged in as:', currentUser.name, '(ID:', currentUser.studentId + ')');
      }
    });
 
@@ -215,9 +244,9 @@
            <p><em>You will be notified once your complaint is resolved.</em></p>
          `, 'success');
 
-         // Reset form
-         document.getElementById("complainForm").reset();
-         document.getElementById('studentId').value = currentUser.studentId;
+         // Reset form but keep student ID
+         document.getElementById("complaintTitle").value = '';
+         document.getElementById("complainDesc").value = '';
        } else {
          // Error from server
          showMessage(`❌ Error: ${result.error}`, 'error');

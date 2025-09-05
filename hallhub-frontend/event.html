@@ -43,6 +43,14 @@
       background: rgba(255, 255, 255, 0.9);
       box-shadow: 0 0 10px rgba(255, 110, 196, 0.3);
     }
+
+    input[readonly] {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  border-color: #e9ecef !important;
+}
+
     textarea { resize: vertical; height: 80px; }
     button {
       background: #ff6ec4;
@@ -109,6 +117,51 @@
   </div>
 
   <script>
+    // Session helper functions
+function getCurrentUser() {
+  try {
+    const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+    return userSession ? JSON.parse(userSession) : null;
+  } catch (error) {
+    console.error('Error parsing user session:', error);
+    return null;
+  }
+}
+
+function initializeStudentIdField() {
+  const currentUser = getCurrentUser();
+  const studentIdField = document.getElementById('organizerId');
+  
+  if (!currentUser || !currentUser.studentId) {
+    alert('Please log in to submit events');
+    window.location.href = 'login.html';
+    return null;
+  }
+  
+  if (studentIdField) {
+    studentIdField.value = currentUser.studentId;
+    studentIdField.readOnly = true;
+    studentIdField.style.backgroundColor = '#f8f9fa';
+    studentIdField.style.color = '#6c757d';
+    studentIdField.style.cursor = 'not-allowed';
+  }
+  
+  return currentUser;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const currentUser = initializeStudentIdField();
+  if (currentUser) {
+    console.log('Logged in as:', currentUser.name, '(ID:', currentUser.studentId + ')');
+  }
+  
+  document.getElementById('eventDate').min = new Date().toISOString().split('T')[0];
+  loadRecentEvents();
+});
+
+// Rest of your existing event.html JavaScript code stays the same...
+
+  
     let currentUser = {};
     try { currentUser = JSON.parse(localStorage.getItem('userSession') || '{}'); } catch { currentUser = {}; }
 
