@@ -43,6 +43,14 @@
       border-color: #a1c4fd;
       outline: none;
     }
+    
+    input[readonly] {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  border-color: #e9ecef !important;
+}
+
     button {
       background-color: #a1c4fd;
       color: white;
@@ -115,6 +123,40 @@
   </div>
 
   <script>
+    // Session helper functions
+function getCurrentUser() {
+  try {
+    const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+    return userSession ? JSON.parse(userSession) : null;
+  } catch (error) {
+    console.error('Error parsing user session:', error);
+    return null;
+  }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+  const currentUser = getCurrentUser();
+  
+  if (!currentUser || !currentUser.studentId) {
+    alert('Please log in to view your lost items');
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  // Pre-fill and make read-only
+  const studentIdField = document.getElementById('studentId');
+  studentIdField.value = currentUser.studentId;
+  studentIdField.readOnly = true;
+  studentIdField.style.backgroundColor = '#f8f9fa';
+  studentIdField.style.color = '#6c757d';
+  studentIdField.style.cursor = 'not-allowed';
+  
+  // Auto-load their items
+  fetchLostItems();
+});
+
+  
     async function fetchLostItems() {
       const studentId = document.getElementById("studentId").value.trim();
       const output = document.getElementById("itemsDisplay");
