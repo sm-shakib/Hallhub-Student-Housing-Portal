@@ -338,16 +338,21 @@ app.get('/api/student-lostitems/:studentId', async (req, res) => {
   }
 });
 
-// API routes for found items - Updated to match expected frontend data
-app.get('/api/founditems', async (req, res) => {
+
+// API route to fetch found items by Lost ID
+
+app.get('/api/founditems/:lostId', async (req, res) => {
   try {
+    const { lostId } = req.params;
+    
     const sql = `
-      SELECT fi.*, si.name as student_name 
-      FROM Found_Items fi 
-      LEFT JOIN Student_Info si ON fi.student_id = si.student_id 
-      ORDER BY fi.date_found DESC
+      SELECT fi.*, si.name as student_name
+      FROM found_item fi
+      LEFT JOIN Student_Info si ON fi.student_id = si.student_id
+      WHERE fi.lost_id = ?
+      ORDER BY fi.Found_Time DESC
     `;
-    const [rows] = await pool.execute(sql);
+    const [rows] = await pool.execute(sql, [lostId]);
     res.json(rows);
   } catch (error) {
     console.error(error);
@@ -355,40 +360,6 @@ app.get('/api/founditems', async (req, res) => {
   }
 });
 
-app.post('/api/founditems', async (req, res) => {
-  try {
-    // Assuming similar field names for found items form
-    const { studentId, itemId, description, foundDate } = req.body;
-
-    if (!studentId || !itemId || !foundDate) {
-      return res.status(400).json({ 
-        error: 'Please provide Student ID, Item ID, and Date Found' 
-      });
-    }
-
-    const sql = `
-      INSERT INTO Found_Items (student_id, item_name, description, date_found)
-      VALUES (?, ?, ?, ?)
-    `;
-    
-    const [result] = await pool.execute(sql, [
-      studentId,           // maps to student_id in database
-      itemId,             // maps to item_name in database  
-      description || '',  // description (optional)
-      foundDate           // maps to date_found in database
-    ]);
-
-    res.json({
-      success: true,
-      message: 'Found item reported successfully',
-      itemId: result.insertId
-    });
-
-  } catch (error) {
-    console.error('Error submitting found item:', error);
-    res.status(500).json({ error: 'Failed to report found item' });
-  }
-});
 
 // API routes for complaints
 app.get('/api/complaints', async (req, res) => {

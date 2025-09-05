@@ -71,7 +71,7 @@
   </div>
 
   <script>
-    function lookupFoundItem() {
+  function lookupFoundItem() {
       const id = document.getElementById('lostId').value.trim();
       const statusBox = document.getElementById('statusBox');
 
@@ -80,23 +80,27 @@
         return;
       }
 
-      // Mock found item check
-      const foundItems = {
-        "L101": { desc: "Black Wallet", location: "Security Office", date: "2025-08-02" },
-        "L322": { desc: "Student ID Card", location: "Reception Desk", date: "2025-08-01" }
-      };
-
-      if (foundItems[id]) {
-        const item = foundItems[id];
-        statusBox.innerHTML = `
-          ✅ <strong>Found Match</strong><br>
-          <strong>Description:</strong> ${item.desc}<br>
-          <strong>Location:</strong> ${item.location}<br>
-          <strong>Date Found:</strong> ${item.date}
-        `;
-      } else {
-        statusBox.textContent = "❌ No match found for this Lost ID.";
-      }
+      // Fetch the found items from the backend
+      fetch(`http://localhost:3000/api/founditems/${id}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.length > 0) {
+            const item = data[0]; // Assuming the first item is the correct match
+            statusBox.innerHTML = `
+              ✅ <strong>Found Match</strong><br>
+              <strong>Student Name:</strong> ${item.student_name}<br>
+              <strong>Description:</strong> ${item.Description}<br>
+              <strong>Location:</strong> ${item.Location}<br>
+              <strong>Date Found:</strong> ${new Date(item.Found_Time).toLocaleString()}
+            `;
+          } else {
+            statusBox.textContent = "❌ No match found for this Lost ID.";
+          }
+        })
+        .catch(error => {
+          statusBox.textContent = "❌ Error fetching data.";
+          console.error(error);
+        });
     }
   </script>
 </body>
