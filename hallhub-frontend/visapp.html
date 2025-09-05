@@ -243,22 +243,22 @@ function initializeForm() {
 }
 
 // Initialize form with student data
-//document.addEventListener('DOMContentLoaded', function() {
-  //const currentUser = initializeForm();
-  //if (!currentUser) return; // Exit if no session
-//});
+document.addEventListener('DOMContentLoaded', function() {
+  const currentUser = initializeForm();
+  if (!currentUser) return; // Exit if no session
+});
 
 // Rest of your existing form submission code...
 
     // Initialize form with student data
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('studentId').value = currentUser.studentId;
-      document.getElementById('studentInfo').innerHTML = `
-        <strong>Name:</strong> ${currentUser.name || 'N/A'}<br>
-        <strong>Student ID:</strong> ${currentUser.studentId}<br>
-        <strong>Email:</strong> ${currentUser.email || 'N/A'}
-      `;
-    });
+    //document.addEventListener('DOMContentLoaded', function() {
+      //document.getElementById('studentId').value = currentUser.studentId;
+      //document.getElementById('studentInfo').innerHTML = `
+       // <strong>Name:</strong> ${currentUser.name || 'N/A'}<br>
+        //<strong>Student ID:</strong> ${currentUser.studentId}<br>
+        //<strong>Email:</strong> ${currentUser.email || 'N/A'}
+      //`;
+   // });
 
     // Handle form submission
     document.getElementById('visitorForm').addEventListener('submit', async function(e) {
