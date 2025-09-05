@@ -52,6 +52,13 @@
       transition: 0.3s ease;
       box-sizing: border-box;
     }
+    
+    input[readonly] {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  border-color: #e9ecef !important;
+}
 
     input:focus {
       border-color: #87CEFA;
@@ -419,13 +426,39 @@
       window.location.href = 'dashb.html';
     }
 
+    // Session helper functions
+function getCurrentUser() {
+  try {
+    const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+    return userSession ? JSON.parse(userSession) : null;
+  } catch (error) {
+    console.error('Error parsing user session:', error);
+    return null;
+  }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+  const currentUser = getCurrentUser();
+  
+  if (!currentUser || !currentUser.studentId) {
+    alert('Please log in to view allocation information');
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  // Pre-fill with current user's student ID
+  document.getElementById('studentIdInput').value = currentUser.studentId;
+  document.getElementById('studentIdInput').placeholder = `Your ID: ${currentUser.studentId}`;
+});
+
     // Initialize page
-    document.addEventListener('DOMContentLoaded', function() {
+    //document.addEventListener('DOMContentLoaded', function() {
       // If user is logged in, show their student ID as placeholder
-      if (currentUser.studentId) {
-        document.getElementById('studentIdInput').placeholder = `Enter Student ID (Your ID: ${currentUser.studentId})`;
-      }
-    });
+      //if (currentUser.studentId) {
+        //document.getElementById('studentIdInput').placeholder = `Enter Student ID (Your ID: ${currentUser.studentId})`;
+      //}
+    //});
   </script>
 </body>
 </html>

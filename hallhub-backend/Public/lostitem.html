@@ -44,6 +44,14 @@
      border-color: #667eea;
      outline: none;
    }
+
+   input[readonly] {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  border-color: #e9ecef !important;
+}
+
    select {
      cursor: pointer;
    }
@@ -92,7 +100,7 @@
      
      <label for="itemId">Item Type *</label>
      <select id="itemId" required>
-       <option value="">Loading item types...</option>
+       <option value="">Select an item type...</option>
      </select>
      
      <label for="description">Item Description *</label>
@@ -107,53 +115,86 @@
  </div>
 
  <script>
+  // Session helper functions
+function getCurrentUser() {
+  try {
+    const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+    return userSession ? JSON.parse(userSession) : null;
+  } catch (error) {
+    console.error('Error parsing user session:', error);
+    return null;
+  }
+}
+
+function initializeStudentIdField() {
+  const currentUser = getCurrentUser();
+  const studentIdField = document.getElementById('studentId');
+  
+  if (!currentUser || !currentUser.studentId) {
+    alert('Please log in to report lost items');
+    window.location.href = 'login.html';
+    return null;
+  }
+  
+  if (studentIdField) {
+    studentIdField.value = currentUser.studentId;
+    studentIdField.readOnly = true;
+    studentIdField.style.backgroundColor = '#f8f9fa';
+    studentIdField.style.color = '#6c757d';
+    studentIdField.style.cursor = 'not-allowed';
+  }
+  
+  return currentUser;
+}
+
+// Update the existing DOMContentLoaded event listener:
+document.addEventListener('DOMContentLoaded', async function() {
+  const currentUser = initializeStudentIdField();
+  if (!currentUser) return; // Exit if no user session
+  
+  // Set max date to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('lostDate').setAttribute('max', today);
+
+  // Load item types from the API
+  await loadItemTypes();
+});
+
    // Load item types when page loads
-   document.addEventListener('DOMContentLoaded', async function() {
+  // document.addEventListener('DOMContentLoaded', async function() {
      // Set max date to today
-     const today = new Date().toISOString().split('T')[0];
-     document.getElementById('lostDate').setAttribute('max', today);
+     //const today = new Date().toISOString().split('T')[0];
+    // document.getElementById('lostDate').setAttribute('max', today);
 
      // Load item types from the API
-     await loadItemTypes();
-   });
+    // await loadItemTypes();
+//   });
 
    async function loadItemTypes() {
      const itemSelect = document.getElementById('itemId');
      const msgElement = document.getElementById('submissionMsg');
      
-     console.log('Loading item types...'); // Debug log
-     
      try {
-       console.log('Fetching from /api/item-types...'); // Debug log
        const response = await fetch('http://localhost:3000/api/item-types');
        const itemTypes = await response.json();
        
-       console.log('Response status:', response.status); // Debug log
-       console.log('Item types received:', itemTypes); // Debug log
-       
-       if (response.ok && Array.isArray(itemTypes)) {
-         // Clear existing options
+       if (response.ok) {
+         // Clear existing options except the first one
          itemSelect.innerHTML = '<option value="">Select an item type...</option>';
          
          // Add item types to dropdown
          itemTypes.forEach(item => {
-           console.log('Adding item:', item); // Debug log
            const option = document.createElement('option');
            option.value = item.Item_ID;
            option.textContent = item.Item_Type;
            itemSelect.appendChild(option);
          });
-         
-         console.log('Dropdown populated successfully'); // Debug log
        } else {
-         console.error('Invalid response:', response.status, itemTypes); // Debug log
-         itemSelect.innerHTML = '<option value="">Failed to load item types</option>';
-         msgElement.textContent = "Failed to load item types. Please refresh the page.";
+         msgElement.textContent = "Failed to load item types";
          msgElement.className = "msg error";
        }
      } catch (error) {
        console.error('Error loading item types:', error);
-       itemSelect.innerHTML = '<option value="">Error loading item types</option>';
        msgElement.textContent = "Error loading item types. Please refresh the page.";
        msgElement.className = "msg error";
      }
@@ -181,8 +222,6 @@
        lostDate: document.getElementById("lostDate").value
      };
      
-     console.log('Form data:', formData); // Debug log
-     
      // Client-side validation
      if (!formData.studentId || !formData.itemId || !formData.description || !formData.lostDate) {
        msgElement.textContent = "Please fill in all required fields";
@@ -202,7 +241,6 @@
        });
        
        const result = await response.json();
-       console.log('Server response:', result); // Debug log
        
        if (result.success) {
          // Show success message
@@ -215,7 +253,7 @@
          // Reset item dropdown to default
          document.getElementById('itemId').value = "";
          
-         // Show additional message
+         // Optional: Redirect after a delay
          setTimeout(() => {
            msgElement.textContent = "You can now close this window or report another item.";
          }, 3000);
