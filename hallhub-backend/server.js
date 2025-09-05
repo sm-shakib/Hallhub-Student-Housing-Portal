@@ -442,30 +442,6 @@ app.post('/api/complaints', async (req, res) => {
 });
 
 
-
-app.put('/api/complaints/:id/resolve', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { resolution } = req.body;
-
-    const sql = `
-      UPDATE Complaints 
-      SET status = 1, resolution = ?, resolved_date = NOW()
-      WHERE complaint_id = ?
-    `;
-    await pool.execute(sql, [resolution, id]);
-
-    res.json({
-      success: true,
-      message: 'Complaint resolved successfully'
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to resolve complaint' });
-  }
-});
-
 // API routes for allocation info
 app.get('/api/allocations', async (req, res) => {
   try {
