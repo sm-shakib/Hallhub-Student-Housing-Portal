@@ -71,38 +71,37 @@
   </div>
 
   <script>
-  function lookupFoundItem() {
-    const id = document.getElementById('lostId').value.trim();
-    const statusBox = document.getElementById('statusBox');
+    function lookupFoundItem() {
+      const id = document.getElementById('lostId').value.trim();
+      const statusBox = document.getElementById('statusBox');
 
-    if (!id) {
+      if (!id) {
         statusBox.textContent = "Please enter a valid Lost Item ID.";
         return;
-    }
+      }
 
-    // Fetch the found items from the backend
-    fetch(`http://localhost:3000/api/founditems/${id}`)
+      // Fetch the found items from the backend
+      fetch(`http://localhost:3000/api/founditems/${id}`)
         .then(response => response.json())
         .then(data => {
-            if (data.length > 0) {
-                const item = data[0]; // Assuming the first item is the correct match
-                statusBox.innerHTML = `
-                    ✅ <strong>Found Match</strong><br>
-                    <strong>Student Name:</strong> ${item.student_name || 'N/A'}<br>
-                    <strong>Item Type:</strong> ${item.Item_Type || 'N/A'}<br>
-                    <strong>Description:</strong> ${item.Description || 'N/A'}<br>
-                    <strong>Lost Date:</strong> ${new Date(item.Lost_Time).toLocaleString()}<br>
-                    <strong>Found Date:</strong> ${new Date(item.Found_Time).toLocaleString()}
-                `;
-            } else {
-                statusBox.textContent = "❌ No match found for this Lost ID.";
-            }
+          if (data.length > 0) {
+            const item = data[0]; // Assuming the first item is the correct match
+            statusBox.innerHTML = `
+              ✅ <strong>Found Match</strong><br>
+              <strong>Student Name:</strong> ${item.student_name}<br>
+              <strong>Description:</strong> ${item.Description}<br>
+              <strong>Location:</strong> ${item.Location}<br>
+              <strong>Date Found:</strong> ${new Date(item.Found_Time).toLocaleString()}
+            `;
+          } else {
+            statusBox.textContent = "❌ No match found for this Lost ID.";
+          }
         })
         .catch(error => {
-            statusBox.textContent = "❌ Error fetching data.";
-            console.error(error);
+          statusBox.textContent = "❌ Error fetching data.";
+          console.error(error);
         });
-}
+    }
   </script>
 </body>
 </html>

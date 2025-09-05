@@ -341,44 +341,26 @@ app.get('/api/student-lostitems/:studentId', async (req, res) => {
 
 // API route to fetch found items by Lost ID
 
-// Replace your existing /api/founditems/:lostId endpoint with this corrected version
+
 app.get('/api/founditems/:lostId', async (req, res) => {
   try {
     const { lostId } = req.params;
     
-    console.log('Looking up Lost ID:', lostId); // Debug log
-    
     const sql = `
-      SELECT 
-        fi.Found_ID,
-        fi.Lost_ID,
-        fi.Found_Time,
-        li.Student_ID,
-        si.Name as student_name,
-        li.Description,
-        li.Lost_Time,
-        i.Item_Type
+      SELECT fi.*, si.name as student_name
       FROM found_item fi
-      JOIN lost_item li ON fi.Lost_ID = li.Lost_ID
-      LEFT JOIN Student_Info si ON li.Student_ID = si.Student_ID
-      LEFT JOIN item i ON li.Item_ID = i.Item_ID
-      WHERE fi.Lost_ID = ?
+      LEFT JOIN Student_Info si ON fi.student_id = si.student_id
+      WHERE fi.lost_id = ?
       ORDER BY fi.Found_Time DESC
     `;
-    
-    console.log('Executing SQL:', sql); // Debug log
-    console.log('With parameter:', lostId); // Debug log
-    
     const [rows] = await pool.execute(sql, [lostId]);
-    
-    console.log('Query result:', rows); // Debug log
-    
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching found items:', error);
-    res.status(500).json({ error: 'Failed to fetch found items: ' + error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch found items' });
   }
 });
+
 
 // API routes for complaints
 app.get('/api/complaints', async (req, res) => {
