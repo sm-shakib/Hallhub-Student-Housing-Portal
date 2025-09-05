@@ -144,7 +144,6 @@
  <div class="form-container">
    <h2>Complaint Form</h2>
    <form id="complainForm">
-     <input type="text" id="studentId" placeholder="Your Student ID" required readonly />
      <input type="text" id="complaintTitle" placeholder="Complaint Title/Subject" required />
      <textarea id="complainDesc" placeholder="Write your complaint here..." required></textarea>
      <button type="submit" id="submitBtn">🚀 Submit Complaint</button>
@@ -159,18 +158,19 @@
 
  <script>
    // Get current user data from localStorage
-   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+   const sessionData = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+   const currentUser = sessionData ? JSON.parse(sessionData) : null;
 
    // Initialize form
-   document.addEventListener('DOMContentLoaded', function() {
-     if (currentUser.studentId) {
-       document.getElementById('studentId').value = currentUser.studentId;
-     } else {
-       //alert('Please log in to file a complaint');
-       //window.location.href = '/';
-       //return;
-     }
-   });
+  //  document.addEventListener('DOMContentLoaded', function() {
+  //    if (currentUser.studentId) {
+  //      document.getElementById('studentId').value = currentUser.studentId;
+  //    } else {
+  //      //alert('Please log in to file a complaint');
+  //      //window.location.href = '/';
+  //      //return;
+  //    }
+  //  });
 
    // Handle form submission
    document.getElementById("complainForm").addEventListener("submit", async function(e) {
@@ -178,9 +178,15 @@
      
      const submitBtn = document.getElementById('submitBtn');
      const confirmationDiv = document.getElementById('confirmationBox');
+
+     // Check if logged in
+      if (!currentUser || !currentUser.studentId) {
+        showMessage("❌ You must be logged in to file a complaint.", "error");
+        return;
+      }
      
      // Get form data
-     const studentId = document.getElementById("studentId").value;
+     const studentId = currentUser.studentId;
      const title = document.getElementById("complaintTitle").value.trim();
      const description = document.getElementById("complainDesc").value.trim();
 
@@ -190,7 +196,7 @@
      showMessage('Submitting your complaint...', 'loading');
 
      try {
-       const response = await fetch('/api/complaints', {
+       const response = await fetch('http://localhost:3000/api/complaints', {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
@@ -212,12 +218,10 @@
            <p><strong>Title:</strong> ${title}</p>
            <p><strong>Status:</strong> Pending</p>
            <p><strong>Submitted by:</strong> ${studentId}</p>
-           <p><em>You will be notified once your complaint is resolved.</em></p>
          `, 'success');
 
          // Reset form
          document.getElementById("complainForm").reset();
-         document.getElementById('studentId').value = currentUser.studentId;
        } else {
          // Error from server
          showMessage(`❌ Error: ${result.error}`, 'error');
