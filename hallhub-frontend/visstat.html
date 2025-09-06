@@ -25,7 +25,7 @@
      border-radius: 16px;
      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
      width: 100%;
-     max-width: 400px;
+     max-width: 600px;
      text-align: center;
      animation: fadeIn 0.6s ease;
    }
@@ -95,40 +95,85 @@
      color: #444;
      display: none;
      animation: slideIn 0.3s ease;
+     text-align: left;
    }
 
    .result.show {
      display: block;
    }
 
-   .result.approved {
+   .result.success {
      background: rgba(39, 174, 96, 0.1);
      color: #27ae60;
      border: 1px solid rgba(39, 174, 96, 0.3);
-   }
-
-   .result.pending {
-     background: rgba(243, 156, 18, 0.1);
-     color: #f39c12;
-     border: 1px solid rgba(243, 156, 18, 0.3);
-   }
-
-   .result.declined {
-     background: rgba(231, 76, 60, 0.1);
-     color: #e74c3c;
-     border: 1px solid rgba(231, 76, 60, 0.3);
    }
 
    .result.error {
      background: rgba(231, 76, 60, 0.1);
      color: #e74c3c;
      border: 1px solid rgba(231, 76, 60, 0.3);
+     text-align: center;
    }
 
    .result.loading {
      background: rgba(181, 255, 252, 0.2);
      color: #333;
      border: 1px solid rgba(181, 255, 252, 0.5);
+     text-align: center;
+   }
+
+   .visitor-card {
+     background: rgba(255, 255, 255, 0.8);
+     border-radius: 10px;
+     padding: 15px;
+     margin-bottom: 15px;
+     border-left: 4px solid #B5FFFC;
+   }
+
+   .visitor-info {
+     display: grid;
+     grid-template-columns: 1fr 1fr;
+     gap: 10px;
+     margin-top: 10px;
+   }
+
+   .info-item {
+     display: flex;
+     flex-direction: column;
+   }
+
+   .info-label {
+     font-size: 0.85rem;
+     font-weight: bold;
+     color: #666;
+     text-transform: uppercase;
+     letter-spacing: 0.5px;
+   }
+
+   .info-value {
+     font-size: 1rem;
+     color: #333;
+     margin-top: 2px;
+   }
+
+   .all-visitors {
+     max-height: 400px;
+     overflow-y: auto;
+     padding-right: 5px;
+   }
+
+   .all-visitors::-webkit-scrollbar {
+     width: 6px;
+   }
+
+   .all-visitors::-webkit-scrollbar-track {
+     background: rgba(255, 255, 255, 0.1);
+     border-radius: 3px;
+   }
+
+   .all-visitors::-webkit-scrollbar-thumb {
+     background: rgba(181, 255, 252, 0.6);
+     border-radius: 3px;
    }
 
    .back-link {
@@ -151,6 +196,25 @@
      text-decoration: none;
    }
 
+   .section-header {
+     font-size: 1.1rem;
+     font-weight: bold;
+     color: #333;
+     margin-bottom: 15px;
+     text-align: center;
+     padding-bottom: 8px;
+     border-bottom: 2px solid rgba(181, 255, 252, 0.3);
+   }
+
+   .visitor-id {
+     background: rgba(181, 255, 252, 0.3);
+     padding: 4px 8px;
+     border-radius: 15px;
+     font-size: 0.85rem;
+     font-weight: bold;
+     color: #333;
+   }
+
    @keyframes fadeIn {
      from { opacity: 0; transform: translateY(20px); }
      to { opacity: 1; transform: translateY(0); }
@@ -160,13 +224,19 @@
      from { transform: translateY(-20px); opacity: 0; }
      to { transform: translateY(0); opacity: 1; }
    }
+
+   @media (max-width: 600px) {
+     .visitor-info {
+       grid-template-columns: 1fr;
+     }
+   }
  </style>
 </head>
 <body>
  <div class="status-box">
-   <h2>Check Visitor Status</h2>
+   <h2>Check Visitor Entries</h2>
    <input type="text" id="checkId" placeholder="Enter Student ID" readonly />
-   <button onclick="checkStatus()" id="checkBtn">Check Status</button>
+   <button onclick="checkVisitorEntries()" id="checkBtn">Check Visitor Entries</button>
    <div class="result" id="statusResult"></div>
  </div>
 
@@ -175,8 +245,8 @@
  </div>
 
  <script>
-   // Get current user data from localStorage
-   //const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+   // Get current user data from localStorage 
+   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
    // Check if user is logged in
   // if (!currentUser.studentId) {
@@ -215,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // document.getElementById('checkId').value = currentUser.studentId;
    //});
 
-   async function checkStatus() {
+   async function checkVisitorEntries() {
      const id = document.getElementById('checkId').value.trim();
      const statusOutput = document.getElementById('statusResult');
      const checkBtn = document.getElementById('checkBtn');
@@ -229,45 +299,86 @@ document.addEventListener('DOMContentLoaded', function() {
        // Show loading state
        checkBtn.disabled = true;
        checkBtn.textContent = 'Checking...';
-       showResult("Checking visitor status...", 'loading');
+       showResult("Checking visitor entries...", 'loading');
 
-       // Fetch visitor applications from backend
-       const response = await fetch(`/api/visitor-applications?student_id=${id}`);
+       // Fetch visitor entries for the specific student
+       const response = await fetch(`/api/visitor-entries-by-student?student_id=${id}`);
        
        if (!response.ok) {
-         throw new Error('Failed to fetch visitor status');
+         throw new Error('Failed to fetch visitor entries');
        }
 
-       const applications = await response.json();
+       const result = await response.json();
 
-       if (applications.length === 0) {
-         showResult(`No visitor applications found for Student ID: ${id}`, 'error');
+       if (!result.success) {
+         showResult(result.error || 'Failed to fetch visitor entries', 'error');
+         return;
+       }
+
+       if (result.entries.length === 0) {
+         showResult(`No visitor entries found for Student ID: ${id}`, 'error');
        } else {
-         // Show the most recent application status
-         const latestApp = applications[0]; // API returns sorted by application_date DESC
-         const status = latestApp.status;
-         const visitorName = latestApp.visitor_name;
-         
-         let statusClass = '';
-         if (status === 'approved') statusClass = 'approved';
-         else if (status === 'pending') statusClass = 'pending';
-         else statusClass = 'declined';
-
-         showResult(`
-           Latest Visitor Application:<br>
-           <strong>Visitor:</strong> ${visitorName}<br>
-           <strong>Status:</strong> ${status.toUpperCase()}
-         `, statusClass);
+         displayVisitorEntries(result.entries);
        }
 
      } catch (error) {
-       console.error('Error checking status:', error);
-       showResult('Failed to check visitor status. Please try again.', 'error');
+       console.error('Error checking visitor entries:', error);
+       showResult('Failed to check visitor entries. Please try again.', 'error');
      } finally {
        // Reset button
        checkBtn.disabled = false;
-       checkBtn.textContent = 'Check Status';
+       checkBtn.textContent = 'Check Visitor Entries';
      }
+   }
+
+   function displayVisitorEntries(entries) {
+     const statusOutput = document.getElementById('statusResult');
+     
+     let html = '<div class="section-header">Your Visitor Entries</div>';
+     html += '<div class="all-visitors">';
+     
+     entries.forEach((entry, index) => {
+       const isLatest = index === 0;
+       
+       html += `
+         <div class="visitor-card">
+           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+             <h4 style="margin: 0; color: #333; font-size: 1.1rem;">
+               ${entry.Name}
+               ${isLatest ? '<span style="font-size: 0.8rem; color: #666; font-weight: normal;"> (Latest)</span>' : ''}
+             </h4>
+             <span class="visitor-id">ID: ${entry.Visitor_ID}</span>
+           </div>
+           
+           <div class="visitor-info">
+             <div class="info-item">
+               <span class="info-label">Phone Number</span>
+               <span class="info-value">${entry.Phone_No || 'N/A'}</span>
+             </div>
+             <div class="info-item">
+               <span class="info-label">Relationship</span>
+               <span class="info-value">${entry.Relation || 'N/A'}</span>
+             </div>
+             <div class="info-item">
+               <span class="info-label">Student ID</span>
+               <span class="info-value">${entry.Student_ID}</span>
+             </div>
+             <div class="info-item">
+               <span class="info-label">Entry Status</span>
+               <span class="info-value">Registered</span>
+             </div>
+           </div>
+         </div>
+       `;
+     });
+     
+     html += '</div>';
+     html += `<p style="text-align: center; color: #666; font-size: 0.9rem; margin-top: 15px;">
+       Total Visitor Entries: <strong>${entries.length}</strong>
+     </p>`;
+     
+     statusOutput.innerHTML = html;
+     statusOutput.className = 'result show success';
    }
 
    function showResult(message, type) {
