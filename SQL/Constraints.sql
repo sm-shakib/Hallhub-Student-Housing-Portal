@@ -1,3 +1,4 @@
+-- Active: 1757043308843@@mysql-71ed2b0-hallhub-1.g.aivencloud.com@28592@defaultdb
 ALTER TABLE Resident
 ADD CONSTRAINT res_stdid_fk FOREIGN KEY (Student_ID) REFERENCES Student_Info(Student_ID);
 
@@ -33,3 +34,6 @@ ADD CONSTRAINT fou_losid_fk FOREIGN KEY (Lost_ID) REFERENCES Lost_Item(Lost_ID);
 
 ALTER TABLE Room
 ADD CONSTRAINT roo_halno_fk FOREIGN KEY (Hall_No) REFERENCES Hall(Hall_No);
+
+ALTER TABLE Visitor_Entry 
+MODIFY  Visitor_ID BIGINT NOT NULL AUTO_INCREMENT;

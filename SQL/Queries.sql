@@ -1,3 +1,4 @@
+-- Active: 1757043308843@@mysql-71ed2b0-hallhub-1.g.aivencloud.com@28592@defaultdb
 select * from student_info;
 
 select * from room;

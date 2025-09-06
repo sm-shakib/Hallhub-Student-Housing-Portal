@@ -1,3 +1,4 @@
+-- Active: 1757043308843@@mysql-71ed2b0-hallhub-1.g.aivencloud.com@28592@defaultdb
 CREATE TABLE Student_Info (
     Serial_No INT AUTO_INCREMENT,
     Student_Id VARCHAR(50) NOT NULL,
