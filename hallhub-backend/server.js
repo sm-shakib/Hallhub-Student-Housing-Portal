@@ -972,107 +972,151 @@ app.get('/api/allocations', async (req, res) => {
 // });
 
 // API routes for visitor applications
-app.get('/api/visitor-applications', async (req, res) => {
+// Essential API endpoint for visitor entry submission
+app.post('/api/visitor-entry', async (req, res) => {
   try {
-    const { student_id, status } = req.query;
-    let sql = `
-      SELECT va.*, si.name as student_name 
-      FROM Visitor_Applications va 
-      LEFT JOIN Student_Info si ON va.student_id = si.student_id
-    `;
-    let params = [];
-    let conditions = [];
+    console.log('Received visitor entry request:', req.body);
     
-    if (student_id) {
-      conditions.push('va.student_id = ?');
-      params.push(student_id);
-    }
-    
-    if (status) {
-      conditions.push('va.status = ?');
-      params.push(status);
-    }
-    
-    if (conditions.length > 0) {
-      sql += ' WHERE ' + conditions.join(' AND ');
-    }
-    
-    sql += ' ORDER BY va.application_date DESC';
-    const [rows] = await pool.execute(sql, params);
-    res.json(rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch visitor applications' });
-  }
-});
+    const { studentId, visitorName, visitorPhone, relation } = req.body;
 
-app.post('/api/visitor-applications', async (req, res) => {
-  try {
-    const { student_id, visitor_name, visitor_phone, visit_purpose, visit_date, visit_time } = req.body;
-
-    if (!student_id || !visitor_name || !visit_purpose || !visit_date) {
-      return res.status(400).json({ error: 'Please provide all required fields' });
+    // Basic validation
+    if (!studentId || !visitorName || !visitorPhone || !relation) {
+      console.log('Missing required fields');
+      return res.status(400).json({ 
+        success: false,
+        error: 'All fields are required: Student ID, Visitor Name, Phone Number, and Relation.' 
+      });
     }
 
+    // Insert into database
     const sql = `
-      INSERT INTO Visitor_Applications (student_id, visitor_name, visitor_phone, visit_purpose, visit_date, visit_time, status, application_date)
-      VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())
+      INSERT INTO Visitor_Entry (Student_ID, Name, Phone_No, Relation)
+      VALUES (?, ?, ?, ?)
     `;
-    const [result] = await pool.execute(sql, [student_id, visitor_name, visitor_phone, visit_purpose, visit_date, visit_time]);
+    
+    console.log('Executing SQL:', sql);
+    console.log('With values:', [studentId, visitorName, visitorPhone, relation]);
+    
+    const [result] = await pool.execute(sql, [
+      studentId,
+      visitorName,
+      visitorPhone,
+      relation
+    ]);
+
+    console.log('Database insert successful, ID:', result.insertId);
 
     res.json({
       success: true,
-      message: 'Visitor application submitted successfully',
-      applicationId: result.insertId
+      message: 'Visitor entry submitted successfully!',
+      visitorId: result.insertId
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to submit visitor application' });
+    console.error('Visitor Entry Database Error:', error);
+    
+    // Handle specific database errors
+    if (error.code === 'ER_NO_SUCH_TABLE') {
+      return res.status(500).json({ 
+        success: false,
+        error: 'Visitor_Entry table does not exist. Please check database setup.' 
+      });
+    }
+    
+    if (error.code === 'ER_BAD_FIELD_ERROR') {
+      return res.status(500).json({ 
+        success: false,
+        error: 'Database column mismatch. Please check table structure.' 
+      });
+    }
+    
+    if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid Student ID. Student not found in system.' 
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false,
+      error: 'Database error: ' + error.message
+    });
   }
 });
 
-app.put('/api/visitor-applications/:id/approve', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const sql = 'UPDATE Visitor_Applications SET status = "approved" WHERE application_id = ?';
-    await pool.execute(sql, [id]);
-
-    res.json({
-      success: true,
-      message: 'Visitor application approved successfully'
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to approve application' });
-  }
+// Test endpoint to verify server is running
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Server is running!',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // API routes for visitor status
-app.get('/api/visitor-status', async (req, res) => {
+// Add this route to your server.js file after your existing visitor entry routes
+
+// API route to get visitor entries for a specific student
+app.get('/api/visitor-entries-by-student', async (req, res) => {
   try {
     const { student_id } = req.query;
     
-    let sql = `
-      SELECT va.*, si.name as student_name 
-      FROM Visitor_Applications va 
-      JOIN Student_Info si ON va.student_id = si.student_id
-    `;
-    let params = [];
+    console.log('Fetching visitor entries for student:', student_id);
     
-    if (student_id) {
-      sql += ' WHERE va.student_id = ?';
-      params.push(student_id);
+    if (!student_id) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Student ID is required' 
+      });
     }
+
+    // First check if student exists
+    const checkStudentSql = 'SELECT Student_ID FROM Student_Info WHERE Student_ID = ?';
+    const [studentExists] = await pool.execute(checkStudentSql, [student_id]);
     
-    sql += ' ORDER BY va.application_date DESC';
-    const [rows] = await pool.execute(sql, params);
-    res.json(rows);
+    if (studentExists.length === 0) {
+      return res.json({
+        success: true,
+        message: 'Student ID not found',
+        entries: []
+      });
+    }
+
+    // Query to get visitor entries for the student from Visitor_Entry table
+    const sql = `
+      SELECT 
+        ve.Visitor_ID,
+        ve.Student_ID,
+        ve.Name,
+        ve.Phone_No,
+        ve.Relation,
+        si.Name as student_name
+      FROM Visitor_Entry ve
+      LEFT JOIN Student_Info si ON ve.Student_ID = si.Student_ID 
+      WHERE ve.Student_ID = ?
+      ORDER BY ve.Visitor_ID DESC
+    `;
+    
+    console.log('Executing query:', sql);
+    console.log('With parameter:', student_id);
+    
+    const [rows] = await pool.execute(sql, [student_id]);
+    
+    console.log('Query result:', rows);
+    
+    res.json({
+      success: true,
+      message: 'Visitor entries fetched successfully',
+      entries: rows,
+      count: rows.length
+    });
+    
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch visitor status' });
+    console.error('Error fetching student visitor entries:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch visitor entries: ' + error.message 
+    });
   }
 });
 

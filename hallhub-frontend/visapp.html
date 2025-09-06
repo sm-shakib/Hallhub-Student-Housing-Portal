@@ -170,12 +170,16 @@
     
     <div class="student-info">
       <h4>Student Information</h4>
-      <p id="studentInfo">Loading...</p>
+      <p id="studentInfo">
+        <strong>Name:</strong> <span id="studentName">Loading...</span><br>
+        <strong>Student ID:</strong> <span id="displayStudentId">Loading...</span><br>
+        <strong>Email:</strong> <span id="studentEmail">Loading...</span>
+      </p>
     </div>
 
     <form id="visitorForm">
       <label for="studentId">Student ID</label>
-      <input type="text" id="studentId" placeholder="Your Student ID" required readonly />
+      <input type="text" id="studentId" placeholder="Auto-filled from login" required readonly />
 
       <label for="visitorName">Visitor Name</label>
       <input type="text" id="visitorName" placeholder="Enter visitor's full name" required />
@@ -186,7 +190,7 @@
       <label for="relation">Relation</label>
       <input type="text" id="relation" placeholder="Relationship with visitor" required />
 
-      <button type="submit" id="submitBtn">Submit</button>
+      <button type="submit" id="submitBtn">Submit Application</button>
       <div class="message" id="formMessage"></div>
     </form>
   </div>
@@ -194,16 +198,26 @@
   <div class="back-link">
     <a href="dashb.html">← Back to Dashboard</a>
   </div>
-
+  
   <script>
-    // Get current user data from localStorage
-    //const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-
-    // Check if user is logged in
-    //if (!currentUser.studentId) {
-     // alert('Please log in to submit visitor application');
-     // window.location.href = '/';
-   // }
+    // Simple function to get current user
+    function getCurrentUser() {
+      try {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+          return JSON.parse(storedUser);
+        }
+      } catch (error) {
+        console.warn('Could not read localStorage:', error);
+      }
+      
+      // Fallback - return a default user for testing
+      return {
+        studentId: 'student Id', // You can change this for testing
+        name: 'Test Student',
+        email: 'test@student.com'
+      };
+    }
 
    // Session helper functions
 function getCurrentUser() {
@@ -265,65 +279,68 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
 
       const submitBtn = document.getElementById('submitBtn');
-      const messageDiv = document.getElementById('formMessage');
 
       // Get form data
       const formData = {
-        student_id: document.getElementById('studentId').value,
-        visitor_name: document.getElementById('visitorName').value.trim(),
-        visitor_phone: document.getElementById('visitorPhone').value.trim(),
-        visit_purpose: document.getElementById('relation').value.trim(),
-        visit_date: new Date().toISOString().split('T')[0],
-        visit_time: null
+        studentId: document.getElementById('studentId').value.trim(),
+        visitorName: document.getElementById('visitorName').value.trim(),
+        visitorPhone: document.getElementById('visitorPhone').value.trim(),
+        relation: document.getElementById('relation').value.trim()
       };
 
+      console.log('Submitting form data:', formData);
+
+      // Basic validation
+      if (!formData.visitorName || !formData.visitorPhone || !formData.relation) {
+        showMessage('Please fill in all fields.', 'error');
+        return;
+      }
+
       try {
-        // Show loading state
         submitBtn.disabled = true;
         submitBtn.textContent = 'Submitting...';
-        showMessage('Submitting your visitor application...', 'loading');
+        showMessage('Submitting visitor application...', 'loading');
 
-        // Submit to backend
-        const response = await fetch('/api/visitor-applications', {
+        // Submit to server
+        const response = await fetch('/api/visitor-entry', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+          headers: { 
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify(formData)
         });
 
+        console.log('Server response status:', response.status);
+        
         const result = await response.json();
+        console.log('Server response data:', result);
 
-        if (response.ok) {
-          // Success
-          showMessage(`Visitor application submitted successfully! Application ID: #${result.applicationId}`, 'success');
-
-          // Reset form
-          document.getElementById('visitorForm').reset();
-          document.getElementById('studentId').value = currentUser.studentId;
-
+        if (response.ok && result.success) {
+          showMessage(`Visitor application submitted successfully! Reference ID: ${result.visitorId}`, 'success');
+          
+          // Clear form but keep student ID
+          document.getElementById('visitorName').value = '';
+          document.getElementById('visitorPhone').value = '';
+          document.getElementById('relation').value = '';
         } else {
-          // Error from server
-          showMessage(`Error: ${result.error}`, 'error');
+          showMessage(`Error: ${result.error || 'Submission failed'}`, 'error');
         }
 
       } catch (error) {
-        console.error('Error submitting application:', error);
-        showMessage('Failed to submit application. Please check your connection and try again.', 'error');
+        console.error('Submission error:', error);
+        showMessage('Could not submit application.', 'error');
       } finally {
-        // Reset button
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit';
+        submitBtn.textContent = 'Submit Application';
       }
     });
 
-    // Function to show messages
     function showMessage(message, type) {
       const messageDiv = document.getElementById('formMessage');
       messageDiv.innerHTML = message;
       messageDiv.className = `message ${type}`;
+      messageDiv.style.display = 'block';
       
-      // Auto-hide success messages after 5 seconds
       if (type === 'success') {
         setTimeout(() => {
           messageDiv.style.display = 'none';
