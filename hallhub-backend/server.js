@@ -560,34 +560,55 @@ app.post('/api/remove-from-resident', async (req, res) => {
 
 
 // Get all complaints ordered by time
-app.get('/api/complaints', async (req, res) => {
-  try {
-    const query = `
-      SELECT 
-          complaint_id,
-          student_id,
-          title,
-          description,
-          time,
-          status
-      FROM complaint 
-      ORDER BY time ASC
-    `;
+// app.get('/api/complaints', async (req, res) => {
+//   try {
+//     const query = `
+//       SELECT 
+//           complaint_id,
+//           student_id,
+//           title,
+//           description,
+//           time,
+//           status
+//       FROM complaint 
+//       ORDER BY time ASC
+//     `;
     
-    const [results] = await pool.query(query);
+//     const [results] = await pool.query(query);
 
-    res.json({
-      success: true,
-      complaints: results,
-      count: results.length
-    });
-  } catch (error) {
-    console.error('Database error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Database error occurred'
-    });
-  }
+//     res.json({
+//       success: true,
+//       complaints: results,
+//       count: results.length
+//     });
+//   } catch (error) {
+//     console.error('Database error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Database error occurred'
+//     });
+//   }
+// });
+
+app.get('/api/complaints', async (req, res) => {
+    try {
+        const { student_id } = req.query; // only search by student_id
+        let query = 'SELECT * FROM ComplaintsView';
+        const params = [];
+
+        if (student_id) {
+            query += ' WHERE student_id = ?';
+            params.push(student_id);
+        }
+
+        query += ' ORDER BY time ASC';
+
+        const [results] = await pool.query(query, params);
+        res.json({ success: true, complaints: results });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
 });
 
 // API routes for events

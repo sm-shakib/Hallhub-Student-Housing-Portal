@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HallHub - Complaints Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .complaint-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .complaint-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <header class="relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700"></div>
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative z-10 container mx-auto px-6 py-8">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <span class="text-2xl">📝</span>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white tracking-tight">HallHub</h1>
+                        <p class="text-blue-100 text-sm font-medium">Complaints Management</p>
+                    </div>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="admin_dashboard.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
+                        Back to Dashboard
+                    </a>
+                    <div class="flex items-center space-x-3 text-white">
+                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-semibold">AD</span>
+                        </div>
+                        <span class="font-medium">Admin User</span>
+                    </div>
+                    <a href="login.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
+                        Logout
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-grow py-12 px-6">
+        <div class="container mx-auto max-w-7xl">
+            <!-- Page Title -->
+            <div class="mb-12 text-center">
+                <h2 class="text-4xl font-bold gradient-text mb-4">Complaints Management</h2>
+                <p class="text-gray-600 text-lg max-w-2xl mx-auto">Monitor and manage all student complaints and feedback submissions.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Complaints</p>
+                            <p class="text-2xl font-bold text-gray-900" id="totalCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">📋</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Pending</p>
+                            <p class="text-2xl font-bold text-orange-600" id="pendingCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">⏳</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Solved</p>
+                            <p class="text-2xl font-bold text-green-600" id="solvedCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">✅</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">This Week</p>
+                            <p class="text-2xl font-bold text-gray-900" id="weekCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">📅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-12">
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div class="flex-1">
+                        <input type="text" id="searchInput" placeholder="Search by Student ID" 
+                               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="flex gap-4">
+                        <select id="statusFilter" class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="solved">Solved</option>
+                        </select>
+                        <button onclick="refreshData()" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium">
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complaints Grid -->
+            <div id="complaintsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="text-center py-12 col-span-full">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Loading complaints...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 mt-20">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🎓</span>
+                        </div>
+                        <h3 class="text-xl font-bold">HallHub</h3>
+                    </div>
+                    <p class="text-gray-400 max-w-md">Your comprehensive student hall management platform. Connecting students, managing resources, and building community.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Admin Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="admin_dashboard.html" class="hover:text-white transition">Dashboard</a></li>
+                        <li><a href="#" class="hover:text-white transition">Reports</a></li>
+                        <li><a href="#" class="hover:text-white transition">Settings</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#contact" class="hover:text-white transition">Contact Us</a></li>
+                        <li><a href="#privacy" class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="#terms" class="hover:text-white transition">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                <p>© 2025 HallHub. All rights reserved. Built with ❤️ for students.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Complaint Details Modal -->
+    <div id="complaintModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-100">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">📝</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900">Complaint Details</h2>
+                    </div>
+                    <button onclick="closeModal()" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors">
+                        <span class="text-xl">&times;</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="p-8 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div id="modalContent" class="space-y-6">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="bg-gray-50 px-8 py-4 border-t border-gray-100 flex justify-end space-x-4">
+                <button onclick="closeModal()" class="px-6 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-medium">
+                    Close
+                </button>
+                <button onclick="toggleComplaintStatus()" class="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium">
+                    Toggle Status
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        let allComplaints = [];
+        let filteredComplaints = [];
+        let currentComplaint = null;
+
+        // async function fetchComplaints() {
+        //     try {
+        //         console.log('Fetching complaints...');
+        //         const response = await fetch('http://localhost:3000/api/complaints');
+        //         console.log('Response status:', response.status);
+                
+        //         if (!response.ok) {
+        //             throw new Error(`HTTP error! status: ${response.status}`);
+        //         }
+                
+        //         const data = await response.json();
+        //         console.log('Received data:', data);
+                
+        //         if (data.success) {
+        //             allComplaints = data.complaints || [];
+        //             filteredComplaints = [...allComplaints];
+        //             displayComplaints(filteredComplaints);
+        //             updateStats(filteredComplaints);
+        //             console.log(`Loaded ${allComplaints.length} complaints`);
+        //         } else {
+        //             showError('Failed to load complaints: ' + (data.message || 'Unknown error'));
+        //         }
+        //     } catch (error) {
+        //         console.error('Error fetching complaints:', error);
+        //         showError('Failed to connect to server: ' + error.message);
+        //     }
+        // }
+
+         async function fetchComplaints(studentId = '') {
+    try {
+        // Only append student_id if provided
+        const queryParam = studentId ? `?student_id=${encodeURIComponent(studentId)}` : '';
+        const response = await fetch(`http://localhost:3000/api/complaints${queryParam}`);
+        const data = await response.json();
+
+        if (data.success) {
+            allComplaints = data.complaints || [];
+            filteredComplaints = [...allComplaints]; // no local search needed
+            displayComplaints(filteredComplaints);
+            updateStats(filteredComplaints);
+        } else {
+            showError('Failed to load complaints: ' + (data.message || 'Unknown error'));
+        }
+    } catch (error) {
+        showError('Failed to connect to server: ' + error.message);
+    }
+}
+
+
+
+        // Display complaints in cards
+        function displayComplaints(complaints) {
+            const container = document.getElementById('complaintsContainer');
+            
+            if (complaints.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 col-span-full">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">🔍</span>
+                        </div>
+                        <p class="text-gray-500">No complaints found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = complaints.map(complaint => {
+                const statusColor = complaint.status === 1 ? 'green' : 'orange';
+                const statusIcon = complaint.status === 1 ? '✅' : '⏳';
+                const statusText = complaint.status === 1 ? 'solved' : 'pending';
+                const timeAgo = formatTimeAgo(complaint.time);
+                
+                return `
+                    <div class="complaint-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-${statusColor}-100 rounded-xl flex items-center justify-center">
+                                <span class="text-xl">${statusIcon}</span>
+                            </div>
+                            <span class="px-2 py-1 bg-${statusColor}-100 text-${statusColor}-800 rounded-lg text-xs font-semibold uppercase">${statusText}</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">${complaint.title || 'No Title'}</h3>
+                        <div class="space-y-2 text-sm text-gray-600 mb-4">
+                            <p><span class="font-medium">Complaint ID:</span> ${complaint.complaint_id || 'N/A'}</p>
+                            <p><span class="font-medium">Student ID:</span> ${complaint.student_id || 'N/A'}</p>
+                            <p><span class="font-medium">Time:</span> ${timeAgo}</p>
+                        </div>
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-600 line-clamp-3">${complaint.description || 'No description provided'}</p>
+                        </div>
+                        <div class="pt-4 border-t border-gray-100">
+                            <button onclick="viewComplaint('${complaint.complaint_id}')" class="w-full px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Search functionality
+        // document.getElementById('searchInput').addEventListener('input', function(e) {
+        //     const searchTerm = e.target.value.toLowerCase().trim();
+        //     const statusFilter = document.getElementById('statusFilter').value;
+
+        //     filteredComplaints = allComplaints.filter(complaint => {
+        //         const complaintId = String(complaint.complaint_id || '').toLowerCase();
+        //         const studentId = String(complaint.student_id || '').toLowerCase();
+        //         const title = String(complaint.title || '').toLowerCase();
+
+        //         const matchesSearch = !searchTerm || 
+        //             complaintId.includes(searchTerm) ||
+        //             studentId.includes(searchTerm) ||
+        //             title.includes(searchTerm);
+
+        //         // const matchesSearch = !searchTerm || studentId.includes(searchTerm);
+
+        //         // const matchesSearch = !searchTerm || 
+        //         //     complaintId === searchTerm ||
+        //         //     studentId.includes(searchTerm) ||
+        //         //     title.includes(searchTerm);
+
+        //         // const matchesSearch = !searchTerm || 
+        //         //     complaintId.startsWith(searchTerm) ||
+        //         //     studentId.includes(searchTerm) ||
+        //         //     title.includes(searchTerm);
+
+        //         const matchesStatus = !statusFilter || complaint.status === statusFilter;
+
+        //         return matchesSearch && matchesStatus;
+        //     });
+
+        //     displayComplaints(filteredComplaints);
+        //     updateStats(filteredComplaints);
+        // });
+
+        // Search by Student ID only
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+    const studentId = e.target.value.trim();
+
+    filteredComplaints = allComplaints.filter(c => 
+        c.student_id.toString().includes(studentId)
+    );
+
+    displayComplaints(filteredComplaints);
+    updateStats(filteredComplaints);
+});
+
+
+        function refreshData() {
+            document.getElementById('searchInput').value = '';
+            fetchComplaints();
+        }
+
+        function getStatusText(status) {
+            return status === 1 ? 'solved' : 'pending';
+        }
+
+
+        // Status filter
+        // document.getElementById('statusFilter').addEventListener('change', function(e) {
+        //     const status = e.target.value;
+        //     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+        //     filteredComplaints = allComplaints.filter(complaint => {
+        //         const matchesSearch = !searchTerm || 
+        //             (complaint.complaint_id || '').toString().toLowerCase().includes(searchTerm) ||
+        //             (complaint.student_id || '').toString().toLowerCase().includes(searchTerm) ||
+        //             (complaint.title || '').toLowerCase().includes(searchTerm);
+                
+        //         const matchesStatus = !status || getStatusText(complaint.status) === status;
+                
+        //         return matchesSearch && matchesStatus;
+        //     });
+            
+        //     displayComplaints(filteredComplaints);
+        //     updateStats(filteredComplaints);
+        // });
+
+        document.getElementById('statusFilter').addEventListener('change', function(e) {
+    const status = e.target.value;
+
+    filteredComplaints = allComplaints.filter(complaint => {
+        // If status is empty, include all
+        if (!status) return true;
+        return getStatusText(complaint.status) === status;
+    });
+
+    displayComplaints(filteredComplaints);
+    updateStats(filteredComplaints);
+});
+
+
+        // View complaint details
+        function viewComplaint(complaintId) {
+            const complaint = allComplaints.find(c => c.complaint_id == complaintId);
+            if (!complaint) return;
+
+            currentComplaint = complaint;
+            const statusColor = complaint.status === 1 ? 'green' : 'orange';
+            const statusIcon = complaint.status === 1 ? '✅' : '⏳';
+            const statusText = complaint.status === 1 ? 'solved' : 'pending';
+
+            document.getElementById("modalContent").innerHTML = `
+                <div class="space-y-6">
+                    <!-- Complaint Header -->
+                    <div class="text-center pb-4 border-b border-gray-100">
+                        <div class="w-16 h-16 bg-${statusColor}-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">${statusIcon}</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-1">${complaint.title || 'No Title'}</h3>
+                        <span class="px-3 py-1 bg-${statusColor}-100 text-${statusColor}-800 rounded-full text-sm font-semibold uppercase">${statusText}</span>
+                    </div>
+                    
+                    <!-- Complaint Information -->
+                    <div class="bg-gray-50 rounded-2xl p-6">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <span class="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                                <span class="text-xs">📋</span>
+                            </span>
+                            Complaint Information
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Complaint ID</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${complaint.complaint_id || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Student ID</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${complaint.student_id || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
+                                <p class="text-sm font-semibold text-${statusColor}-600 mt-1 uppercase">${statusText || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Submitted</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${formatDateTime(complaint.time)}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 md:col-span-2">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Description</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${complaint.description || 'No description provided'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("complaintModal").classList.remove("hidden");
+        }
+
+        async function toggleComplaintStatus() {
+            if (!currentComplaint) return;
+
+            const newStatus = currentComplaint.status === 0 ? 1 : 0;
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/update-complaint-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        complaint_id: currentComplaint.complaint_id,
+                        status: newStatus
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ Complaint status updated to ${newStatus}!`);
+                    closeModal();
+                    fetchComplaints(); // Refresh the data
+                } else {
+                    alert(`❌ Failed to update complaint status: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error updating complaint status:', error);
+                alert('❌ Server error while updating complaint status');
+            }
+        }
+
+        function formatTimeAgo(timestamp) {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffInSeconds = Math.floor((now - time) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            return `${Math.floor(diffInSeconds / 86400)}d ago`;
+        }
+
+        function formatDateTime(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+
+        // function refreshData() {
+        //     fetchComplaints();
+        // }
+
+        function closeModal() {
+            document.getElementById("complaintModal").classList.add("hidden");
+            currentComplaint = null;
+        }
+
+        function updateStats(complaints) {
+            document.getElementById('totalCount').textContent = complaints.length;
+            
+            const pending = complaints.filter(c => c.status === 0).length;
+            const solved = complaints.filter(c => c.status === 1).length;
+            
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('solvedCount').textContent = solved;
+            
+            // Calculate this week's complaints
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const thisWeek = complaints.filter(c => new Date(c.time) >= oneWeekAgo).length;
+            document.getElementById('weekCount').textContent = thisWeek;
+        }
+
+        function showError(message) {
+            const container = document.getElementById('complaintsContainer');
+            container.innerHTML = `
+                <div class="text-center py-12 col-span-full">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">❌</span>
+                    </div>
+                    <p class="text-red-600 font-medium">${message}</p>
+                </div>
+            `;
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, fetching complaints...');
+            fetchComplaints();
+        });
+    </script>
+</body>
+</html>
