@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HallHub - Lost Items Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .item-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .item-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <header class="relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-red-600 via-orange-600 to-yellow-600"></div>
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative z-10 container mx-auto px-6 py-8">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <span class="text-2xl">🔍</span>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white tracking-tight">HallHub</h1>
+                        <p class="text-orange-100 text-sm font-medium">Lost Items Management</p>
+                    </div>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="admin_dashboard.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
+                        Back to Dashboard
+                    </a>
+                    <div class="flex items-center space-x-3 text-white">
+                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-semibold">AD</span>
+                        </div>
+                        <span class="font-medium">Admin User</span>
+                    </div>
+                    <a href="login.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
+                        Logout
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-grow py-12 px-6">
+        <div class="container mx-auto max-w-7xl">
+            <!-- Page Title -->
+            <div class="mb-12 text-center">
+                <h2 class="text-4xl font-bold gradient-text mb-4">Lost Items Management</h2>
+                <p class="text-gray-600 text-lg max-w-2xl mx-auto">Manage and track lost items reported by students in the hall.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Lost Items</p>
+                            <p class="text-2xl font-bold text-gray-900" id="totalCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🔍</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">This Week</p>
+                            <p class="text-2xl font-bold text-orange-600" id="weekCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">📅</span>
+                        </div>
+                    </div>
+                </div>
+                <!--
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Pending</p>
+                            <p class="text-2xl font-bold text-yellow-600" id="pendingCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">⏳</span>
+                        </div>
+                    </div>
+                </div>
+                -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Today</p>
+                            <p class="text-2xl font-bold text-green-600" id="todayCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-12">
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div class="flex-1">
+                        <input type="text" id="searchInput" placeholder="Search by Student ID, Lost ID, or Description" 
+                               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    </div>
+                    <div class="flex gap-4">
+                        <select id="itemFilter" class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500">
+                            <option value="">All Items</option>
+                        </select>
+                        <button onclick="refreshData()" class="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium">
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lost Items Grid -->
+            <div id="itemsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="text-center py-12 col-span-full">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Loading lost items...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 mt-20">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🎓</span>
+                        </div>
+                        <h3 class="text-xl font-bold">HallHub</h3>
+                    </div>
+                    <p class="text-gray-400 max-w-md">Your comprehensive student hall management platform. Connecting students, managing resources, and building community.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Admin Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="admin_dashboard.html" class="hover:text-white transition">Dashboard</a></li>
+                        <li><a href="admin_found_items.html" class="hover:text-white transition">Found Items</a></li>
+                        <li><a href="#" class="hover:text-white transition">Reports</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#contact" class="hover:text-white transition">Contact Us</a></li>
+                        <li><a href="#privacy" class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="#terms" class="hover:text-white transition">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                <p>© 2025 HallHub. All rights reserved. Built with ❤️ for students.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        let allItems = [];
+        let filteredItems = [];
+
+        async function fetchLostItems() {
+            try {
+                console.log('Fetching lost items...');
+                const response = await fetch('http://localhost:3000/api/lost-items');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Received data:', data);
+                
+                if (data.success) {
+                    allItems = data.items || [];
+                    filteredItems = [...allItems];
+                    displayItems(filteredItems);
+                    updateStats(filteredItems);
+                    populateItemFilter(filteredItems);
+                    console.log(`Loaded ${allItems.length} lost items`);
+                } else {
+                    showError('Failed to load lost items: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error fetching lost items:', error);
+                showError('Failed to connect to server: ' + error.message);
+            }
+        }
+
+        // Display lost items in cards
+        function displayItems(items) {
+            const container = document.getElementById('itemsContainer');
+            
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 col-span-full">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">🔍</span>
+                        </div>
+                        <p class="text-gray-500">No lost items found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map(item => {
+                const lostTime = new Date(item.Lost_Time).toLocaleString();
+                return `
+                    <div class="item-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                                <span class="text-xl">🔍</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <!--
+                                <button onclick="markAsFound(${item.Lost_ID})" class="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors">
+                                    <span class="text-sm">✅</span>
+                                </button>
+                                -->
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Lost ID: ${item.Lost_ID}</h3>
+                        <div class="space-y-2 text-sm text-gray-600 mb-4">
+                            <p><span class="font-medium">Student ID:</span> ${item.Student_ID || 'N/A'}</p>
+                            <p><span class="font-medium">Item Type:</span> ${item.item_type || 'N/A'}</p>
+                            <p><span class="font-medium">Description:</span> ${item.Description || 'N/A'}</p>
+                            <p><span class="font-medium">Lost Time:</span> ${lostTime}</p>
+                        </div>
+                        <div class="pt-4 border-t border-gray-100">
+                            <button onclick="markAsFound(${item.Lost_ID})" class="w-full px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium">
+                                Mark as Found
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const itemFilter = document.getElementById('itemFilter').value;
+
+            filteredItems = allItems.filter(item => {
+                const studentId = String(item.Student_ID || '').toLowerCase();
+                const lostId = String(item.Lost_ID || '').toLowerCase();
+                const description = String(item.Description || '').toLowerCase();
+
+                const matchesSearch = !searchTerm || 
+                    studentId.includes(searchTerm) ||
+                    lostId.includes(searchTerm) ||
+                    description.includes(searchTerm);
+
+                const matchesFilter = !itemFilter || item.item_type === itemFilter;
+
+                return matchesSearch && matchesFilter;
+            });
+
+            displayItems(filteredItems);
+            updateStats(filteredItems);
+        });
+
+        // Item filter
+        document.getElementById('itemFilter').addEventListener('change', function(e) {
+            const filter = e.target.value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredItems = allItems.filter(item => {
+                const matchesSearch = !searchTerm || 
+                    (item.Student_ID || '').toString().toLowerCase().includes(searchTerm) ||
+                    (item.Lost_ID || '').toString().toLowerCase().includes(searchTerm) ||
+                    (item.Description || '').toLowerCase().includes(searchTerm);
+                
+                const matchesFilter = !filter || item.item_type === filter;
+                
+                return matchesSearch && matchesFilter;
+            });
+            
+            displayItems(filteredItems);
+            updateStats(filteredItems);
+        });
+
+        async function markAsFound(lostId) {
+            if (!confirm('Mark this item as found?')) return;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/mark-as-found', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lost_id: lostId })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ Item marked as found successfully!');
+                    fetchLostItems(); // Refresh the list
+                } else {
+                    alert(`❌ Failed to mark item as found: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error marking item as found:', error);
+                alert('❌ Server error while marking item as found');
+            }
+        }
+
+        function populateItemFilter(items) {
+            const itemTypes = [...new Set(items.map(item => item.item_type).filter(Boolean))];
+            const filter = document.getElementById('itemFilter');
+            
+            filter.innerHTML = '<option value="">All Items</option>' + 
+                itemTypes.map(type => `<option value="${type}">${type}</option>`).join('');
+        }
+
+        function refreshData() {
+            fetchLostItems();
+        }
+
+        function updateStats(items) {
+    // Always use ALL items for stats, not just filtered
+    const totalLost = allItems.length;
+    document.getElementById('totalCount').textContent = totalLost;
+
+    // This Week
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekCount = allItems.filter(item => new Date(item.Lost_Time) >= weekAgo).length;
+    document.getElementById('weekCount').textContent = weekCount;
+
+    // Pending (all not found yet, which is your API default)
+    //document.getElementById('pendingCount').textContent = totalLost;
+
+    // Found Today (in this page it means "lost items reported today")
+    const today = new Date().toDateString();
+    const todayCount = allItems.filter(item => new Date(item.Lost_Time).toDateString() === today).length;
+    document.getElementById('todayCount').textContent = todayCount;
+}
+
+
+        function showError(message) {
+            const container = document.getElementById('itemsContainer');
+            container.innerHTML = `
+                <div class="text-center py-12 col-span-full">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">❌</span>
+                    </div>
+                    <p class="text-red-600 font-medium">${message}</p>
+                </div>
+            `;
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, fetching lost items...');
+            fetchLostItems();
+        });
+    </script>
+</body>
+</html>

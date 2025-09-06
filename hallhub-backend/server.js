@@ -611,6 +611,269 @@ app.get('/api/complaints', async (req, res) => {
     }
 });
 
+// ===============================
+// Items API
+// ===============================
+
+// Get all items
+app.get('/api/items', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        item_id,
+        item_type
+      FROM item
+      ORDER BY item_id ASC
+    `);
+
+    res.json({
+      success: true,
+      items: rows,
+      count: rows.length
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
+// Add new item
+app.post('/api/items/add', async (req, res) => {
+  const { item_type } = req.body;
+
+  if (!item_type) {
+    return res.status(400).json({
+      success: false,
+      message: 'Item type is required'
+    });
+  }
+
+  try {
+    const [result] = await pool.query(
+      `INSERT INTO item (item_type) VALUES (?)`,
+      [item_type]
+    );
+
+    res.json({
+      success: true,
+      message: 'Item added successfully',
+      item_id: result.insertId
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
+// Update item
+app.put('/api/items/update', async (req, res) => {
+  const { item_id, item_type } = req.body;
+
+  if (!item_id || !item_type) {
+    return res.status(400).json({
+      success: false,
+      message: 'Item ID and type are required'
+    });
+  }
+
+  try {
+    const [result] = await pool.query(
+      `UPDATE item SET item_type = ? WHERE item_id = ?`,
+      [item_type, item_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Item updated successfully'
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
+// Delete item
+app.delete('/api/items/delete', async (req, res) => {
+  const { item_id } = req.body;
+
+  if (!item_id) {
+    return res.status(400).json({
+      success: false,
+      message: 'Item ID is required'
+    });
+  }
+
+  try {
+    const [result] = await pool.query(
+      `DELETE FROM item WHERE item_id = ?`,
+      [item_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Item deleted successfully'
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
+// ===============================
+// Lost & Found Items API
+// ===============================
+
+// Get Lost Items
+app.get('/api/lost-items', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`CALL GetLostItems()`);
+
+    // NOTE: MySQL returns [ [results], [metadata] ] for CALL
+    const items = rows[0] || [];
+
+    res.json({
+      success: true,
+      items,
+      count: items.length
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
+// Get Found Items
+app.get('/api/found-items', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`CALL GetFoundItems()`);
+
+    const items = rows[0] || [];
+
+    res.json({
+      success: true,
+      items,
+      count: items.length
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
+
+// Mark lost item as found
+app.post('/api/mark-as-found', async (req, res) => {
+  const { lost_id } = req.body;
+
+  if (!lost_id) {
+    return res.status(400).json({
+      success: false,
+      message: 'Lost ID is required'
+    });
+  }
+
+  try {
+    // Check if already found
+    const [checkRows] = await pool.query(
+      'SELECT Found_ID FROM found_item WHERE Lost_ID = ?',
+      [lost_id]
+    );
+
+    if (checkRows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Item is already marked as found'
+      });
+    }
+
+    // Insert new found record
+    const foundId = Date.now(); // temporary unique ID (better: AUTO_INCREMENT in DB)
+
+    await pool.query(
+      `INSERT INTO found_item (Found_ID, Lost_ID, Found_Time) 
+       VALUES (?, ?, NOW())`,
+      [foundId, lost_id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Item marked as found successfully',
+      found_id: foundId
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // API routes for events
 app.get('/api/events', async (req, res) => {
   try {
