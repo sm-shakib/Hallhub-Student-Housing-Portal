@@ -332,6 +332,7 @@ app.get('/api/nonresident-students', async (req, res) => {
   try {
     const query = `
       SELECT 
+        serial_no,
         student_id,
         name,
         email,
@@ -345,6 +346,7 @@ app.get('/api/nonresident-students', async (req, res) => {
         relative_phone_no AS relative_phone
       FROM Student_Info
       WHERE resident_status = 0
+      ORDER BY Created_AT ASC
     `;
 
     const [results] = await pool.query(query);
@@ -363,11 +365,123 @@ app.get('/api/nonresident-students', async (req, res) => {
   }
 });
 
+// Update student info
+app.put('/api/students/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      serial_no, name, email, department, level, address, phone,
+      relativeName, relativeRelation, relativeAddress, relativePhone
+    } = req.body;
+
+    const sql = `
+      UPDATE Student_Info 
+      SET serial_no =?, name=?, email=?, department=?, level=?, address=?, phone_no=?, 
+          relative_name=?, relative_relation=?, relative_address=?, relative_phone_no=?
+      WHERE student_id=?
+    `;
+    const [result] = await pool.execute(sql, [
+      serial_no, name, email, department, level, address, phone,
+      relativeName, relativeRelation, relativeAddress, relativePhone, id
+    ]);
+
+    res.json({ success: true, message: 'Student updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Update failed' });
+  }
+});
+
+app.post('/api/add-to-resident', async (req, res) => {
+  try {
+    const { student_id } = req.body;
+    console.log('Adding student to resident:', req.body);
+
+    if (!student_id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Student ID is required' 
+      });
+    }
+
+    // Check if student exists
+    const checkStudentSql = 'SELECT student_id, name, email FROM Student_Info WHERE student_id = ?';
+    const [studentExists] = await pool.execute(checkStudentSql, [student_id]);
+    
+    if (studentExists.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Student not found' 
+      });
+    }
+
+    const student = studentExists[0];
+
+    // Check if already resident
+    const checkResidentSql = 'SELECT student_id FROM Resident WHERE student_id = ?';
+    const [alreadyResident] = await pool.execute(checkResidentSql, [student_id]);
+    
+    if (alreadyResident.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Student is already a resident' 
+      });
+    }
+
+    // Insert into Resident table
+    const insertSql = 'INSERT INTO Resident (student_id) VALUES (?)';
+    const [result] = await pool.execute(insertSql, [student_id]);
+
+    if (result.affectedRows > 0) {
+      // Update resident_status in Student_Info
+      const updateStatusSql = 'UPDATE Student_Info SET resident_status = 1 WHERE student_id = ?';
+      await pool.execute(updateStatusSql, [student_id]);
+
+       // ---- Send Email ----
+      const mailOptions = {
+        from: 'hallhub00@gmail.com',
+        to: student.email,
+        subject: 'Resident Status Update',
+        text: `Hello ${student.name},\n\nYou have been successfully added to the resident list.\n\nRegards,\nHallHub`
+      };
+
+      transporter.sendMail(mailOptions, (err, info) => {
+        if (err) {
+          console.error('Error sending email:', err);
+        } else {
+          console.log('Email sent:', info.response);
+        }
+      });
+
+
+      res.json({ 
+        success: true, 
+        message: 'Student successfully added to resident list',
+        resident_id: result.insertId
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to add student to resident list' 
+      });
+    }
+
+  } catch (error) {
+    console.error('Error adding student to resident:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Database error occurred', 
+      error: error.message
+    });
+  }
+});
+
 // Get resident students by joining Resident with Student_Info
 app.get('/api/resident-students', async (req, res) => {
   try {
     const query = `
       SELECT 
+          r.resident_id,
           s.student_id,
           s.name AS full_name,
           s.email,
@@ -381,7 +495,7 @@ app.get('/api/resident-students', async (req, res) => {
           s.relative_phone_no AS relative_phone
       FROM Student_Info s
       INNER JOIN Resident r ON s.student_id = r.student_id
-      ORDER BY s.Created_At ASC
+      ORDER BY r.Date ASC
     `;
 
     const [results] = await pool.query(query);
@@ -400,7 +514,52 @@ app.get('/api/resident-students', async (req, res) => {
   }
 });
 
-// Get all complaints ordered by time descending
+// Remove student from resident status (set resident_status = 0 AND delete from Resident table)
+app.post('/api/remove-from-resident', async (req, res) => {
+  try {
+    const { student_id } = req.body;
+
+    //Update Student_Info (set resident_status = 0)
+    const updateQuery = `
+      UPDATE Student_Info 
+      SET resident_status = 0 
+      WHERE student_id = ?
+    `;
+
+    const [updateResults] = await pool.execute(updateQuery, [student_id]);
+
+    if (updateResults.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+
+    //Delete from Resident table
+    const deleteQuery = `
+      DELETE FROM Resident 
+      WHERE student_id = ?
+    `;
+
+    await pool.execute(deleteQuery, [student_id]);
+
+    // Final Response
+    res.json({
+      success: true,
+      message: 'Student removed from resident list successfully'
+    });
+
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
+
+// Get all complaints ordered by time
 app.get('/api/complaints', async (req, res) => {
   try {
     const query = `
@@ -412,7 +571,7 @@ app.get('/api/complaints', async (req, res) => {
           time,
           status
       FROM complaint 
-      ORDER BY time DESC
+      ORDER BY time ASC
     `;
     
     const [results] = await pool.query(query);
