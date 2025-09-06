@@ -68,10 +68,12 @@
       box-shadow: 0 0 0 3px rgba(116, 235, 213, 0.1);
     }
 
-    input[readonly] {
-      background-color: #f8f9fa;
-      color: #6c757d;
-    }
+   input[readonly] {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  border-color: #e9ecef !important;
+}
 
     button {
       width: 100%;
@@ -217,18 +219,60 @@
       };
     }
 
-    // Initialize page
-    document.addEventListener('DOMContentLoaded', function() {
-      const currentUser = getCurrentUser();
-      
-      // Set student information
-      document.getElementById('studentId').value = currentUser.studentId || 'student Id';
-      document.getElementById('studentName').textContent = currentUser.name || 'Test Student';
-      document.getElementById('displayStudentId').textContent = currentUser.studentId || 'student Id';
-      document.getElementById('studentEmail').textContent = currentUser.email || 'test@student.com';
-      
-      console.log('Page loaded with user:', currentUser);
-    });
+   // Session helper functions
+function getCurrentUser() {
+  try {
+    const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+    return userSession ? JSON.parse(userSession) : null;
+  } catch (error) {
+    console.error('Error parsing user session:', error);
+    return null;
+  }
+}
+
+function initializeForm() {
+  const currentUser = getCurrentUser();
+  
+  if (!currentUser || !currentUser.studentId) {
+    alert('Please log in to submit visitor application');
+    window.location.href = 'login.html';
+    return null;
+  }
+  
+  // Set student ID field
+  const studentIdField = document.getElementById('studentId');
+  if (studentIdField) {
+    studentIdField.value = currentUser.studentId;
+    studentIdField.readOnly = true;
+  }
+  
+  // Update student info display
+  document.getElementById('studentInfo').innerHTML = `
+    <strong>Name:</strong> ${currentUser.name || 'N/A'}<br>
+    <strong>Student ID:</strong> ${currentUser.studentId}<br>
+    <strong>Email:</strong> ${currentUser.email || 'N/A'}
+  `;
+  
+  return currentUser;
+}
+
+// Initialize form with student data
+document.addEventListener('DOMContentLoaded', function() {
+  const currentUser = initializeForm();
+  if (!currentUser) return; // Exit if no session
+});
+
+// Rest of your existing form submission code...
+
+    // Initialize form with student data
+    //document.addEventListener('DOMContentLoaded', function() {
+      //document.getElementById('studentId').value = currentUser.studentId;
+      //document.getElementById('studentInfo').innerHTML = `
+       // <strong>Name:</strong> ${currentUser.name || 'N/A'}<br>
+        //<strong>Student ID:</strong> ${currentUser.studentId}<br>
+        //<strong>Email:</strong> ${currentUser.email || 'N/A'}
+      //`;
+   // });
 
     // Handle form submission
     document.getElementById('visitorForm').addEventListener('submit', async function(e) {

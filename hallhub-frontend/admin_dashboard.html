@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HallHub - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .feature-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
+    <header class="relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700"></div>
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative z-10 container mx-auto px-6 py-8">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <span class="text-2xl">🛡️</span>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white tracking-tight">HallHub</h1>
+                        <p class="text-blue-100 text-sm font-medium">Admin Dashboard</p>
+                    </div>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-3 text-white">
+                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-semibold">AD</span>
+                        </div>
+                        <span class="font-medium">Admin User</span>
+                    </div>
+                    <a href="login.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
+                        Logout
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow py-12 px-6">
+        <div class="container mx-auto max-w-7xl">
+            <div class="mb-12 text-center">
+                <h2 class="text-4xl font-bold gradient-text mb-4">Welcome Back, Admin!</h2>
+                <p class="text-gray-600 text-lg max-w-2xl mx-auto">Manage student records, oversee hall operations, and maintain comprehensive oversight of all activities.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Students</p>
+                            <p id="totalStudents" class="text-2xl font-bold text-gray-900">Loading...</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">👥</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Resident Students</p>
+                            <p id="residentStudents" class="text-2xl font-bold text-gray-900">Loading...</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🏠</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Non-Resident</p>
+                            <p id="nonResidentStudents" class="text-2xl font-bold text-gray-900">Loading...</p>
+                        </div>
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🚶</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Pending Issues</p>
+                            <p id="pendingComplaints" class="text-2xl font-bold text-gray-900">Loading...</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">⚠️</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-12">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">System Overview</h3>
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Active</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold">REGISTRATIONS</span>
+                            <span class="text-sm text-gray-500">Today</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-2">New Student Registrations</h4>
+                        <p class="text-gray-600 text-sm"><!-- 5 new students registered today - -->Review pending applications</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-semibold">MAINTENANCE</span>
+                            <span class="text-sm text-gray-500">In Progress</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-2">Facility Maintenance</h4>
+                        <p class="text-gray-600 text-sm"><!-- 3 maintenance requests being processed - -->Monitor completion status</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-lg text-xs font-semibold">REPORTS</span>
+                            <span class="text-sm text-gray-500">Weekly</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-2">System Reports</h4>
+                        <p class="text-gray-600 text-sm">Generate weekly activity reports and analytics dashboard</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
+                <a href="admin_nonresident_students.html" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">🚶</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Non-Resident Students</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Oversee non-resident student records, access permissions, event participation, and external services.</p>
+                    <div class="flex items-center text-orange-600 font-semibold text-lg group-hover:text-orange-700">
+                        <span>Manage Non-Residents</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+                
+                <a href="admin_resident_students.html" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">🏠</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Resident Students</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Manage resident student records, room allocations, facility usage, and residential services.</p>
+                    <div class="flex items-center text-green-600 font-semibold text-lg group-hover:text-green-700">
+                        <span>Manage Residents</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="admin_complaints.html" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">📝</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Complaints</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Review and manage student complaints, track resolution status, and maintain feedback records.</p>
+                    <div class="flex items-center text-red-600 font-semibold text-lg group-hover:text-red-700">
+                        <span>Manage Complaints</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="#" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">📦</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Item Category</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Manage item categories, classification systems, and organize inventory by type and purpose.</p>
+                    <div class="flex items-center text-blue-600 font-semibold text-lg group-hover:text-blue-700">
+                        <span>Manage Categories</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="#" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">🔍</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Lost Items</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Track lost item reports, manage recovery processes, and maintain lost and found inventory.</p>
+                    <div class="flex items-center text-yellow-600 font-semibold text-lg group-hover:text-yellow-700">
+                        <span>Manage Lost Items</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="#" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">✅</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Found Items</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Catalog found items, match with lost reports, coordinate returns, and update recovery status.</p>
+                    <div class="flex items-center text-teal-600 font-semibold text-lg group-hover:text-teal-700">
+                        <span>Manage Found Items</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="#" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">🎉</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Events</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Organize hall events, manage registrations, schedule activities, and coordinate community programs.</p>
+                    <div class="flex items-center text-purple-600 font-semibold text-lg group-hover:text-purple-700">
+                        <span>Manage Events</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="#" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-pink-500 to-rose-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">👥</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Visitor Info</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Track visitor registrations, manage access permissions, monitor guest activities, and security protocols.</p>
+                    <div class="flex items-center text-pink-600 font-semibold text-lg group-hover:text-pink-700">
+                        <span>Manage Visitors</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="#" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">🏢</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Allocation Info</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Oversee room allocations, bed assignments, space management, and residential placement coordination.</p>
+                    <div class="flex items-center text-emerald-600 font-semibold text-lg group-hover:text-emerald-700">
+                        <span>Manage Allocations</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="#" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-violet-500 to-purple-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">🏛️</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Hall</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Manage hall facilities, common areas, maintenance schedules, and overall building administration.</p>
+                    <div class="flex items-center text-violet-600 font-semibold text-lg group-hover:text-violet-700">
+                        <span>Manage Hall</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+
+                <a href="#" class="feature-card bg-white rounded-3xl p-12 shadow-xl border border-gray-100 group cursor-pointer block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-3xl text-white">🚪</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Room</h3>
+                    <p class="text-gray-600 mb-8 text-lg">Oversee individual room assignments, occupancy status, maintenance requests, and room-specific services.</p>
+                    <div class="flex items-center text-amber-600 font-semibold text-lg group-hover:text-amber-700">
+                        <span>Manage Rooms</span>
+                        <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </a>
+            </div>
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 mt-20">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🎓</span>
+                        </div>
+                        <h3 class="text-xl font-bold">HallHub</h3>
+                    </div>
+                    <p class="text-gray-400 max-w-md">Your comprehensive student hall management platform. Connecting students, managing resources, and building community.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Admin Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">Dashboard</a></li>
+                        <li><a href="#" class="hover:text-white transition">Reports</a></li>
+                        <li><a href="#" class="hover:text-white transition">Settings</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#contact" class="hover:text-white transition">Contact Us</a></li>
+                        <li><a href="#privacy" class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="#terms" class="hover:text-white transition">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                <p>© 2025 HallHub. All rights reserved. Built with ❤️ for students.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Fetch student and complaint statistics
+        async function loadDashboardStats() {
+            try {
+                // --- Fetch resident students count ---
+                const residentResponse = await fetch('http://127.0.0.1:3000/api/resident-students');
+                const residentData = await residentResponse.json();
+
+                // --- Fetch non-resident students count ---
+                const nonResidentResponse = await fetch('http://127.0.0.1:3000/api/nonresident-students');
+                const nonResidentData = await nonResidentResponse.json();
+
+                // --- Fetch complaints ---
+                const complaintsResponse = await fetch('http://127.0.0.1:3000/api/complaints');
+                const complaintsData = await complaintsResponse.json();
+
+                if (residentData.success && nonResidentData.success && complaintsData.success) {
+                    const residentCount = residentData.count || 0;
+                    const nonResidentCount = nonResidentData.count || 0;
+                    const totalCount = residentCount + nonResidentCount;
+
+                    // Count complaints where status = 0
+                    const pendingCount = complaintsData.complaints.filter(c => c.status === 0).length;
+
+                    // --- Update dashboard cards ---
+                    document.getElementById('totalStudents').textContent = totalCount;
+                    document.getElementById('residentStudents').textContent = residentCount;
+                    document.getElementById('nonResidentStudents').textContent = nonResidentCount;
+                    document.getElementById('pendingComplaints').textContent = pendingCount;
+                } else {
+                    showError();
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard stats:', error);
+                showError();
+            }
+        }
+
+        function showError() {
+            document.getElementById('totalStudents').textContent = 'Error';
+            document.getElementById('residentStudents').textContent = 'Error';
+            document.getElementById('nonResidentStudents').textContent = 'Error';
+            document.getElementById('pendingComplaints').textContent = 'Error';
+        }
+
+        // Load stats when page loads
+        document.addEventListener('DOMContentLoaded', loadDashboardStats);
+    </script>
+
+</body>
+</html>

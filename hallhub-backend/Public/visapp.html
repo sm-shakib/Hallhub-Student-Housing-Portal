@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visitor Application</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #74ebd5, #ACB6E5);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .form-container {
+      background-color: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+      width: 100%;
+      max-width: 450px;
+      animation: fadeIn 0.6s ease;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+      font-size: 1.8rem;
+    }
+
+    .student-info {
+      background: rgba(116, 235, 213, 0.1);
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border-left: 4px solid #74ebd5;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 18px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    input:focus {
+      border-color: #74ebd5;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(116, 235, 213, 0.1);
+    }
+
+   input[readonly] {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  border-color: #e9ecef !important;
+}
+
+    button {
+      width: 100%;
+      background: linear-gradient(45deg, #74ebd5, #ACB6E5);
+      color: #fff;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(116, 235, 213, 0.3);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .message {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+
+    .message.success {
+      background: rgba(39, 174, 96, 0.1);
+      color: #27ae60;
+      border: 1px solid rgba(39, 174, 96, 0.3);
+      display: block;
+    }
+
+    .message.error {
+      background: rgba(231, 76, 60, 0.1);
+      color: #e74c3c;
+      border: 1px solid rgba(231, 76, 60, 0.3);
+      display: block;
+    }
+
+    .message.loading {
+      background: rgba(243, 156, 18, 0.1);
+      color: #f39c12;
+      border: 1px solid rgba(243, 156, 18, 0.3);
+      display: block;
+    }
+
+    .back-link {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .back-link a {
+      text-decoration: none;
+      font-weight: bold;
+      color: #0056b3;
+      padding: 10px 20px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .back-link a:hover {
+      background: rgba(255, 255, 255, 0.6);
+      text-decoration: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(-100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Visitor Application</h2>
+    
+    <div class="student-info">
+      <h4>Student Information</h4>
+      <p id="studentInfo">Loading...</p>
+    </div>
+
+    <form id="visitorForm">
+      <label for="studentId">Student ID</label>
+      <input type="text" id="studentId" placeholder="Your Student ID" required readonly />
+
+      <label for="visitorName">Visitor Name</label>
+      <input type="text" id="visitorName" placeholder="Enter visitor's full name" required />
+
+      <label for="visitorPhone">Phone Number</label>
+      <input type="tel" id="visitorPhone" placeholder="Enter phone number" required />
+
+      <label for="relation">Relation</label>
+      <input type="text" id="relation" placeholder="Relationship with visitor" required />
+
+      <button type="submit" id="submitBtn">Submit</button>
+      <div class="message" id="formMessage"></div>
+    </form>
+  </div>
+
+  <div class="back-link">
+    <a href="dashb.html">← Back to Dashboard</a>
+  </div>
+
+  <script>
+    // Get current user data from localStorage
+    //const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
+    // Check if user is logged in
+    //if (!currentUser.studentId) {
+     // alert('Please log in to submit visitor application');
+     // window.location.href = '/';
+   // }
+
+   // Session helper functions
+function getCurrentUser() {
+  try {
+    const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+    return userSession ? JSON.parse(userSession) : null;
+  } catch (error) {
+    console.error('Error parsing user session:', error);
+    return null;
+  }
+}
+
+function initializeForm() {
+  const currentUser = getCurrentUser();
+  
+  if (!currentUser || !currentUser.studentId) {
+    alert('Please log in to submit visitor application');
+    window.location.href = 'login.html';
+    return null;
+  }
+  
+  // Set student ID field
+  const studentIdField = document.getElementById('studentId');
+  if (studentIdField) {
+    studentIdField.value = currentUser.studentId;
+    studentIdField.readOnly = true;
+  }
+  
+  // Update student info display
+  document.getElementById('studentInfo').innerHTML = `
+    <strong>Name:</strong> ${currentUser.name || 'N/A'}<br>
+    <strong>Student ID:</strong> ${currentUser.studentId}<br>
+    <strong>Email:</strong> ${currentUser.email || 'N/A'}
+  `;
+  
+  return currentUser;
+}
+
+// Initialize form with student data
+document.addEventListener('DOMContentLoaded', function() {
+  const currentUser = initializeForm();
+  if (!currentUser) return; // Exit if no session
+});
+
+// Rest of your existing form submission code...
+
+    // Initialize form with student data
+    //document.addEventListener('DOMContentLoaded', function() {
+      //document.getElementById('studentId').value = currentUser.studentId;
+      //document.getElementById('studentInfo').innerHTML = `
+       // <strong>Name:</strong> ${currentUser.name || 'N/A'}<br>
+        //<strong>Student ID:</strong> ${currentUser.studentId}<br>
+        //<strong>Email:</strong> ${currentUser.email || 'N/A'}
+      //`;
+   // });
+
+    // Handle form submission
+    document.getElementById('visitorForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const submitBtn = document.getElementById('submitBtn');
+      const messageDiv = document.getElementById('formMessage');
+
+      // Get form data
+      const formData = {
+        student_id: document.getElementById('studentId').value,
+        visitor_name: document.getElementById('visitorName').value.trim(),
+        visitor_phone: document.getElementById('visitorPhone').value.trim(),
+        visit_purpose: document.getElementById('relation').value.trim(),
+        visit_date: new Date().toISOString().split('T')[0],
+        visit_time: null
+      };
+
+      try {
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        showMessage('Submitting your visitor application...', 'loading');
+
+        // Submit to backend
+        const response = await fetch('/api/visitor-applications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          // Success
+          showMessage(`Visitor application submitted successfully! Application ID: #${result.applicationId}`, 'success');
+
+          // Reset form
+          document.getElementById('visitorForm').reset();
+          document.getElementById('studentId').value = currentUser.studentId;
+
+        } else {
+          // Error from server
+          showMessage(`Error: ${result.error}`, 'error');
+        }
+
+      } catch (error) {
+        console.error('Error submitting application:', error);
+        showMessage('Failed to submit application. Please check your connection and try again.', 'error');
+      } finally {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+      }
+    });
+
+    // Function to show messages
+    function showMessage(message, type) {
+      const messageDiv = document.getElementById('formMessage');
+      messageDiv.innerHTML = message;
+      messageDiv.className = `message ${type}`;
+      
+      // Auto-hide success messages after 5 seconds
+      if (type === 'success') {
+        setTimeout(() => {
+          messageDiv.style.display = 'none';
+        }, 5000);
+      }
+    }
+  </script>
+</body>
+</html>

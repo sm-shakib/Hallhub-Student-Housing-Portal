@@ -1,0 +1,27 @@
+{
+    "sqltools.connections": [
+        {
+            "name": "hall",
+            "driver": "MySQL",
+            "server": "localhost",
+            "port": 3306,
+            "database": "hall_mgmt",
+            "username": "WasifDarain",
+            "password": "mysql",
+            "previewLimit": 50
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "mysql-71ed2b0-hallhub-1.g.aivencloud.com",
+            "port": 28592,
+            "driver": "MySQL",
+            "database": "defaultdb",
+            "username": "avnadmin",
+            "name": "Aiven"
+        }
+    ]
+}

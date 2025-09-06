@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+ <title>Visitor Status</title>
+ <style>
+   body {
+     font-family: 'Segoe UI', sans-serif;
+     background: linear-gradient(to right, #FFDEE9, #B5FFFC);
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-items: center;
+     min-height: 100vh;
+     margin: 0;
+     padding: 20px;
+     box-sizing: border-box;
+   }
+
+   .status-box {
+     background-color: rgba(255, 255, 255, 0.95);
+     backdrop-filter: blur(10px);
+     padding: 30px;
+     border-radius: 16px;
+     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+     width: 100%;
+     max-width: 400px;
+     text-align: center;
+     animation: fadeIn 0.6s ease;
+   }
+
+   h2 {
+     color: #333;
+     margin-bottom: 20px;
+     font-size: 1.8rem;
+   }
+
+   input {
+     width: 100%;
+     padding: 12px;
+     margin-bottom: 15px;
+     border-radius: 10px;
+     border: 2px solid #e1e5e9;
+     transition: all 0.3s ease;
+     font-size: 1rem;
+     box-sizing: border-box;
+   }
+
+   input:focus {
+     border-color: #B5FFFC;
+     outline: none;
+     box-shadow: 0 0 0 3px rgba(181, 255, 252, 0.2);
+   }
+
+   input[readonly] {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  border-color: #e9ecef !important;
+}
+
+   button {
+     width: 100%;
+     background: linear-gradient(45deg, #FFDEE9, #B5FFFC);
+     color: #333;
+     padding: 12px;
+     border: none;
+     border-radius: 10px;
+     font-size: 16px;
+     font-weight: bold;
+     cursor: pointer;
+     transition: all 0.3s ease;
+     text-transform: uppercase;
+     letter-spacing: 1px;
+   }
+
+   button:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 8px 20px rgba(181, 255, 252, 0.3);
+   }
+
+   button:disabled {
+     background: #ccc;
+     cursor: not-allowed;
+     transform: none;
+     box-shadow: none;
+   }
+
+   .result {
+     margin-top: 20px;
+     padding: 15px;
+     border-radius: 12px;
+     font-weight: 600;
+     color: #444;
+     display: none;
+     animation: slideIn 0.3s ease;
+   }
+
+   .result.show {
+     display: block;
+   }
+
+   .result.approved {
+     background: rgba(39, 174, 96, 0.1);
+     color: #27ae60;
+     border: 1px solid rgba(39, 174, 96, 0.3);
+   }
+
+   .result.pending {
+     background: rgba(243, 156, 18, 0.1);
+     color: #f39c12;
+     border: 1px solid rgba(243, 156, 18, 0.3);
+   }
+
+   .result.declined {
+     background: rgba(231, 76, 60, 0.1);
+     color: #e74c3c;
+     border: 1px solid rgba(231, 76, 60, 0.3);
+   }
+
+   .result.error {
+     background: rgba(231, 76, 60, 0.1);
+     color: #e74c3c;
+     border: 1px solid rgba(231, 76, 60, 0.3);
+   }
+
+   .result.loading {
+     background: rgba(181, 255, 252, 0.2);
+     color: #333;
+     border: 1px solid rgba(181, 255, 252, 0.5);
+   }
+
+   .back-link {
+     margin-top: 20px;
+     text-align: center;
+   }
+
+   .back-link a {
+     text-decoration: none;
+     font-weight: bold;
+     color: #0056b3;
+     padding: 10px 20px;
+     border-radius: 20px;
+     background: rgba(255, 255, 255, 0.3);
+     transition: all 0.3s ease;
+   }
+
+   .back-link a:hover {
+     background: rgba(255, 255, 255, 0.6);
+     text-decoration: none;
+   }
+
+   @keyframes fadeIn {
+     from { opacity: 0; transform: translateY(20px); }
+     to { opacity: 1; transform: translateY(0); }
+   }
+
+   @keyframes slideIn {
+     from { transform: translateY(-20px); opacity: 0; }
+     to { transform: translateY(0); opacity: 1; }
+   }
+ </style>
+</head>
+<body>
+ <div class="status-box">
+   <h2>Check Visitor Status</h2>
+   <input type="text" id="checkId" placeholder="Enter Student ID" readonly />
+   <button onclick="checkStatus()" id="checkBtn">Check Status</button>
+   <div class="result" id="statusResult"></div>
+ </div>
+
+ <div class="back-link">
+   <a href="dashb.html">← Back to Dashboard</a>
+ </div>
+
+ <script>
+   // Get current user data from localStorage
+   //const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
+   // Check if user is logged in
+  // if (!currentUser.studentId) {
+     //alert('Please log in to check visitor status');
+    // window.location.href = '/';
+   //}
+
+   // Session helper functions
+function getCurrentUser() {
+  try {
+    const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+    return userSession ? JSON.parse(userSession) : null;
+  } catch (error) {
+    console.error('Error parsing user session:', error);
+    return null;
+  }
+}
+
+// Initialize with current user's student ID
+document.addEventListener('DOMContentLoaded', function() {
+  const currentUser = getCurrentUser();
+  
+  if (!currentUser || !currentUser.studentId) {
+    alert('Please log in to check visitor status');
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  const checkIdField = document.getElementById('checkId');
+  checkIdField.value = currentUser.studentId;
+  checkIdField.readOnly = true;
+});
+
+   // Initialize with current user's student ID
+  // document.addEventListener('DOMContentLoaded', function() {
+    // document.getElementById('checkId').value = currentUser.studentId;
+   //});
+
+   async function checkStatus() {
+     const id = document.getElementById('checkId').value.trim();
+     const statusOutput = document.getElementById('statusResult');
+     const checkBtn = document.getElementById('checkBtn');
+
+     if (!id) {
+       showResult("Please enter a valid Student ID.", 'error');
+       return;
+     }
+
+     try {
+       // Show loading state
+       checkBtn.disabled = true;
+       checkBtn.textContent = 'Checking...';
+       showResult("Checking visitor status...", 'loading');
+
+       // Fetch visitor applications from backend
+       const response = await fetch(`/api/visitor-applications?student_id=${id}`);
+       
+       if (!response.ok) {
+         throw new Error('Failed to fetch visitor status');
+       }
+
+       const applications = await response.json();
+
+       if (applications.length === 0) {
+         showResult(`No visitor applications found for Student ID: ${id}`, 'error');
+       } else {
+         // Show the most recent application status
+         const latestApp = applications[0]; // API returns sorted by application_date DESC
+         const status = latestApp.status;
+         const visitorName = latestApp.visitor_name;
+         
+         let statusClass = '';
+         if (status === 'approved') statusClass = 'approved';
+         else if (status === 'pending') statusClass = 'pending';
+         else statusClass = 'declined';
+
+         showResult(`
+           Latest Visitor Application:<br>
+           <strong>Visitor:</strong> ${visitorName}<br>
+           <strong>Status:</strong> ${status.toUpperCase()}
+         `, statusClass);
+       }
+
+     } catch (error) {
+       console.error('Error checking status:', error);
+       showResult('Failed to check visitor status. Please try again.', 'error');
+     } finally {
+       // Reset button
+       checkBtn.disabled = false;
+       checkBtn.textContent = 'Check Status';
+     }
+   }
+
+   function showResult(message, type) {
+     const statusOutput = document.getElementById('statusResult');
+     statusOutput.innerHTML = message;
+     statusOutput.className = `result show ${type}`;
+   }
+ </script>
+</body>
+</html>

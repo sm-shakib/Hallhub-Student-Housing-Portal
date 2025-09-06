@@ -5,353 +5,528 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>HallHub - Student Registration</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Enable dark mode via class -->
     <script>
-        tailwind.config = { darkMode: 'class' };
-
-        // Apply saved theme before rendering
-        if (localStorage.theme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark'); // default: light
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
         }
     </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .feature-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .error-message.show {
+            opacity: 1;
+        }
+        .input-error {
+            border-color: #dc2626 !important;
+            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2) !important;
+        }
+        .input-valid {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 font-sans min-h-screen flex flex-col transition-colors duration-300">
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen flex flex-col">
 
-    <!-- Header Section -->
-    <header class="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-indigo-700 dark:to-purple-900 text-white py-6 shadow-lg">
-        <div class="container mx-auto px-4 flex justify-between items-center">
-            <h1 class="text-3xl font-bold">🏢 HallHub</h1>
-            <nav class="flex items-center space-x-4">
-                <a href="home.html" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Back to Home</a>
-                <a href="login.html" class="mx-4 hover:text-gray-200 dark:hover:text-gray-300 transition">Login</a>
-                <!-- Theme Toggle Button -->
-                <button id="theme-toggle" class="px-3 py-1 bg-white/20 rounded hover:bg-white/30 transition select-none">
-                    🌙
-                </button>
-            </nav>
+    <!-- Updated header to match home page styling exactly -->
+    <header class="relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700"></div>
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative z-10 container mx-auto px-6 py-8">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <span class="text-2xl">🏢</span>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white tracking-tight">HallHub</h1>
+                        <p class="text-blue-100 text-sm font-medium">Student Housing Portal</p>
+                    </div>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="home.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">← Back to Home</a>
+                    <a href="login.html" class="px-4 py-2 bg-white bg-opacity-30 text-white rounded-lg hover:bg-opacity-40 transition-all duration-200 font-medium backdrop-blur-sm border border-white border-opacity-20">Login</a>
+                </nav>
+            </div>
         </div>
     </header>
 
-    <!-- Success/Error Message -->
-    <div id="alert-message" class="hidden">
-        <div class="container mx-auto px-4 py-3">
-            <div id="alert-content" class="p-4 rounded-lg shadow-md">
-                <p id="alert-text"></p>
+    <!-- Completely redesigned registration form section with two-part layout -->
+    <section class="flex-grow py-16 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold gradient-text mb-4">🎓 Student Registration</h2>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Join the HallHub community and unlock seamless campus living</p>
             </div>
-        </div>
-    </div>
+            
+            <form id="registration-form" class="grid grid-cols-1 lg:grid-cols-2 gap-8" novalidate>
+                <!-- First section: Personal Information -->
+                <div class="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">👤</span>
+                        </div>
+                        Personal Information
+                    </h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label for="student-id" class="block text-gray-700 font-semibold mb-2">Student ID</label>
+                            <input type="text" id="student-id" name="student-id" autocomplete="off" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" />
+                            <div class="error-message" id="student-id-error">Student ID is required</div>
+                        </div>
+                        <div>
+                            <label for="name" class="block text-gray-700 font-semibold mb-2">Full Name</label>
+                            <input type="text" id="name" name="name" autocomplete="off" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" />
+                            <div class="error-message" id="name-error">Full Name is required</div>
+                        </div>
+                        <div>
+                            <label for="email" class="block text-gray-700 font-semibold mb-2">Email Address</label>
+                            <input type="email" id="email" name="email" autocomplete="off" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" />
+                            <div class="error-message" id="email-error">Please enter a valid email address</div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="department" class="block text-gray-700 font-semibold mb-2">Department</label>
+                                <select id="department" name="department" required
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white">
+                                    <option value="">Select Department</option>
+                                    <option value="AE">AE</option>
+                                    <option value="Architecture">Architecture</option>
+                                    <option value="BME">BME</option>
+                                    <option value="CE">CE</option>
+                                    <option value="CSE">CSE</option>
+                                    <option value="EECE">EECE</option>
+                                    <option value="EWCE">EWCE</option>
+                                    <option value="IPE">IPE</option>
+                                    <option value="ME">ME</option>
+                                    <option value="NAME">NAME</option>
+                                    <option value="NSE">NSE</option>
+                                    <option value="PME">PME</option>
+                                </select>
+                                <div class="error-message" id="department-error">Department is required</div>
+                            </div>
+                            <div>
+                                <label for="level" class="block text-gray-700 font-semibold mb-2">Level</label>
+                                <input type="text" id="level" name="level" autocomplete="off" required
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" />
+                                <div class="error-message" id="level-error">Level is required</div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="address" class="block text-gray-700 font-semibold mb-2">Address</label>
+                            <input type="text" id="address" name="address" autocomplete="off" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" />
+                            <div class="error-message" id="address-error">Address is required</div>
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-gray-700 font-semibold mb-2">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" autocomplete="off" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" />
+                            <div class="error-message" id="phone-error">Phone Number is required</div>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Registration Form Section -->
-    <section class="flex-grow py-12">
-        <div class="container mx-auto px-4">
-            <div class="max-w-md mx-auto 
-                        bg-white/20 dark:bg-gray-800/30 
-                        backdrop-blur-lg border border-white/20 dark:border-gray-700/30 
-                        rounded-xl shadow-lg p-8 
-                        hover:shadow-[0_0_25px_rgba(0,255,255,0.8)] transition
-                        hover:scale-[1.01] transform duration-300 ease-in-out">
-                <h2 class="text-3xl font-bold text-gray-800 dark:text-white text-center mb-6">🎓 Student Registration</h2>
-                
-                <form id="registration-form" class="space-y-4" novalidate>
-                    <div>
-                        <label for="student-id" class="block text-gray-700 dark:text-gray-300 font-semibold">Student ID *</label>
-                        <input type="text" id="student-id" name="student-id" autocomplete="off" required
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors" />
-                        <span class="text-red-500 text-sm hidden" id="student-id-error"></span>
+                <!-- Second section: Emergency Contact & Account Setup -->
+                <div class="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                        <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">👥</span>
+                        </div>
+                        Emergency Contact & Security
+                    </h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label for="relativename" class="block text-gray-700 font-semibold mb-2">Emergency Contact Name</label>
+                            <input type="text" id="relativename" name="relativename" autocomplete="off" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200" />
+                            <div class="error-message" id="relativename-error">Emergency Contact Name is required</div>
+                        </div>
+                        <div>
+                            <label for="relativerelation" class="block text-gray-700 font-semibold mb-2">Relationship</label>
+                            <select id="relativerelation" name="relativerelation" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white">
+                                <option value="">Select Relationship</option>
+                                <option value="Father">Father</option>
+                                <option value="Mother">Mother</option>
+                                <option value="Brother">Brother</option>
+                                <option value="Sister">Sister</option>
+                                <option value="Uncle">Uncle</option>
+                                <option value="Aunt">Aunt</option>
+                                <option value="Cousin">Cousin</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div class="error-message" id="relativerelation-error">Relationship is required</div>
+                        </div>
+                        <div>
+                            <label for="relativeaddress" class="block text-gray-700 font-semibold mb-2">Emergency Contact Address</label>
+                            <input type="text" id="relativeaddress" name="relativeaddress" autocomplete="off" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200" />
+                            <div class="error-message" id="relativeaddress-error">Emergency Contact Address is required</div>
+                        </div>
+                        <div>
+                            <label for="relativephone" class="block text-gray-700 font-semibold mb-2">Emergency Contact Phone</label>
+                            <input type="tel" id="relativephone" name="relativephone" autocomplete="off" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200" />
+                            <div class="error-message" id="relativephone-error">Emergency Contact Phone is required</div>
+                        </div>
+                        <div class="border-t border-gray-200 pt-6">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Account Security</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="password" class="block text-gray-700 font-semibold mb-2">Password</label>
+                                    <input type="password" id="password" name="password" autocomplete="off" required
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200" />
+                                    <div class="error-message" id="password-error">Password must be at least 6 characters long</div>
+                                </div>
+                                <div>
+                                    <label for="confirm-password" class="block text-gray-700 font-semibold mb-2">Confirm Password</label>
+                                    <input type="password" id="confirm-password" name="confirm-password" autocomplete="off" required
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200" />
+                                    <div class="error-message" id="confirm-password-error">Passwords do not match</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div>
-                        <label for="name" class="block text-gray-700 dark:text-gray-300 font-semibold">Full Name *</label>
-                        <input type="text" id="name" name="name" autocomplete="off" required
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors" />
-                        <span class="text-red-500 text-sm hidden" id="name-error"></span>
-                    </div>
-                    
-                    <div>
-                        <label for="email" class="block text-gray-700 dark:text-gray-300 font-semibold">Email Address *</label>
-                        <input type="email" id="email" name="email" autocomplete="off" required
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors" />
-                        <span class="text-red-500 text-sm hidden" id="email-error"></span>
-                    </div>
-                    
-                    <div>
-                        <label for="department" class="block text-gray-700 dark:text-gray-300 font-semibold">Department</label>
-                        <input type="text" id="department" name="department" autocomplete="off"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors" />
-                    </div>
-                    
-                    <div>
-                        <label for="level" class="block text-gray-700 dark:text-gray-300 font-semibold">Level</label>
-                        <input type="text" id="level" name="level" autocomplete="off"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors" />
-                    </div>
-                    
-                    <div>
-                        <label for="address" class="block text-gray-700 dark:text-gray-300 font-semibold">Address</label>
-                        <textarea id="address" name="address" rows="2" autocomplete="off"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors resize-none"></textarea>
-                    </div>
-                    
-                    <div>
-                        <label for="phone" class="block text-gray-700 dark:text-gray-300 font-semibold">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" autocomplete="off"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors" />
-                        <span class="text-red-500 text-sm hidden" id="phone-error"></span>
-                    </div>
-                    
-                    <div>
-                        <label for="relativename" class="block text-gray-700 dark:text-gray-300 font-semibold">Relative Name</label>
-                        <input type="text" id="relativename" name="relativename" autocomplete="off"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors" />
-                    </div>
-                    
-                    <div>
-                        <label for="relativerelation" class="block text-gray-700 dark:text-gray-300 font-semibold">Relative Relation</label>
-                        <select id="relativerelation" name="relativerelation"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors">
-                            <option value="">Select Relation</option>
-                            <option value="Father">Father</option>
-                            <option value="Mother">Mother</option>
-                            <option value="Guardian">Guardian</option>
-                            <option value="Brother">Brother</option>
-                            <option value="Sister">Sister</option>
-                            <option value="Uncle">Uncle</option>
-                            <option value="Aunt">Aunt</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label for="relativeaddress" class="block text-gray-700 dark:text-gray-300 font-semibold">Relative Address</label>
-                        <textarea id="relativeaddress" name="relativeaddress" rows="2" autocomplete="off"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors resize-none"></textarea>
-                    </div>
-                    
-                    <div>
-                        <label for="relativephone" class="block text-gray-700 dark:text-gray-300 font-semibold">Relative Phone Number</label>
-                        <input type="tel" id="relativephone" name="relativephone" autocomplete="off"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors" />
-                        <span class="text-red-500 text-sm hidden" id="relativephone-error"></span>
-                    </div>
-                    
-                    <div>
-                        <label for="password" class="block text-gray-700 dark:text-gray-300 font-semibold">Password *</label>
-                        <input type="password" id="password" name="password" autocomplete="off" required
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors" />
-                        <span class="text-red-500 text-sm hidden" id="password-error"></span>
-                        <small class="text-gray-500 dark:text-gray-400">Password must be at least 6 characters long</small>
-                    </div>
-                    
-                    <div>
-                        <label for="confirm-password" class="block text-gray-700 dark:text-gray-300 font-semibold">Confirm Password *</label>
-                        <input type="password" id="confirm-password" name="confirm-password" autocomplete="off" required
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 
-                                   dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors" />
-                        <span class="text-red-500 text-sm hidden" id="confirm-password-error"></span>
-                    </div>
+                </div>
 
-                    <button type="submit" id="submit-btn"
-                        class="w-full 
-                               bg-gradient-to-r from-blue-500 to-indigo-600 
-                               hover:from-cyan-400 hover:to-blue-700
-                               hover:scale-[1.03] transform duration-300 ease-in-out
-                               text-white py-3 rounded-lg 
-                               shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.9)] 
-                               transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span id="submit-text">Register Now</span>
-                        <span id="loading-spinner" class="hidden">
-                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Registering...
-                        </span>
+                <!-- Updated submit button with modern styling -->
+                <div class="lg:col-span-2 text-center pt-8">
+                    <button type="submit" id="submit-btn" disabled
+                        class="inline-flex items-center px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg">
+                        Create My Account
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
                     </button>
-                    
-                    <div class="text-center mt-4">
-                        <p class="text-gray-600 dark:text-gray-400">Already have an account? 
-                            <a href="login.html" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold">Login here</a>
-                        </p>
-                    </div>
-                </form>
-            </div>
+                    <p class="text-gray-500 mt-4">Already have an account? <a href="login.html" class="text-blue-600 hover:text-blue-700 font-semibold">Sign in here</a></p>
+                </div>
+            </form>
         </div>
     </section>
 
-    <!-- Footer Section -->
-    <footer class="bg-gray-800 dark:bg-gradient-to-t dark:from-gray-900 dark:to-gray-800 text-white py-6 border-t border-gray-700">
-        <div class="container mx-auto px-4 text-center">
-            <p class="mb-4 text-gray-300">© 2025 HallHub. All rights reserved.</p>
-            <div class="flex justify-center space-x-4">
-                <a href="#contact" class="hover:text-gray-200 dark:hover:text-gray-400 transition">Contact Us</a>
-                <a href="#privacy" class="hover:text-gray-200 dark:hover:text-gray-400 transition">Privacy Policy</a>
-                <a href="#terms" class="hover:text-gray-200 dark:hover:text-gray-400 transition">Terms of Service</a>
+    <!-- Updated footer to match home page styling exactly -->
+    <footer class="bg-gray-900 text-white py-12 mt-auto">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🏢</span>
+                        </div>
+                        <h3 class="text-xl font-bold">HallHub</h3>
+                    </div>
+                    <p class="text-gray-400 max-w-md mb-6">Your comprehensive student housing and records portal. Connecting students, managing resources, and building community.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition">
+                            <span class="text-sm">📧</span>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition">
+                            <span class="text-sm">📱</span>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition">
+                            <span class="text-sm">🌐</span>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="home.html" class="hover:text-white transition">Home</a></li>
+                        <li><a href="login.html" class="hover:text-white transition">Login</a></li>
+                        <li><a href="#features" class="hover:text-white transition">Features</a></li>
+                        <li><a href="#about" class="hover:text-white transition">About</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#contact" class="hover:text-white transition">Contact Us</a></li>
+                        <li><a href="#privacy" class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="#terms" class="hover:text-white transition">Terms of Service</a></li>
+                        <li><a href="#help" class="hover:text-white transition">Help Center</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                <p>© 2025 HallHub. All rights reserved. Built with ❤️ for students.</p>
             </div>
         </div>
     </footer>
 
     <script>
-        // Theme Toggle Logic
-        document.getElementById('theme-toggle').addEventListener('click', function () {
-            document.documentElement.classList.toggle('dark');
-            if (document.documentElement.classList.contains('dark')) {
-                localStorage.theme = 'dark';
-                this.textContent = '☀️';
-            } else {
-                localStorage.theme = 'light';
-                this.textContent = '🌙';
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
+        }
+
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+                    var csvSheet = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    var csv = XLSX.utils.sheet_to_csv(csvSheet, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
             }
+            return gk_fileData[filename] || "";
+        }
+
+        // Validation functions
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+
+        function validatePasswordMatch(password, confirmPassword) {
+            return password === confirmPassword && password.length > 0;
+        }
+
+        function validateRequired(value) {
+            return value.trim().length > 0;
+        }
+
+        function showError(fieldId, show = true) {
+            const errorElement = document.getElementById(fieldId + '-error');
+            const inputElement = document.getElementById(fieldId);
+            
+            if (show) {
+                errorElement.classList.add('show');
+                inputElement.classList.add('input-error');
+                inputElement.classList.remove('input-valid');
+            } else {
+                errorElement.classList.remove('show');
+                inputElement.classList.remove('input-error');
+                inputElement.classList.add('input-valid');
+            }
+        }
+
+        function validateField(fieldId, validationFunction, customMessage) {
+            const input = document.getElementById(fieldId);
+            const value = input.value.trim();
+            
+            if (fieldId === 'email') {
+                const isValid = validateRequired(value) && validationFunction(value);
+                showError(fieldId, !isValid);
+                return isValid;
+            } else if (fieldId === 'password') {
+                const isValid = validationFunction(value);
+                showError(fieldId, !isValid);
+                // Also revalidate confirm password when password changes
+                if (document.getElementById('confirm-password').value) {
+                    validateField('confirm-password', () => validatePasswordMatch(value, document.getElementById('confirm-password').value));
+                }
+                return isValid;
+            } else if (fieldId === 'confirm-password') {
+                const password = document.getElementById('password').value;
+                const isValid = validationFunction(password, value);
+                showError(fieldId, !isValid);
+                return isValid;
+            } else {
+                const isValid = validationFunction(value);
+                showError(fieldId, !isValid);
+                return isValid;
+            }
+        }
+
+        function checkFormValidity() {
+            const requiredFields = ['student-id', 'name', 'email', 'department', 'level', 'address', 'phone', 'relativename', 'relativerelation', 'relativeaddress', 'relativephone'];
+            
+            let allValid = true;
+            
+            // Check all required fields
+            requiredFields.forEach(fieldId => {
+                const input = document.getElementById(fieldId);
+                if (!validateRequired(input.value)) {
+                    allValid = false;
+                }
+            });
+            
+            // Check email format
+            const email = document.getElementById('email').value.trim();
+            if (!validateEmail(email)) {
+                allValid = false;
+            }
+            
+            // Check password requirements
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (!validatePassword(password)) {
+                allValid = false;
+            }
+            
+            if (!validatePasswordMatch(password, confirmPassword)) {
+                allValid = false;
+            }
+            
+            // Enable/disable submit button
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = !allValid;
+            
+            return allValid;
+        }
+
+        // Add event listeners for real-time validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const requiredFields = ['student-id', 'name', 'email', 'department', 'level', 'address', 'phone', 'relativename', 'relativerelation', 'relativeaddress', 'relativephone'];
+            
+            // Add validation for required fields
+            requiredFields.forEach(fieldId => {
+                const input = document.getElementById(fieldId);
+                
+                input.addEventListener('blur', function() {
+                    if (fieldId === 'email') {
+                        validateField(fieldId, validateEmail);
+                    } else {
+                        validateField(fieldId, validateRequired);
+                    }
+                    checkFormValidity();
+                });
+                
+                input.addEventListener('input', function() {
+                    // Remove error styling while typing
+                    if (input.value.trim().length > 0) {
+                        const errorElement = document.getElementById(fieldId + '-error');
+                        errorElement.classList.remove('show');
+                        input.classList.remove('input-error');
+                    }
+                    checkFormValidity();
+                });
+            });
+            
+            // Special handling for password fields
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirm-password');
+            
+            passwordInput.addEventListener('input', function() {
+                validateField('password', validatePassword);
+                // Also check confirm password if it has a value
+                if (confirmPasswordInput.value) {
+                    validateField('confirm-password', validatePasswordMatch);
+                }
+                checkFormValidity();
+            });
+            
+            passwordInput.addEventListener('blur', function() {
+                validateField('password', validatePassword);
+                checkFormValidity();
+            });
+            
+            confirmPasswordInput.addEventListener('input', function() {
+                validateField('confirm-password', validatePasswordMatch);
+                checkFormValidity();
+            });
+            
+            confirmPasswordInput.addEventListener('blur', function() {
+                validateField('confirm-password', validatePasswordMatch);
+                checkFormValidity();
+            });
         });
 
-        // Set button icon on load
-        document.getElementById('theme-toggle').textContent =
-            document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
-
-        // Utility functions
-        function showAlert(message, type = 'success') {
-            const alertMessage = document.getElementById('alert-message');
-            const alertContent = document.getElementById('alert-content');
-            const alertText = document.getElementById('alert-text');
-            
-            // Set colors based on type
-            if (type === 'success') {
-                alertContent.className = 'p-4 rounded-lg shadow-md bg-green-100 dark:bg-green-800 border border-green-400 dark:border-green-600';
-                alertText.className = 'text-green-700 dark:text-green-200';
-            } else {
-                alertContent.className = 'p-4 rounded-lg shadow-md bg-red-100 dark:bg-red-800 border border-red-400 dark:border-red-600';
-                alertText.className = 'text-red-700 dark:text-red-200';
-            }
-            
-            alertText.textContent = message;
-            alertMessage.classList.remove('hidden');
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                alertMessage.classList.add('hidden');
-            }, 5000);
-        }
-
-        function showError(fieldId, message) {
-            const field = document.getElementById(fieldId);
-            const error = document.getElementById(fieldId + '-error');
-            
-            if (error) {
-                error.textContent = message;
-                error.classList.remove('hidden');
-                field.classList.add('border-red-500', 'focus:ring-red-500');
-                field.classList.remove('focus:ring-blue-600');
-            }
-        }
-
-        function clearError(fieldId) {
-            const field = document.getElementById(fieldId);
-            const error = document.getElementById(fieldId + '-error');
-            
-            if (error) {
-                error.classList.add('hidden');
-                field.classList.remove('border-red-500', 'focus:ring-red-500');
-                field.classList.add('focus:ring-blue-600');
-            }
-        }
-
-        function clearAllErrors() {
-            const errorFields = ['student-id', 'name', 'email', 'phone', 'password', 'confirm-password', 'relativephone'];
-            errorFields.forEach(fieldId => clearError(fieldId));
-        }
-
-        function validateForm(formData) {
-            let isValid = true;
-            
-            // Clear previous errors
-            clearAllErrors();
-            
-            // Validate required fields
-            if (!formData.studentId) {
-                showError('student-id', 'Student ID is required');
-                isValid = false;
-            }
-            
-            if (!formData.name) {
-                showError('name', 'Full name is required');
-                isValid = false;
-            }
-            
-            if (!formData.email) {
-                showError('email', 'Email address is required');
-                isValid = false;
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-                showError('email', 'Please enter a valid email address');
-                isValid = false;
-            }
-            
-            // Validate phone number (basic validation)
-            if (formData.phone && !/^[\d\+\-\(\)\s]+$/.test(formData.phone)) {
-                showError('phone', 'Please enter a valid phone number');
-                isValid = false;
-            }
-            
-            if (formData.relativePhone && !/^[\d\+\-\(\)\s]+$/.test(formData.relativePhone)) {
-                showError('relativephone', 'Please enter a valid phone number');
-                isValid = false;
-            }
-            
-            // Validate password
-            if (!formData.password) {
-                showError('password', 'Password is required');
-                isValid = false;
-            } else if (formData.password.length < 6) {
-                showError('password', 'Password must be at least 6 characters long');
-                isValid = false;
-            }
-            
-            if (!formData.confirmPassword) {
-                showError('confirm-password', 'Please confirm your password');
-                isValid = false;
-            } else if (formData.password !== formData.confirmPassword) {
-                showError('confirm-password', 'Passwords do not match');
-                isValid = false;
-            }
-            
-            return isValid;
-        }
-
-        function setLoading(isLoading) {
-            const submitBtn = document.getElementById('submit-btn');
-            const submitText = document.getElementById('submit-text');
-            const loadingSpinner = document.getElementById('loading-spinner');
-            
-            if (isLoading) {
-                submitBtn.disabled = true;
-                submitText.classList.add('hidden');
-                loadingSpinner.classList.remove('hidden');
-            } else {
-                submitBtn.disabled = false;
-                submitText.classList.remove('hidden');
-                loadingSpinner.classList.add('hidden');
-            }
-        }
-
-        // Form submission logic
+        // Select the form by its ID
         const form = document.getElementById('registration-form');
-        
+  
+        // Listen for form submit event
         form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Prevent page reload on submit
 
-            // Collect form data
+            // Validate all fields before submission
+            if (!checkFormValidity()) {
+                // Show all validation errors
+                const requiredFields = ['student-id', 'name', 'email', 'department', 'level', 'address', 'phone', 'relativename', 'relativerelation', 'relativeaddress', 'relativephone'];
+                
+                requiredFields.forEach(fieldId => {
+                    const input = document.getElementById(fieldId);
+                    if (!validateRequired(input.value.trim())) {
+                        showError(fieldId, true);
+                    }
+                });
+                
+                // Validate email
+                const email = document.getElementById('email').value.trim();
+                if (!validateEmail(email)) {
+                    showError('email', true);
+                }
+                
+                // Validate password
+                const password = document.getElementById('password').value;
+                if (!validatePassword(password)) {
+                    showError('password', true);
+                }
+                
+                // Validate password match
+                const confirmPassword = document.getElementById('confirm-password').value;
+                if (!validatePasswordMatch(password, confirmPassword)) {
+                    showError('confirm-password', true);
+                }
+                
+                alert('Please fill in all required fields correctly before submitting.');
+                return;
+            }
+
+            // Collect data from all inputs
             const formData = {
                 studentId: document.getElementById('student-id').value.trim(),
                 name: document.getElementById('name').value.trim(),
@@ -368,69 +543,44 @@
                 confirmPassword: document.getElementById('confirm-password').value,
             };
 
-            // Validate form
-            if (!validateForm(formData)) {
-                return;
-            }
-
-            setLoading(true);
-
             try {
-                // Send registration request
-                const response = await fetch('http://localhost:3000/register', {
+                // Send data to backend API with POST request
+                const response = await fetch('http://localhost:3000/register', { // Replace with your backend URL if different
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData),
                 });
 
+                // Read JSON response from backend
                 const result = await response.json();
 
+                // Show success or error message
                 if (response.ok) {
-                    showAlert('Registration successful! You can now login with your credentials.', 'success');
-                    form.reset();
+                    alert(result.message || 'Registration successful!');
+                    form.reset(); // Clear the form inputs after success
                     
-                    // Redirect to login page after 2 seconds
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 2000);
+                    // Reset validation states
+                    const allInputs = form.querySelectorAll('input, select');
+                    allInputs.forEach(input => {
+                        input.classList.remove('input-error', 'input-valid');
+                    });
+                    
+                    const allErrors = form.querySelectorAll('.error-message');
+                    allErrors.forEach(error => {
+                        error.classList.remove('show');
+                    });
+                    
+                    // Disable submit button again
+                    document.getElementById('submit-btn').disabled = true;
                 } else {
-                    showAlert(result.error || 'Registration failed. Please try again.', 'error');
+                    alert(result.error || 'Registration failed. Please try again.');
                 }
             } catch (error) {
-                console.error('Registration error:', error);
-                showAlert('Failed to connect to the server. Please try again later.', 'error');
-            } finally {
-                setLoading(false);
-            }
-        });
-
-        // Real-time validation on input change
-        document.getElementById('email').addEventListener('blur', function() {
-            if (this.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value)) {
-                showError('email', 'Please enter a valid email address');
-            } else {
-                clearError('email');
-            }
-        });
-
-        document.getElementById('password').addEventListener('input', function() {
-            if (this.value && this.value.length < 6) {
-                showError('password', 'Password must be at least 6 characters long');
-            } else {
-                clearError('password');
-            }
-        });
-
-        document.getElementById('confirm-password').addEventListener('input', function() {
-            const password = document.getElementById('password').value;
-            if (this.value && this.value !== password) {
-                showError('confirm-password', 'Passwords do not match');
-            } else {
-                clearError('confirm-password');
+                alert('Failed to connect to the server. Please try again later.');
+                console.error(error);
             }
         });
     </script>
+
 </body>
 </html>
