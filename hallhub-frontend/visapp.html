@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showMessage('Submitting visitor application...', 'loading');
 
         // Submit to server
-        const response = await fetch('/api/visitor-entry', {
+        const response = await fetch('http://127.0.0.1:3000/api/visitor-entry', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json'

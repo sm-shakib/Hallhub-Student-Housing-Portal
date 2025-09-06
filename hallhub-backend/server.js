@@ -1253,7 +1253,7 @@ app.post('/api/visitor-entry', async (req, res) => {
 
     // Insert into database
     const sql = `
-      INSERT INTO Visitor_Entry (Student_ID, Name, Phone_No, Relation)
+      INSERT INTO visitor_entry (Student_ID, Name, Phone_No, Relation)
       VALUES (?, ?, ?, ?)
     `;
     
@@ -1319,7 +1319,7 @@ app.get('/api/test', (req, res) => {
 // API routes for visitor status
 // Add this route to your server.js file after your existing visitor entry routes
 
-// API route to get visitor entries for a specific student
+// API route to get visitor entries for a specific student with Status column
 app.get('/api/visitor-entries-by-student', async (req, res) => {
   try {
     const { student_id } = req.query;
@@ -1327,9 +1327,9 @@ app.get('/api/visitor-entries-by-student', async (req, res) => {
     console.log('Fetching visitor entries for student:', student_id);
     
     if (!student_id) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Student ID is required' 
+        error: 'Student ID is required'
       });
     }
 
@@ -1345,7 +1345,7 @@ app.get('/api/visitor-entries-by-student', async (req, res) => {
       });
     }
 
-    // Query to get visitor entries for the student from Visitor_Entry table
+    // Query to get visitor entries for the student from Visitor_Entry
     const sql = `
       SELECT 
         ve.Visitor_ID,
@@ -1353,8 +1353,9 @@ app.get('/api/visitor-entries-by-student', async (req, res) => {
         ve.Name,
         ve.Phone_No,
         ve.Relation,
+        ve.Status,
         si.Name as student_name
-      FROM Visitor_Entry ve
+      FROM visitor_entry ve
       LEFT JOIN Student_Info si ON ve.Student_ID = si.Student_ID 
       WHERE ve.Student_ID = ?
       ORDER BY ve.Visitor_ID DESC
@@ -1376,9 +1377,9 @@ app.get('/api/visitor-entries-by-student', async (req, res) => {
     
   } catch (error) {
     console.error('Error fetching student visitor entries:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: 'Failed to fetch visitor entries: ' + error.message 
+      error: 'Failed to fetch visitor entries: ' + error.message
     });
   }
 });
