@@ -1534,15 +1534,49 @@ app.get('/api/student-lostitems/:studentId', async (req, res) => {
 });
 
 
-// API route to fetch found items by Lost ID
+// // API route to fetch found items by Lost ID
 
-// Replace the existing /api/founditems/:lostId endpoint in your server.js with this corrected version
-
-app.get('/api/founditems/:lostId', async (req, res) => {
-  try {
-    const { lostId } = req.params;
+// app.get('/api/founditems/:lostId', async (req, res) => {
+//   try {
+//     const { lostId } = req.params;
     
-    console.log('Looking up Lost ID:', lostId); // Debug log
+//     console.log('Looking up Lost ID:', lostId); // Debug log
+    
+//     const sql = `
+//       SELECT 
+//         fi.Found_ID,
+//         fi.Lost_ID,
+//         fi.Found_Time,
+//         li.Student_ID,
+//         si.Name as student_name,
+//         li.Description,
+//         li.Lost_Time,
+//         i.Item_Type
+//       FROM found_item fi
+//       JOIN lost_item li ON fi.Lost_ID = li.Lost_ID
+//       LEFT JOIN Student_Info si ON li.Student_ID = si.Student_ID
+//       LEFT JOIN item i ON li.Item_ID = i.Item_ID
+//       WHERE fi.Lost_ID = ?
+//       ORDER BY fi.Found_Time DESC
+//     `;
+    
+//     const [rows] = await pool.execute(sql, [lostId]);
+    
+//     console.log('Query result:', rows); // Debug log
+    
+//     res.json(rows);
+//   } catch (error) {
+//     console.error('Error fetching found items:', error);
+//     res.status(500).json({ error: 'Failed to fetch found items: ' + error.message });
+//   }
+// });
+
+// API route to fetch found items for a specific student
+app.get('/api/student-found-items/:studentId', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    
+    console.log('Looking up found items for Student ID:', studentId);
     
     const sql = `
       SELECT 
@@ -1558,21 +1592,20 @@ app.get('/api/founditems/:lostId', async (req, res) => {
       JOIN lost_item li ON fi.Lost_ID = li.Lost_ID
       LEFT JOIN Student_Info si ON li.Student_ID = si.Student_ID
       LEFT JOIN item i ON li.Item_ID = i.Item_ID
-      WHERE fi.Lost_ID = ?
+      WHERE li.Student_ID = ?
       ORDER BY fi.Found_Time DESC
     `;
     
-    const [rows] = await pool.execute(sql, [lostId]);
+    const [rows] = await pool.execute(sql, [studentId]);
     
-    console.log('Query result:', rows); // Debug log
+    console.log('Found items query result:', rows);
     
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching found items:', error);
+    console.error('Error fetching student found items:', error);
     res.status(500).json({ error: 'Failed to fetch found items: ' + error.message });
   }
 });
-
 
 
 

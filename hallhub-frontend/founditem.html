@@ -3,104 +3,284 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Found Items</title>
+  <title>My Found Items</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(to right, #A18CD1, #FBC2EB);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
+      padding: 20px;
+      color: #333;
     }
-    .box {
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
       background-color: white;
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.2);
-      width: 400px;
-      text-align: center;
     }
     h2 {
       color: #333;
       margin-bottom: 20px;
+      text-align: center;
     }
-    input {
-      width: 100%;
-      padding: 10px;
+    .student-info {
+      background: rgba(161, 196, 253, 0.1);
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border-left: 4px solid #a1c4fd;
+    }
+    .student-info h3 {
+      margin-top: 0;
+      color: #333;
+    }
+    .stats-section {
+      background: rgba(76, 175, 80, 0.1);
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border-left: 4px solid #4caf50;
+      text-align: center;
+    }
+    .stats-section h3 {
+      margin: 0 0 10px 0;
+      color: #2e7d32;
+    }
+    .stats-badge {
+      background: rgba(255, 255, 255, 0.7);
+      padding: 10px 20px;
+      border-radius: 20px;
+      display: inline-block;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+    .stats-badge.no-items {
+      background: rgba(255, 152, 0, 0.2);
+      color: #f57c00;
+    }
+    .stats-badge.has-items {
+      background: rgba(76, 175, 80, 0.2);
+      color: #2e7d32;
+    }
+    .loading {
+      text-align: center;
+      background-color: #e3f2fd;
+      color: #1976d2;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .error {
+      text-align: center;
+      background-color: #ffebee;
+      color: #c62828;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .no-items {
+      text-align: center;
+      background-color: #fff3e0;
+      color: #f57c00;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .found-item {
+      background-color: #e8f5e8;
+      border-left: 4px solid #4caf50;
+      padding: 20px;
+      margin: 15px 0;
       border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-bottom: 16px;
-      transition: 0.3s ease;
-      box-sizing: border-box;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    input:focus {
-      border-color: #A18CD1;
-      outline: none;
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
     }
-    button {
+    .item-title {
+      color: #2e7d32;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+    }
+    .found-badge {
+      background-color: #4caf50;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .item-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .detail-item {
+      padding: 8px;
+      background-color: rgba(255,255,255,0.7);
+      border-radius: 6px;
+    }
+    .detail-label {
+      font-weight: bold;
+      color: #2e7d32;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .refresh-btn {
       background-color: #A18CD1;
       color: white;
       border: none;
-      padding: 10px;
+      padding: 12px 24px;
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
-      width: 100%;
+      margin-bottom: 20px;
       transition: background-color 0.3s ease;
     }
-    button:hover {
+    .refresh-btn:hover {
       background-color: #8c75bb;
     }
-    .result {
-      margin-top: 15px;
-      background-color: #FBC2EB;
-      padding: 15px;
-      border-radius: 10px;
-      color: #444;
-      font-weight: 500;
-      text-align: left;
+    .refresh-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
     }
-    .loading {
-      background-color: #e3f2fd;
-      color: #1976d2;
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
     }
-    .error {
-      background-color: #ffebee;
-      color: #c62828;
+    .back-link a {
+      text-decoration: none;
+      font-weight: bold;
+      color: #0056b3;
+      padding: 10px 20px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
     }
-    .success {
-      background-color: #e8f5e8;
+    .back-link a:hover {
+      background: rgba(255, 255, 255, 0.6);
+      text-decoration: none;
+    }
+    .items-list-header {
+      margin-bottom: 15px;
       color: #2e7d32;
+      font-weight: bold;
+      padding: 10px;
+      background: rgba(76, 175, 80, 0.1);
+      border-radius: 8px;
+      text-align: center;
+    }
+    @media (max-width: 600px) {
+      .item-details {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>Found Item Lookup</h2>
-    <input type="text" id="lostId" placeholder="Enter Lost Item ID" required />
-    <button onclick="lookupFoundItem()">Check Status</button>
-    <div class="result" id="statusBox"></div>
+  <div class="container">
+    <h2>📦 My Found Items</h2>
+    
+    <!-- User Info Section -->
+    <div class="student-info">
+      <h3>Student Information</h3>
+      <div id="studentInfo">Loading student information...</div>
+    </div>
+    
+    <!-- Found Items Statistics -->
+    <div class="stats-section">
+      <h3>📊 Found Items Statistics</h3>
+      <div id="foundItemsStats">
+        <div class="stats-badge">
+          Total Found Items: <span id="foundItemsCount">0</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- <button class="refresh-btn" id="refreshBtn" onclick="loadFoundItems()">🔄 Refresh</button> -->
+    
+    <div id="itemsContainer">
+      <div class="loading">Loading your found items...</div>
+    </div>
+  </div>
+
+  <div class="back-link">
+    <a href="dashb.html">← Back to Dashboard</a>
   </div>
 
   <script>
-    function lookupFoundItem() {
-      const id = document.getElementById('lostId').value.trim();
-      const statusBox = document.getElementById('statusBox');
+    let currentUser = null;
 
-      if (!id) {
-        statusBox.className = "result error";
-        statusBox.textContent = "Please enter a valid Lost Item ID.";
+    // Get student session data same way as complaints page
+    function initializeUser() {
+      const sessionData = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+      
+      if (!sessionData) {
+        // For demo purposes, create mock user data (remove this in production)
+        currentUser = {
+          name: 'Demo User',
+          studentId: '12345',
+          email: 'demo@university.edu'
+        };
+        console.log('Using demo user data for testing');
+      } else {
+        try {
+          currentUser = JSON.parse(sessionData);
+          console.log('User session loaded:', currentUser);
+        } catch (e) {
+          console.error('Error parsing session data:', e);
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function updateFoundItemsStats(count) {
+      const countElement = document.getElementById('foundItemsCount');
+      const statsElement = document.getElementById('foundItemsStats');
+      
+      countElement.textContent = count;
+      
+      // Update the stats section styling based on count
+      if (count > 0) {
+        statsElement.innerHTML = `
+          <div class="stats-badge has-items">
+            ✅ Total Found Items: <span style="font-size: 1.2em; font-weight: bold;">${count}</span>
+          </div>
+        `;
+      } else {
+        statsElement.innerHTML = `
+          <div class="stats-badge no-items">
+            📭 Total Found Items: <span style="font-size: 1.2em; font-weight: bold;">0</span>
+          </div>
+        `;
+      }
+    }
+
+    function loadFoundItems() {
+      const container = document.getElementById('itemsContainer');
+
+      if (!currentUser || !currentUser.studentId) {
+        container.innerHTML = '<div class="error">❌ No user session found. Please log in again.</div>';
+        updateFoundItemsStats(0);
         return;
       }
 
-      // Show loading state
-      statusBox.className = "result loading";
-      statusBox.textContent = "Searching for found items...";
+      const studentId = currentUser.studentId;
 
-      // Fetch the found items from the backend API
-      fetch(`http://localhost:3000/api/founditems/${id}`)
+      // Show loading state
+      container.innerHTML = '<div class="loading">🔍 Loading your found items...</div>';
+
+      // Fetch found items for the logged-in student
+      fetch(`http://localhost:3000/api/student-found-items/${studentId}`)
         .then(response => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -108,34 +288,100 @@
           return response.json();
         })
         .then(data => {
-          if (data.length > 0) {
-            const item = data[0]; // Get the first found item
-            statusBox.className = "result success";
-            statusBox.innerHTML = `
-              <strong>✅ Found Match!</strong><br><br>
-              <strong>Student Name:</strong> ${item.student_name || 'N/A'}<br>
-              <strong>Item Type:</strong> ${item.Item_Type || 'N/A'}<br>
-              <strong>Description:</strong> ${item.Description || 'N/A'}<br>
-              <strong>Lost Date:</strong> ${item.Lost_Time ? new Date(item.Lost_Time).toLocaleString() : 'N/A'}<br>
-              <strong>Found Date:</strong> ${item.Found_Time ? new Date(item.Found_Time).toLocaleString() : 'N/A'}<br>
-              <strong>Found ID:</strong> ${item.Found_ID || 'N/A'}
-            `;
-          } else {
-            statusBox.className = "result error";
-            statusBox.textContent = "❌ No match found for this Lost ID.";
-          }
+          displayFoundItems(data);
         })
         .catch(error => {
           console.error('Fetch error:', error);
-          statusBox.className = "result error";
-          statusBox.textContent = "❌ Error fetching data. Please check your connection and try again.";
+          container.innerHTML = '<div class="error">❌ Error loading found items. Please check your connection and try again.</div>';
+          updateFoundItemsStats(0);
         });
     }
 
-    // Allow Enter key to trigger search
-    document.getElementById('lostId').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        lookupFoundItem();
+    function displayFoundItems(items) {
+      const container = document.getElementById('itemsContainer');
+
+      // Update statistics
+      const foundItemsCount = items ? items.length : 0;
+      updateFoundItemsStats(foundItemsCount);
+
+      if (!items || items.length === 0) {
+        container.innerHTML = `
+          <div class="no-items">
+            <h3>📭 No Found Items Yet</h3>
+            <p>None of your lost items have been found yet. Keep checking back!</p>
+            <p>If you haven't reported a lost item yet, you can <a href="lost-item-form.html" style="color: #A18CD1;">report it here</a>.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <div class="items-list-header">
+          Showing ${foundItemsCount} found item${foundItemsCount === 1 ? '' : 's'}:
+        </div>
+      `;
+      
+      items.forEach(item => {
+        html += `
+          <div class="found-item">
+            <div class="item-header">
+              <h3 class="item-title">${item.Item_Type || 'Unknown Item'}</h3>
+              <span class="found-badge">✅ FOUND</span>
+            </div>
+            
+            <div class="item-details">
+              <div class="detail-item">
+                <span class="detail-label">Description:</span>
+                ${item.Description || 'No description available'}
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Lost Date:</span>
+                ${item.Lost_Time ? new Date(item.Lost_Time).toLocaleDateString() : 'Unknown'}
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Found Date:</span>
+                ${item.Found_Time ? new Date(item.Found_Time).toLocaleDateString() : 'Unknown'}
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Found ID:</span>
+                ${item.Found_ID || 'N/A'}
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Lost ID:</span>
+                ${item.Lost_ID || 'N/A'}
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Status:</span>
+                <span style="color: #4caf50; font-weight: bold;">Ready for Pickup</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // Initialize user and load items when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      if (initializeUser()) {
+        // Show student info
+        document.getElementById('studentInfo').innerHTML = `
+          <strong>Name:</strong> ${currentUser.name}<br>
+          <strong>ID:</strong> ${currentUser.studentId}<br>
+          <strong>Email:</strong> ${currentUser.email}
+        `;
+        
+        loadFoundItems();
+      } else {
+        document.getElementById('itemsContainer').innerHTML = 
+          '<div class="error">❌ Failed to load user session. Please log in again.</div>';
+        updateFoundItemsStats(0);
       }
     });
   </script>
