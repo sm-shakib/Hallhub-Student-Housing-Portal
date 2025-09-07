@@ -611,6 +611,46 @@ app.get('/api/complaints', async (req, res) => {
     }
 });
 
+// Update complaint status
+app.post('/api/update-complaint-status', async (req, res) => {
+  try {
+    const { complaint_id, status } = req.body;
+
+    if (!complaint_id || !status) {
+      return res.status(400).json({
+        success: false,
+        message: 'Complaint ID and status are required'
+      });
+    }
+
+    const query = `
+      UPDATE complaint 
+      SET status = ? 
+      WHERE complaint_id = ?
+    `;
+    
+    const [result] = await pool.execute(query, [status, complaint_id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Complaint not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Complaint status updated successfully'
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  }
+});
+
 // ===============================
 // Items API
 // ===============================
