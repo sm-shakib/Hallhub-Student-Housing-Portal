@@ -164,6 +164,9 @@
  </div>
 
  <script>
+
+    let currentUser = null;
+
    // Session helper functions
    function getCurrentUser() {
      try {
@@ -176,8 +179,9 @@
    }
 
    function initializeStudentIdField() {
-     const currentUser = getCurrentUser();
+     currentUser = getCurrentUser();
      const studentIdField = document.getElementById('studentId');
+     console.log(currentUser);
      
      if (!currentUser || !currentUser.studentId) {
        alert('Please log in to file a complaint');

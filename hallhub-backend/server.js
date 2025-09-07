@@ -651,6 +651,45 @@ app.post('/api/update-complaint-status', async (req, res) => {
   }
 });
 
+app.post('/api/complaints', async (req, res) => {
+  try {
+    const { title, description, student_id } = req.body;
+
+    //console.log("📩 Incoming complaint request:", { title, description, student_id });
+
+    if (!title || !description || !student_id) {
+      //console.warn("⚠️ Missing fields:", { title, description, student_id });
+      return res.status(400).json({ error: 'Please provide title, description, and student_id' });
+    }
+
+    const sql = `
+      INSERT INTO complaint (title, description, student_id)
+      VALUES (?, ?, ?)
+    `;
+
+    //console.log("📝 Executing SQL:", sql);
+    //console.log("🔢 With values:", [title, description, student_id]);
+
+    const [result] = await pool.execute(sql, [title, description, student_id]);
+
+    //console.log("✅ Insert result:", result);
+
+    res.json({
+      success: true,
+      message: 'Complaint submitted successfully',
+      complaintId: result.insertId
+    });
+
+  } catch (error) {
+    console.error("❌ Error inserting complaint:", error);
+    res.status(500).json({ 
+      error: 'Failed to submit complaint',
+      details: error.message,   // <-- return actual error message (for debugging only!)
+      code: error.code          // <-- useful MySQL error code
+    });
+  }
+});
+
 // ===============================
 // Items API
 // ===============================
@@ -1177,44 +1216,7 @@ app.get('/api/complaints/:studentId', async (req, res) => {
 });
 
 
-app.post('/api/complaints', async (req, res) => {
-  try {
-    const { title, description, student_id } = req.body;
 
-    //console.log("📩 Incoming complaint request:", { title, description, student_id });
-
-    if (!title || !description || !student_id) {
-      //console.warn("⚠️ Missing fields:", { title, description, student_id });
-      return res.status(400).json({ error: 'Please provide title, description, and student_id' });
-    }
-
-    const sql = `
-      INSERT INTO complaint (title, description, student_id)
-      VALUES (?, ?, ?)
-    `;
-
-    //console.log("📝 Executing SQL:", sql);
-    //console.log("🔢 With values:", [title, description, student_id]);
-
-    const [result] = await pool.execute(sql, [title, description, student_id]);
-
-    //console.log("✅ Insert result:", result);
-
-    res.json({
-      success: true,
-      message: 'Complaint submitted successfully',
-      complaintId: result.insertId
-    });
-
-  } catch (error) {
-    console.error("❌ Error inserting complaint:", error);
-    res.status(500).json({ 
-      error: 'Failed to submit complaint',
-      details: error.message,   // <-- return actual error message (for debugging only!)
-      code: error.code          // <-- useful MySQL error code
-    });
-  }
-});
 
 
 // API routes for allocation info
