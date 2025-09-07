@@ -1385,14 +1385,27 @@ app.get('/api/visitor-entries-by-student', async (req, res) => {
 });
 
 // API route to fetch items from the 'item' table
+// Replace your existing /api/items endpoint with this:
 app.get('/api/items', async (req, res) => {
   try {
-    const sql = 'SELECT * FROM item'; // Query to fetch all items
+    const sql = 'SELECT * FROM item ORDER BY item_id ASC'; // Use your actual table structure
     const [rows] = await pool.execute(sql);
-    res.json(rows); // Send the fetched rows to the frontend
+    
+    console.log('Database query result:', rows); // Debug log
+    
+    // Return consistent structure
+    res.json({
+      success: true,
+      items: rows,
+      count: rows.length
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch items' });
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch items',
+      error: error.message
+    });
   }
 });
 

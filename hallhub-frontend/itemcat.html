@@ -22,7 +22,7 @@
       border-radius: 12px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.2);
       width: 100%;
-      max-width: 500px;
+      max-width: 600px;
       text-align: center;
     }
     h2 {
@@ -50,7 +50,7 @@
     .categories {
       margin-top: 20px;
       text-align: left;
-      max-height: 400px;
+      max-height: 500px;
       overflow-y: auto;
     }
     .category-item {
@@ -69,10 +69,23 @@
       color: #495057;
       font-size: 18px;
     }
-    .category-item p {
+    .item-field {
       margin: 5px 0;
       color: #6c757d;
       font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .field-name {
+      font-weight: 600;
+      color: #495057;
+      min-width: 120px;
+    }
+    .field-value {
+      flex: 1;
+      text-align: right;
+      word-break: break-word;
     }
     .loading {
       color: #666;
@@ -91,12 +104,18 @@
       text-align: center;
       padding: 20px;
     }
+    .item-count {
+      color: #6c757d;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Item Categories</h2>
     <button onclick="fetchCategories()" id="fetchBtn">View Categories</button>
+    <div id="itemCount" class="item-count"></div>
     <div id="categoriesContainer" class="categories"></div>
   </div>
 
@@ -105,10 +124,12 @@
       console.log('Starting fetch...'); // Debug log
       
       const categoriesContainer = document.getElementById("categoriesContainer");
+      const itemCount = document.getElementById("itemCount");
       const fetchBtn = document.getElementById("fetchBtn");
       
       // Show loading state
       categoriesContainer.innerHTML = '<p class="loading">Loading items...</p>';
+      itemCount.innerHTML = '';
       fetchBtn.disabled = true;
       fetchBtn.textContent = 'Loading...';
       
@@ -121,29 +142,57 @@
           }
           return response.json();
         })
-        .then(data => {
-          console.log('Data received:', data);
+        .then(response => {
+          console.log('Full API response:', response);
+          
+          // Handle the wrapped response structure from your backend
+          let data;
+          if (response.success && response.items) {
+            data = response.items; // Extract items array from wrapped response
+          } else if (Array.isArray(response)) {
+            data = response; // Direct array response
+          } else {
+            data = [];
+          }
+          
+          console.log('Extracted data:', data);
           console.log('Data length:', data ? data.length : 'null');
           
           categoriesContainer.innerHTML = ''; // Clear loading message
+          itemCount.innerHTML = '';
 
           if (!data || data.length === 0) {
             categoriesContainer.innerHTML = '<p class="no-data">No items found in the database.</p>';
           } else {
+            // Show item count
+            itemCount.innerHTML = `Found ${data.length} item${data.length === 1 ? '' : 's'}`;
+            
             data.forEach((item, index) => {
               console.log(`Item ${index}:`, item); // Log each item
               
               const itemRow = document.createElement("div");
               itemRow.classList.add("category-item");
               
-              // Handle different possible column name formats
-              const itemId = item.Item_ID || item.item_id || item.id || 'Unknown ID';
-              const itemType = item.Item_Type || item.item_type || item.type || 'Unknown Type';
+              // Find the primary identifier (ID field)
+              const idField = findIdField(item);
+              const itemTitle = idField ? `Item: ${item[idField]}` : `Item #${index + 1}`;
               
-              itemRow.innerHTML = `
-                <h3>Item ID: ${itemId}</h3>
-                <p><strong>Item Type:</strong> ${itemType}</p>
-              `;
+              let itemContent = `<h3>${itemTitle}</h3>`;
+              
+              // Display all fields from the item
+              Object.keys(item).forEach(key => {
+                const value = item[key];
+                const displayValue = value !== null && value !== undefined ? value : 'N/A';
+                
+                itemContent += `
+                  <div class="item-field">
+                    <span class="field-name">${formatFieldName(key)}:</span>
+                    <span class="field-value">${displayValue}</span>
+                  </div>
+                `;
+              });
+              
+              itemRow.innerHTML = itemContent;
               categoriesContainer.appendChild(itemRow);
             });
           }
@@ -154,9 +203,10 @@
             <div class="error">
               <strong>Error fetching items:</strong><br>
               ${error.message}<br>
-              <small>Check console for more details</small>
+              <small>Check console for more details. Make sure your server is running on the correct port.</small>
             </div>
           `;
+          itemCount.innerHTML = '';
         })
         .finally(() => {
           // Re-enable button
@@ -165,23 +215,45 @@
         });
     }
     
+    // Helper function to find the ID field
+    function findIdField(item) {
+      const possibleIdFields = [
+        'id', 'ID', 'item_id', 'Item_ID', 'itemId', 'ItemID',
+        'item_code', 'Item_Code', 'code', 'Code'
+      ];
+      
+      return possibleIdFields.find(field => item.hasOwnProperty(field));
+    }
+    
+    // Helper function to format field names for display
+    function formatFieldName(fieldName) {
+      return fieldName
+        .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+        .replace(/[_-]/g, ' ') // Replace underscores and hyphens with spaces
+        .replace(/\b\w/g, l => l.toUpperCase()) // Capitalize first letter of each word
+        .trim();
+    }
+    
     // Test server connection on page load
     window.onload = function() {
       console.log('Page loaded, testing server connection...');
       
+      // First try to test a simple endpoint
       fetch('/test-connection')
         .then(response => response.json())
         .then(data => {
-          console.log('Server connection test:', data);
+          console.log('Server connection test successful:', data);
         })
         .catch(error => {
-          console.error('Server connection failed:', error);
-          document.getElementById("categoriesContainer").innerHTML = `
-            <div class="error">
-              <strong>Server Connection Failed</strong><br>
-              Make sure your server is running on port 3000
-            </div>
-          `;
+          console.log('Test connection endpoint not available, trying direct API...');
+          
+          // If test endpoint doesn't exist, just show ready message
+          const container = document.getElementById("categoriesContainer");
+          if (container.innerHTML === '') {
+            container.innerHTML = '<p class="no-data">Ready to fetch items. Click "View Categories" to start.</p>';
+          }
         });
     };
   </script>
+</body>
+</html>
