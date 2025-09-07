@@ -185,14 +185,10 @@
 <body>
   <div class="info-box">
     <h2>🏠 Room Allocation Info</h2>
-    <label for="studentIdInput" class="student-id-label">Your Student ID</label>
-    <input type="text" id="studentIdInput" readonly />
     <div>
       <button onclick="getMyAllocations()" id="getInfoBtn">View My Allocations</button>
     </div>
     <div class="details" id="allocationDetails"></div>
-    <p class="info-note">You can only view your own allocation information</p>
-    
     <div class="nav-buttons">
       <button class="back-btn" onclick="goBack()">← Back to Dashboard</button>
     </div>
@@ -248,7 +244,7 @@
         output.innerHTML = '<div class="error">Failed to fetch allocation information. Please try again.</div>';
       } finally {
         btn.disabled = false;
-        btn.textContent = 'View My Allocations';
+        btn.textContent = 'Reload';
       }
     }
 
