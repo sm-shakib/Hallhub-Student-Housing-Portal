@@ -283,9 +283,9 @@
           localStorage.removeItem('userSession');
           sessionStorage.removeItem('userSession');
           alert("You've been logged out!");
-          window.location.href = "/";
+          window.location.href = "home.html";
         } catch {
-          window.location.href = "/";
+          window.location.href = "home.html";
         }
       }
     }
@@ -293,7 +293,7 @@
     function checkAuth() {
       if (!currentUser.studentId) {
         alert('Please log in to access the dashboard');
-        window.location.href = '/';
+        window.location.href = 'login.html';
         return false;
       }
       return true;
