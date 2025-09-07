@@ -45,11 +45,11 @@
     }
 
     input[readonly] {
-  background-color: #f8f9fa !important;
-  color: #6c757d !important;
-  cursor: not-allowed;
-  border-color: #e9ecef !important;
-}
+      background-color: #f8f9fa !important;
+      color: #6c757d !important;
+      cursor: not-allowed;
+      border-color: #e9ecef !important;
+    }
 
     textarea { resize: vertical; height: 80px; }
     button {
@@ -74,9 +74,58 @@
     .back-link a { text-decoration: none; color: #0056b3; font-weight: bold; padding: 10px 20px; border-radius: 20px; background: rgba(255, 255, 255, 0.3); transition: all 0.3s ease; }
     .back-link a:hover { background: rgba(255, 255, 255, 0.6); }
     .events-list { background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(8px); padding: 30px; border-radius: 20px; width: 90%; max-width: 800px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin-top: 30px; }
-    .event-card { background: rgba(255, 255, 255, 0.7); padding: 15px; margin: 10px 0; border-radius: 12px; border-left: 4px solid #ff6ec4; }
+    .event-card { 
+      background: rgba(255, 255, 255, 0.7); 
+      padding: 15px; 
+      margin: 10px 0; 
+      border-radius: 12px; 
+      position: relative;
+    }
+    .event-card.approved { border-left: 4px solid #27ae60; }
+    .event-card.pending { border-left: 4px solid #f39c12; }
     .event-card h4 { margin: 0 0 10px 0; color: #333; }
     .event-card p { margin: 5px 0; color: #666; font-size: 0.9rem; }
+    .status-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .status-badge.approved {
+      background: rgba(39, 174, 96, 0.2);
+      color: #27ae60;
+    }
+    .status-badge.pending {
+      background: rgba(243, 156, 18, 0.2);
+      color: #f39c12;
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+    .tab-button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      width: auto;
+      margin: 0;
+    }
+    .tab-button.active {
+      background: #ff6ec4;
+      color: white;
+    }
+    .tab-button:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -108,8 +157,11 @@
   <div id="eventMessage"></div>
 
   <div class="events-list" id="eventsList">
-    <h2>📋 Recent Events</h2>
-    <div id="eventsContainer"><p>Loading recent events...</p></div>
+    <div class="tabs">
+      <button class="tab-button active" id="allEventsTab">📋 All Events</button>
+      <button class="tab-button" id="myEventsTab">👤 My Events</button>
+    </div>
+    <div id="eventsContainer"><p>Loading events...</p></div>
   </div>
 
   <div class="back-link">
@@ -117,7 +169,7 @@
   </div>
 
   <script>
-    // Session helper functions
+// Session helper functions
 function getCurrentUser() {
   try {
     const userSession = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
@@ -141,124 +193,207 @@ function initializeStudentIdField() {
   if (studentIdField) {
     studentIdField.value = currentUser.studentId;
     studentIdField.readOnly = true;
-    studentIdField.style.backgroundColor = '#f8f9fa';
-    studentIdField.style.color = '#6c757d';
-    studentIdField.style.cursor = 'not-allowed';
   }
   
   return currentUser;
 }
 
+let currentView = 'all'; // 'all' or 'my'
+let currentUser = null;
+
 document.addEventListener('DOMContentLoaded', function() {
-  const currentUser = initializeStudentIdField();
+  currentUser = initializeStudentIdField();
   if (currentUser) {
     console.log('Logged in as:', currentUser.name, '(ID:', currentUser.studentId + ')');
   }
   
+  // Set minimum date to today
   document.getElementById('eventDate').min = new Date().toISOString().split('T')[0];
-  loadRecentEvents();
+  
+  // Load events based on current view
+  loadEvents();
+  
+  // Tab event listeners
+  document.getElementById('allEventsTab').addEventListener('click', () => switchTab('all'));
+  document.getElementById('myEventsTab').addEventListener('click', () => switchTab('my'));
 });
 
-// Rest of your existing event.html JavaScript code stays the same...
-
+function switchTab(view) {
+  currentView = view;
   
-    let currentUser = {};
-    try { currentUser = JSON.parse(localStorage.getItem('userSession') || '{}'); } catch { currentUser = {}; }
+  // Update tab appearance
+  document.querySelectorAll('.tab-button').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(view === 'all' ? 'allEventsTab' : 'myEventsTab').classList.add('active');
+  
+  // Load events for the selected view
+  loadEvents();
+}
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const studentId = currentUser.studentId || currentUser.student_id;
-      if (studentId) document.getElementById('organizerId').value = studentId;
-      document.getElementById('eventDate').min = new Date().toISOString().split('T')[0];
-      loadRecentEvents();
+document.getElementById("eventForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+  showMessage('Submitting your event...', 'loading');
+
+  const Title = document.getElementById("eventTitle").value.trim();
+  const Type = document.getElementById("eventType").value;
+  const DateVal = document.getElementById("eventDate").value;
+  const TimeVal = document.getElementById("eventTime").value;
+  const Description = document.getElementById("eventDesc").value.trim();
+  const Student_ID = document.getElementById("organizerId").value.trim();
+
+  // Validation
+  if (!Title || !Type || !DateVal || !Student_ID || !Description) {
+    showMessage('❌ Please fill in all required fields.', 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '🚀 Submit Event';
+    return;
+  }
+
+  // Format datetime
+  const DateTime = TimeVal ? `${DateVal} ${TimeVal}:00` : `${DateVal} 12:00:00`;
+
+  try {
+    const response = await fetch('http://localhost:3000/api/events', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ 
+        Title, 
+        Type, 
+        Date: DateTime, 
+        Description, 
+        Student_ID: parseInt(Student_ID) // Ensure it's a number
+      })
     });
 
-    document.getElementById("eventForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true; submitBtn.textContent = 'Submitting...';
-      showMessage('Submitting your event...', 'loading');
+    const responseText = await response.text();
+    console.log('Server response:', responseText);
+    
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse response:', parseError);
+      result = { error: 'Invalid server response: ' + responseText };
+    }
 
-      const Title = document.getElementById("eventTitle").value.trim();
-      const Type = document.getElementById("eventType").value;
-      const DateVal = document.getElementById("eventDate").value;
-      const TimeVal = document.getElementById("eventTime").value;
-      const Description = document.getElementById("eventDesc").value.trim();
-      const Student_ID = document.getElementById("organizerId").value.trim();
+    if (response.ok && result.success) {
+      showMessage(`<h3>🎉 Event Submitted Successfully!</h3>
+        <p><strong>Title:</strong> ${Title}</p>
+        <p><strong>Type:</strong> ${Type}</p>
+        <p><strong>Date:</strong> ${new Date(DateTime).toLocaleDateString()}</p>
+        <p><strong>Time:</strong> ${new Date(DateTime).toLocaleTimeString()}</p>
+        <p><strong>Organizer:</strong> ${Student_ID}</p>
+        <p><strong>Event ID:</strong> #${result.Event_ID}</p>
+        <p><strong>Status:</strong> ${result.Status || 'Pending Approval'}</p>
+        <p><em>Your event has been submitted and is pending approval.</em></p>`, 'success');
 
-      if (!Title || !Type || !DateVal || !Student_ID) {
-        showMessage('❌ Please fill in all required fields.', 'error');
-        submitBtn.disabled = false; submitBtn.textContent = '🚀 Submit Event';
-        return;
-      }
+      // Reset form but keep student ID
+      document.getElementById("eventForm").reset();
+      document.getElementById('organizerId').value = Student_ID;
+      document.getElementById('organizerId').readOnly = true;
+      
+      // Reload events list
+      setTimeout(() => {
+        loadEvents();
+      }, 1000); // Small delay to ensure database is updated
+      
+    } else {
+      const errorMessage = result.error || result.message || 'Unknown error occurred';
+      showMessage(`❌ Error: ${errorMessage}`, 'error');
+    }
+    
+  } catch (error) {
+    console.error('Network error:', error);
+    showMessage(`❌ Connection failed: ${error.message}`, 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = '🚀 Submit Event';
+  }
+});
 
-      const DateTime = TimeVal ? `${DateVal} ${TimeVal}:00` : `${DateVal} 12:00:00`;
+function showMessage(message, type) {
+  const msgDiv = document.getElementById('eventMessage');
+  const box = document.createElement('div');
+  box.className = `event-display ${type}-message`;
+  box.innerHTML = message;
+  msgDiv.innerHTML = '';
+  msgDiv.appendChild(box);
+  
+  // Auto-hide success messages after 7 seconds
+  if (type === 'success') {
+    setTimeout(() => {
+      msgDiv.innerHTML = '';
+    }, 7000);
+  }
+}
 
+async function loadEvents() {
+  const container = document.getElementById('eventsContainer');
+  container.innerHTML = '<p>Loading events...</p>';
+  
+  try {
+    let url = 'http://localhost:3000/api/events';
+    
+    if (currentView === 'all' && currentUser) {
+      // For "All Events" tab: show approved events + user's pending events
+      url += `?student_id=${currentUser.studentId}`;
+    } else if (currentView === 'my' && currentUser) {
+      // For "My Events" tab: show only user's events (all statuses)
+      url = `http://localhost:3000/api/events/my/${currentUser.studentId}`;
+    }
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const events = await response.json();
+    console.log('Loaded events:', events);
+    
+    if (!events || !Array.isArray(events) || events.length === 0) {
+      const emptyMessage = currentView === 'my' ? 'You have not submitted any events yet.' : 'No events found.';
+      container.innerHTML = `<p>${emptyMessage}</p>`;
+      return;
+    }
+    
+    let html = '';
+    events.forEach(event => {
       try {
-        const response = await fetch('http://localhost:3000/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ Title,Type , Date: DateTime, Description, Student_ID})
-        });
-
-        const resText = await response.text();
-        let result;
-        try { result = JSON.parse(resText); } catch { result = { error: 'Invalid server response' }; }
-
-        if (response.ok) {
-          showMessage(`<h3>🎉 Event Submitted Successfully!</h3>
-            <p><strong>Title:</strong> ${Title}</p>
-            <p><strong>Type:</strong> ${Type}</p>
-            <p><strong>Date:</strong> ${new Date(DateTime).toLocaleDateString()}</p>
-            <p><strong>Organizer:</strong> ${Student_ID}</p>
-            <p>Event ID: #${result.Event_ID || 'Unknown'}</p>`, 'success');
-
-          document.getElementById("eventForm").reset();
-          document.getElementById('organizerId').value = Student_ID;
-          loadRecentEvents();
-        } else {
-          showMessage(`❌ Server Error (${response.status}): ${result.error || 'Unknown error'}`, 'error');
-        }
-      } catch (error) {
-        showMessage(`❌ Connection failed: ${error.message}`, 'error');
-      } finally {
-        submitBtn.disabled = false; submitBtn.textContent = '🚀 Submit Event';
+        const eventDate = new Date(event.Date);
+        const isValidDate = !isNaN(eventDate.getTime());
+        const statusClass = event.Status === 1 ? 'approved' : 'pending';
+        const statusText = event.StatusText || (event.Status === 1 ? 'Approved' : 'Pending');
+        const isOwnEvent = currentUser && event.Student_ID == currentUser.studentId;
+        
+        html += `<div class="event-card ${statusClass}">
+          <div class="status-badge ${statusClass}">${statusText}</div>
+          <h4>${event.Title || 'Untitled Event'}</h4>
+          <p><strong>Type:</strong> ${event.Type || 'Not specified'}</p>
+          <p><strong>📅 Date:</strong> ${isValidDate ? eventDate.toLocaleDateString() : 'Invalid date'}</p>
+          <p><strong>🕒 Time:</strong> ${isValidDate ? eventDate.toLocaleTimeString() : 'Invalid time'}</p>
+          ${event.Description ? `<p><strong>📝 Description:</strong> ${event.Description}</p>` : ''}
+          <p><strong>👤 Organizer ID:</strong> ${event.Student_ID || 'Unknown'}${isOwnEvent ? ' (You)' : ''}</p>
+          <p><strong>Event ID:</strong> #${event.Event_ID || 'Unknown'}</p>
+        </div>`;
+      } catch (eventError) {
+        console.error('Error processing event:', event, eventError);
       }
     });
-
-    function showMessage(message, Type) {
-      const msgDiv = document.getElementById('eventMessage');
-      const box = document.createElement('div');
-      box.className = `event-display ${Type}-message`;
-      box.innerHTML = message;
-      msgDiv.innerHTML = ''; msgDiv.appendChild(box);
-      if (Type === 'success') setTimeout(() => { msgDiv.innerHTML = ''; }, 5000);
-    }
-
-    async function loadRecentEvents() {
-      const container = document.getElementById('eventsContainer');
-      try {
-        const response = await fetch('http://localhost:3000/api/events');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const events = await response.json();
-        if (!events.length) { container.innerHTML = '<p>No events found.</p>'; return; }
-        let html = '';
-        events.slice(0, 5).forEach(event => {
-          const eventDate = new Date(event.Date);
-          html += `<div class="event-card">
-            <h4>${event.Title}</h4>
-            <p><strong>Type:</strong> ${event.Type}</p>
-            <p><strong>📅 Date:</strong> ${eventDate.toLocaleDateString()}</p>
-            <p><strong>🕒 Time:</strong> ${eventDate.toLocaleTimeString()}</p>
-            ${event.Description ? `<p><strong>📝 Description:</strong> ${event.Description}</p>` : ''}
-            <p><strong>👤 Organizer:</strong> ${event.Student_ID}</p>
-            <p>Event ID: #${event.Event_ID}</p>
-          </div>`;
-        });
-        container.innerHTML = html;
-      } catch (error) {
-        container.innerHTML = `<p class="error-message">Failed to load events: ${error.message}</p>`;
-      }
-    }
+    
+    container.innerHTML = html || '<p>No valid events to display.</p>';
+    
+  } catch (error) {
+    console.error('Error loading events:', error);
+    container.innerHTML = `<p class="error-message">Failed to load events: ${error.message}</p>`;
+  }
+}
   </script>
 </body>
 </html>

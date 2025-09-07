@@ -239,7 +239,7 @@
 
         // Sort events by date and take latest 3
         const latestEvents = events
-          .sort((a, b) => new Date(b.Date) - new Date(a.Date))
+          .sort((a, b) => new Date(a.Date) - new Date(b.Date))
           .slice(0, 3);
 
         const eventsHTML = latestEvents.map(event => {

@@ -1086,43 +1086,178 @@ app.post('/api/approve-visitor', async (req, res) => {
 
 
 
-// API routes for events
+// // API routes for events - FIXED VERSION
+// app.get('/api/events', async (req, res) => {
+//   try {
+//     const sql = 'SELECT * FROM events ORDER BY Date DESC';
+//     const [rows] = await pool.execute(sql);
+//     res.json(rows);
+//   } catch (error) {
+//     console.error('Error fetching events:', error);
+//     res.status(500).json({ error: 'Failed to fetch events' });
+//   }
+// });
+
+// app.post('/api/events', async (req, res) => {
+//   try {
+//     const { Title, Type, Date, Description, Student_ID } = req.body;
+    
+//     if (!Title || !Date || !Student_ID || !Type || !Description) {
+//       return res.status(400).json({ error: 'Please provide title, type, description, date, and ID' });
+//     }
+    
+//     const sql = `
+//       INSERT INTO events (Title, Type, Date, Description, Student_ID)
+//       VALUES (?, ?, ?, ?, ?)
+//     `;
+//     const [result] = await pool.execute(sql, [Title, Type, Date, Description, Student_ID]);
+    
+//     // Return the correct field name that matches your frontend expectation
+//     res.json({
+//       success: true,
+//       message: 'Event created successfully',
+//       Event_ID: result.insertId  // Changed from 'eventId' to 'Event_ID'
+//     });
+    
+//   } catch (error) {
+//     console.error('Error creating event:', error);
+//     res.status(500).json({ error: 'Failed to create event' });
+//   }
+// });
+
+
+
+
+
+
+
+
+
+
+
+// API routes for events - UPDATED VERSION with status filtering
 app.get('/api/events', async (req, res) => {
   try {
-    const sql = 'SELECT * FROM events ORDER BY Date DESC';
-    const [rows] = await pool.execute(sql);
+    const { student_id } = req.query; // Get student_id from query parameter
+    
+    let sql, params;
+    
+    if (student_id) {
+      // If student_id is provided, show:
+      // 1. All approved events (status = 1)
+      // 2. User's own pending events (status = 0 AND Student_ID = student_id)
+      sql = `
+        SELECT *, 
+               CASE 
+                 WHEN Status = 0 THEN 'Pending'
+                 WHEN Status = 1 THEN 'Approved'
+                 ELSE 'Unknown'
+               END as StatusText
+        FROM events 
+        WHERE Status = 1 OR (Status = 0 AND Student_ID = ?)
+        ORDER BY Date ASC
+      `;
+      params = [parseInt(student_id)];
+    } else {
+      // If no student_id, only show approved events
+      sql = `
+        SELECT *, 
+               CASE 
+                 WHEN Status = 0 THEN 'Pending'
+                 WHEN Status = 1 THEN 'Approved'
+                 ELSE 'Unknown'
+               END as StatusText
+        FROM events 
+        WHERE Status = 1 
+        ORDER BY Date ASC
+      `;
+      params = [];
+    }
+    
+    const [rows] = await pool.execute(sql, params);
     res.json(rows);
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching events:', error);
     res.status(500).json({ error: 'Failed to fetch events' });
   }
 });
 
 app.post('/api/events', async (req, res) => {
   try {
-    const { Title,Type,Date, Description, Student_ID} = req.body;
-
+    const { Title, Type, Date, Description, Student_ID } = req.body;
+    
     if (!Title || !Date || !Student_ID || !Type || !Description) {
-      return res.status(400).json({ error: 'Please provide title,Type,Description, date, and ID' });
+      return res.status(400).json({ error: 'Please provide title, type, description, date, and ID' });
     }
-
+    
+    // New events start with status = 0 (pending)
     const sql = `
-      INSERT INTO events (Title,Type,Date, Description, Student_ID)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO events (Title, Type, Date, Description, Student_ID, Status)
+      VALUES (?, ?, ?, ?, ?, 0)
     `;
-    const [result] = await pool.execute(sql, [Title,Type,Date, Description,Student_ID]);
-
+    const [result] = await pool.execute(sql, [Title, Type, Date, Description, Student_ID]);
+    
     res.json({
       success: true,
-      message: 'Event created successfully',
-      eventId: result.insertId
+      message: 'Event created successfully and is pending approval',
+      Event_ID: result.insertId,
+      Status: 'Pending'
     });
-
+    
   } catch (error) {
-    console.error(error);
+    console.error('Error creating event:', error);
     res.status(500).json({ error: 'Failed to create event' });
   }
 });
+
+// Optional: Add route to get only user's events (for a separate "My Events" section)
+app.get('/api/events/my/:student_id', async (req, res) => {
+  try {
+    const { student_id } = req.params;
+    
+    const sql = `
+      SELECT *, 
+             CASE 
+               WHEN Status = 0 THEN 'Pending'
+               WHEN Status = 1 THEN 'Approved'
+               ELSE 'Unknown'
+             END as StatusText
+      FROM events 
+      WHERE Student_ID = ?
+      ORDER BY Date ASC
+    `;
+    const [rows] = await pool.execute(sql, [parseInt(student_id)]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching user events:', error);
+    res.status(500).json({ error: 'Failed to fetch user events' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Updated API route for lost items to match the lost_item table structure
 app.post('/api/lostitems', async (req, res) => {
@@ -1580,7 +1715,7 @@ app.get('/api/dashboard-stats', async (req, res) => {
     WHERE l.student_id = ?`, [student_id]);
     stats.totalFoundItems = foundItems[0].count;
 
-    const [events] = await pool.execute('SELECT COUNT(*) as count FROM events');
+    const [events] = await pool.execute('SELECT COUNT(*) as count FROM events WHERE Status = 1');
     stats.totalEvents = events[0].count;
 
     const [complaints] = await pool.execute('SELECT COUNT(*) as count FROM complaint WHERE student_id = ?', [student_id]);
