@@ -983,6 +983,76 @@ app.post('/api/mark-as-found', async (req, res) => {
   }
 });
 
+// Get all visitor entries
+app.get('/api/visitor-entries', async (req, res) => {
+    const query = `
+        SELECT 
+            Visitor_ID,
+            Student_ID,
+            Name,
+            Phone_No,
+            Relation,
+            Status,
+            Date
+        FROM visitor_entry 
+        ORDER BY Visitor_ID DESC
+    `;
+
+    try {
+        const [results] = await pool.query(query);
+        res.json({
+            success: true,
+            visitors: results,
+            count: results.length
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Database error occurred'
+        });
+    }
+});
+
+// Approve visitor entry (set status = 1)
+app.post('/api/approve-visitor', async (req, res) => {
+    const { visitor_id } = req.body;
+
+    if (!visitor_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'Visitor ID is required'
+        });
+    }
+
+    const query = `
+        UPDATE visitor_entry 
+        SET Status = 1 
+        WHERE Visitor_ID = ?
+    `;
+
+    try {
+        const [results] = await pool.query(query, [visitor_id]);
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Visitor entry not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Visitor approved successfully'
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Database error occurred'
+        });
+    }
+});
 
 
 
