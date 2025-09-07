@@ -29,24 +29,6 @@
       color: #333;
       margin-bottom: 20px;
     }
-    button {
-      background-color: #f7797d;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.3s ease;
-      margin-bottom: 20px;
-    }
-    button:hover {
-      background-color: #e6676f;
-    }
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
     .categories {
       margin-top: 20px;
       text-align: left;
@@ -54,84 +36,194 @@
       overflow-y: auto;
     }
     .category-item {
-      margin-bottom: 15px;
-      padding: 15px;
-      background-color: #f8f9fa;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #f1f3f5 100%);
       border: 1px solid #e9ecef;
-      border-radius: 8px;
-      transition: background-color 0.3s ease;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .category-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(to bottom, #f7797d, #FBD786);
+      border-radius: 0 2px 2px 0;
     }
     .category-item:hover {
-      background-color: #e9ecef;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
     }
     .category-item h3 {
-      margin: 0 0 10px 0;
-      color: #495057;
-      font-size: 18px;
+      margin: 0 0 15px 0;
+      color: #2c3e50;
+      font-size: 20px;
+      font-weight: 600;
+      padding-left: 10px;
+      border-bottom: 2px solid #e9ecef;
+      padding-bottom: 10px;
+    }
+    .item-fields-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      padding-left: 10px;
     }
     .item-field {
-      margin: 5px 0;
-      color: #6c757d;
-      font-size: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      background: rgba(255, 255, 255, 0.6);
+      padding: 10px 12px;
+      border-radius: 8px;
+      border-left: 3px solid #f7797d;
+      transition: all 0.2s ease;
+    }
+    .item-field:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: translateX(2px);
     }
     .field-name {
       font-weight: 600;
-      color: #495057;
-      min-width: 120px;
+      color: #34495e;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: block;
     }
     .field-value {
-      flex: 1;
-      text-align: right;
+      color: #2c3e50;
+      font-size: 15px;
+      font-weight: 500;
       word-break: break-word;
+      line-height: 1.4;
     }
     .loading {
       color: #666;
       font-style: italic;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+    .loading::before {
+      content: '';
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f7797d;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
     .error {
       color: #dc3545;
-      background-color: #f8d7da;
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
       border: 1px solid #f5c6cb;
-      padding: 10px;
-      border-radius: 8px;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
     }
     .no-data {
       color: #6c757d;
       font-style: italic;
       text-align: center;
-      padding: 20px;
+      padding: 40px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 12px;
+      margin: 20px 0;
+      border: 2px dashed #dee2e6;
     }
     .item-count {
-      color: #6c757d;
-      font-size: 14px;
-      margin-bottom: 15px;
+      color: #495057;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      border-radius: 25px;
+      display: inline-block;
+      border: 1px solid #90caf9;
+    }
+    .stats-bar {
+      display: flex;
+      justify-content: space-around;
+      margin: 15px 0;
+      padding: 15px;
+      background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
+      border-radius: 10px;
+      border: 1px solid #c5e1a5;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #4caf50;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .refresh-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(247, 121, 125, 0.9);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    .refresh-indicator.show {
+      opacity: 1;
     }
   </style>
 </head>
 <body>
+  <div class="refresh-indicator" id="refreshIndicator">Loading items...</div>
   <div class="container">
     <h2>Item Categories</h2>
-    <button onclick="fetchCategories()" id="fetchBtn">View Categories</button>
     <div id="itemCount" class="item-count"></div>
+    <!-- <div id="statsBar" class="stats-bar" style="display: none;"></div> -->
     <div id="categoriesContainer" class="categories"></div>
   </div>
 
   <script>
+    let itemsData = [];
+
     function fetchCategories() {
       console.log('Starting fetch...'); // Debug log
       
       const categoriesContainer = document.getElementById("categoriesContainer");
       const itemCount = document.getElementById("itemCount");
-      const fetchBtn = document.getElementById("fetchBtn");
+      //const statsBar = document.getElementById("statsBar");
+      const refreshIndicator = document.getElementById("refreshIndicator");
       
       // Show loading state
-      categoriesContainer.innerHTML = '<p class="loading">Loading items...</p>';
+      categoriesContainer.innerHTML = '<div class="loading">Loading items...</div>';
       itemCount.innerHTML = '';
-      fetchBtn.disabled = true;
-      fetchBtn.textContent = 'Loading...';
+      //statsBar.style.display = 'none';
+      refreshIndicator.classList.add('show');
       
       fetch('http://localhost:3000/api/items')
         .then(response => {
@@ -158,15 +250,22 @@
           console.log('Extracted data:', data);
           console.log('Data length:', data ? data.length : 'null');
           
+          itemsData = data || [];
           categoriesContainer.innerHTML = ''; // Clear loading message
           itemCount.innerHTML = '';
 
           if (!data || data.length === 0) {
-            categoriesContainer.innerHTML = '<p class="no-data">No items found in the database.</p>';
+            categoriesContainer.innerHTML = '<div class="no-data">No items found in the database.</div>';
+            statsBar.style.display = 'none';
           } else {
-            // Show item count
-            itemCount.innerHTML = `Found ${data.length} item${data.length === 1 ? '' : 's'}`;
+            // Show enhanced item count and stats
+            itemCount.innerHTML = `📊 ${data.length} Item Categorie${data.length === 1 ? '' : 's'} Found`;
             
+            // Calculate and show statistics
+            const stats = calculateItemStats(data);
+            //displayStats(stats);
+            
+            // Display items with enhanced styling
             data.forEach((item, index) => {
               console.log(`Item ${index}:`, item); // Log each item
               
@@ -175,25 +274,39 @@
               
               // Find the primary identifier (ID field)
               const idField = findIdField(item);
-              const itemTitle = idField ? `Item: ${item[idField]}` : `Item #${index + 1}`;
+              const itemTitle = idField ? `${formatFieldName(idField)}: ${item[idField]}` : `Item #${index + 1}`;
               
               let itemContent = `<h3>${itemTitle}</h3>`;
+              itemContent += '<div class="item-fields-grid">';
               
               // Display all fields from the item
               Object.keys(item).forEach(key => {
                 const value = item[key];
-                const displayValue = value !== null && value !== undefined ? value : 'N/A';
+                const displayValue = formatFieldValue(value);
                 
                 itemContent += `
                   <div class="item-field">
-                    <span class="field-name">${formatFieldName(key)}:</span>
+                    <span class="field-name">${formatFieldName(key)}</span>
                     <span class="field-value">${displayValue}</span>
                   </div>
                 `;
               });
               
+              itemContent += '</div>';
               itemRow.innerHTML = itemContent;
               categoriesContainer.appendChild(itemRow);
+              
+              // Add entrance animation
+              setTimeout(() => {
+                itemRow.style.opacity = '0';
+                itemRow.style.transform = 'translateY(20px)';
+                itemRow.style.transition = 'all 0.5s ease';
+                
+                setTimeout(() => {
+                  itemRow.style.opacity = '1';
+                  itemRow.style.transform = 'translateY(0)';
+                }, index * 100);
+              }, 10);
             });
           }
         })
@@ -201,18 +314,96 @@
           console.error('Detailed error:', error);
           categoriesContainer.innerHTML = `
             <div class="error">
-              <strong>Error fetching items:</strong><br>
+              <strong>⚠️ Error fetching items:</strong><br>
               ${error.message}<br>
               <small>Check console for more details. Make sure your server is running on the correct port.</small>
             </div>
           `;
           itemCount.innerHTML = '';
+          statsBar.style.display = 'none';
         })
         .finally(() => {
-          // Re-enable button
-          fetchBtn.disabled = false;
-          fetchBtn.textContent = 'View Categories';
+          // Hide loading indicator
+          setTimeout(() => {
+            refreshIndicator.classList.remove('show');
+          }, 500);
         });
+    }
+    
+    function calculateItemStats(data) {
+      const stats = {
+        total: data.length,
+        fieldsCount: 0,
+        nonEmptyFields: 0,
+        uniqueValues: new Set()
+      };
+      
+      if (data.length > 0) {
+        stats.fieldsCount = Object.keys(data[0]).length;
+        
+        data.forEach(item => {
+          Object.values(item).forEach(value => {
+            if (value !== null && value !== undefined && value !== '') {
+              stats.nonEmptyFields++;
+              stats.uniqueValues.add(String(value));
+            }
+          });
+        });
+      }
+      
+      return stats;
+    }
+    
+    // function displayStats(stats) {
+    //   const statsBar = document.getElementById("statsBar");
+      
+    //   if (stats.total > 0) {
+    //     statsBar.innerHTML = `
+    //       <div class="stat-item">
+    //         <div class="stat-number">${stats.total}</div>
+    //         <div class="stat-label">Total Items Types</div>
+    //       </div>
+    //       <div class="stat-item">
+    //         <div class="stat-number">${stats.fieldsCount}</div>
+    //         <div class="stat-label">Fields per Item</div>
+    //       </div>
+    //       <div class="stat-item">
+    //         <div class="stat-number">${stats.nonEmptyFields}</div>
+    //         <div class="stat-label">Data Points</div>
+    //       </div>
+    //       <div class="stat-item">
+    //         <div class="stat-number">${stats.uniqueValues.size}</div>
+    //         <div class="stat-label">Unique Values</div>
+    //       </div>
+    //     `;
+    //     statsBar.style.display = 'flex';
+    //   }
+    // }
+    
+    function formatFieldValue(value) {
+      if (value === null || value === undefined) return '<em>N/A</em>';
+      if (value === '') return '<em>Empty</em>';
+      
+      // Format different types of values
+      if (typeof value === 'number') {
+        return value.toLocaleString();
+      }
+      
+      if (typeof value === 'boolean') {
+        return value ? '✅ Yes' : '❌ No';
+      }
+      
+      // Check if it looks like a date
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+        try {
+          const date = new Date(value);
+          return date.toLocaleDateString();
+        } catch (e) {
+          return value;
+        }
+      }
+      
+      return value;
     }
     
     // Helper function to find the ID field
@@ -234,26 +425,23 @@
         .trim();
     }
     
-    // Test server connection on page load
+    // Auto-load items when page loads
     window.onload = function() {
-      console.log('Page loaded, testing server connection...');
+      console.log('Page loaded, automatically fetching items...');
       
-      // First try to test a simple endpoint
-      fetch('/test-connection')
-        .then(response => response.json())
-        .then(data => {
-          console.log('Server connection test successful:', data);
-        })
-        .catch(error => {
-          console.log('Test connection endpoint not available, trying direct API...');
-          
-          // If test endpoint doesn't exist, just show ready message
-          const container = document.getElementById("categoriesContainer");
-          if (container.innerHTML === '') {
-            container.innerHTML = '<p class="no-data">Ready to fetch items. Click "View Categories" to start.</p>';
-          }
-        });
+      // Add a small delay for better UX
+      setTimeout(() => {
+        fetchCategories();
+      }, 500);
     };
+    
+    // Optional: Auto-refresh every 30 seconds
+    setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        console.log('Auto-refreshing items...');
+        fetchCategories();
+      }
+    }, 30000);
   </script>
 </body>
 </html>

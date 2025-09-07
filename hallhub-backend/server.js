@@ -601,7 +601,7 @@ app.get('/api/complaints', async (req, res) => {
             params.push(student_id);
         }
 
-        query += ' ORDER BY time ASC';
+        query += ' ORDER BY time DESC';
 
         const [results] = await pool.query(query, params);
         res.json({ success: true, complaints: results });
@@ -609,6 +609,148 @@ app.get('/api/complaints', async (req, res) => {
         console.error(err);
         res.status(500).json({ success: false, message: 'Database error' });
     }
+});
+
+// Update complaint status
+app.post('/api/update-complaint-status', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const { complaint_id, status } = req.body;
+
+    if (complaint_id === undefined || status === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'Complaint ID and status are required'
+      });
+    }
+
+    await connection.beginTransaction();
+
+    // Get current status
+    const [rows] = await connection.execute(
+      'SELECT status FROM complaint WHERE complaint_id = ?',
+      [complaint_id]
+    );
+
+    if (rows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        message: 'Complaint not found'
+      });
+    }
+
+    const currentStatus = rows[0].status;
+
+    // Update complaint status
+    const [result] = await connection.execute(
+      'UPDATE complaint SET status = ? WHERE complaint_id = ?',
+      [status, complaint_id]
+    );
+
+    if (result.affectedRows === 0) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        message: 'Complaint not found'
+      });
+    }
+
+    // Handle complaint_resolution table
+    if (currentStatus === 0 && status === 1) {
+      // Insert when going 0 -> 1
+      await connection.execute(
+        `INSERT INTO complaint_resolution (Complaint_ID, Receive_Time) 
+         VALUES (?, NOW())`,
+        [complaint_id]
+      );
+    } else if (currentStatus === 1 && status === 0) {
+      // Delete when going 1 -> 0
+      await connection.execute(
+        `DELETE FROM complaint_resolution WHERE Complaint_ID = ?`,
+        [complaint_id]
+      );
+    }
+
+    await connection.commit();
+
+    res.json({
+      success: true,
+      message: 'Complaint status updated successfully'
+    });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred'
+    });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+
+app.post('/api/complaints', async (req, res) => {
+  try {
+    const { title, description, student_id } = req.body;
+
+    //console.log("📩 Incoming complaint request:", { title, description, student_id });
+
+    if (!title || !description || !student_id) {
+      //console.warn("⚠️ Missing fields:", { title, description, student_id });
+      return res.status(400).json({ error: 'Please provide title, description, and student_id' });
+    }
+
+    const sql = `
+      INSERT INTO complaint (title, description, student_id)
+      VALUES (?, ?, ?)
+    `;
+
+    //console.log("📝 Executing SQL:", sql);
+    //console.log("🔢 With values:", [title, description, student_id]);
+
+    const [result] = await pool.execute(sql, [title, description, student_id]);
+
+    //console.log("✅ Insert result:", result);
+
+    res.json({
+      success: true,
+      message: 'Complaint submitted successfully',
+      complaintId: result.insertId
+    });
+
+  } catch (error) {
+    console.error("❌ Error inserting complaint:", error);
+    res.status(500).json({ 
+      error: 'Failed to submit complaint',
+      details: error.message,   // <-- return actual error message (for debugging only!)
+      code: error.code          // <-- useful MySQL error code
+    });
+  }
+});
+
+// Get complaints for a specific student
+app.get('/api/complaints/:studentId', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const query = `
+      SELECT complaint_id, student_id, title, description, time, status
+      FROM complaint 
+      WHERE student_id = ?
+      ORDER BY time DESC
+    `;
+    const [results] = await pool.execute(query, [studentId]);
+
+    res.json({
+      success: true,
+      complaints: results,
+      count: results.length
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ success: false, message: "Database error occurred" });
+  }
 });
 
 // ===============================
@@ -1113,68 +1255,10 @@ app.get('/api/founditems/:lostId', async (req, res) => {
   }
 });
 
-// Get complaints for a specific student
-app.get('/api/complaints/:studentId', async (req, res) => {
-  try {
-    const { studentId } = req.params;
-    const query = `
-      SELECT complaint_id, student_id, title, description, time, status
-      FROM complaint 
-      WHERE student_id = ?
-      ORDER BY time DESC
-    `;
-    const [results] = await pool.execute(query, [studentId]);
-
-    res.json({
-      success: true,
-      complaints: results,
-      count: results.length
-    });
-  } catch (error) {
-    console.error("Database error:", error);
-    res.status(500).json({ success: false, message: "Database error occurred" });
-  }
-});
 
 
-app.post('/api/complaints', async (req, res) => {
-  try {
-    const { title, description, student_id } = req.body;
 
-    //console.log("📩 Incoming complaint request:", { title, description, student_id });
 
-    if (!title || !description || !student_id) {
-      //console.warn("⚠️ Missing fields:", { title, description, student_id });
-      return res.status(400).json({ error: 'Please provide title, description, and student_id' });
-    }
-
-    const sql = `
-      INSERT INTO complaint (title, description, student_id)
-      VALUES (?, ?, ?)
-    `;
-
-    //console.log("📝 Executing SQL:", sql);
-    //console.log("🔢 With values:", [title, description, student_id]);
-
-    const [result] = await pool.execute(sql, [title, description, student_id]);
-
-    //console.log("✅ Insert result:", result);
-
-    res.json({
-      success: true,
-      message: 'Complaint submitted successfully',
-      complaintId: result.insertId
-    });
-
-  } catch (error) {
-    console.error("❌ Error inserting complaint:", error);
-    res.status(500).json({ 
-      error: 'Failed to submit complaint',
-      details: error.message,   // <-- return actual error message (for debugging only!)
-      code: error.code          // <-- useful MySQL error code
-    });
-  }
-});
 
 
 // API routes for allocation info
