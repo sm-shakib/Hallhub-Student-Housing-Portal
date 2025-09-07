@@ -1132,6 +1132,119 @@ app.post('/api/approve-visitor', async (req, res) => {
 
 
 
+// Get all events
+app.get('/api/eevents', async (req, res) => {
+    const query = `
+        SELECT 
+            Event_ID,
+            Title,
+            Type,
+            Date,
+            Description,
+            Student_ID,
+            Status
+        FROM events 
+        ORDER BY Date DESC
+    `;
+
+    try {
+        const [results] = await pool.query(query);
+        res.json({
+            success: true,
+            events: results,
+            count: results.length
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Database error occurred'
+        });
+    }
+});
+
+// Update event status
+app.put('/api/events/update-status', async (req, res) => {
+    const { event_id, status } = req.body;
+
+    if (!event_id || status === undefined) {
+        return res.status(400).json({
+            success: false,
+            message: 'Event ID and status are required'
+        });
+    }
+
+    const query = `
+        UPDATE events 
+        SET Status = ? 
+        WHERE Event_ID = ?
+    `;
+
+    try {
+        const [results] = await pool.query(query, [status, event_id]);
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Event not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Event status updated successfully'
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Database error occurred'
+        });
+    }
+});
+
+// Delete event
+app.delete('/api/events/delete', async (req, res) => {
+    const { event_id } = req.body;
+
+    if (!event_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'Event ID is required'
+        });
+    }
+
+    const query = `
+        DELETE FROM events 
+        WHERE Event_ID = ?
+    `;
+
+    try {
+        const [results] = await pool.query(query, [event_id]);
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Event not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Event deleted successfully'
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Database error occurred'
+        });
+    }
+});
+
+
+
+
 
 
 
