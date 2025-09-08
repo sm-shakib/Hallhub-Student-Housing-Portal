@@ -1256,36 +1256,45 @@ app.get('/api/events', async (req, res) => {
     let sql, params;
     
     if (student_id) {
-      // If student_id is provided, show:
-      // 1. All approved events (status = 1)
-      // 2. User's own pending events (status = 0 AND Student_ID = student_id)
-      sql = `
-        SELECT *, 
-               CASE 
-                 WHEN Status = 0 THEN 'Pending'
-                 WHEN Status = 1 THEN 'Approved'
-                 ELSE 'Unknown'
-               END as StatusText
-        FROM events 
-        WHERE Status = 1 OR (Status = 0 AND Student_ID = ?)
-        ORDER BY Date ASC
-      `;
-      params = [parseInt(student_id)];
-    } else {
-      // If no student_id, only show approved events
-      sql = `
-        SELECT *, 
-               CASE 
-                 WHEN Status = 0 THEN 'Pending'
-                 WHEN Status = 1 THEN 'Approved'
-                 ELSE 'Unknown'
-               END as StatusText
-        FROM events 
-        WHERE Status = 1 
-        ORDER BY Date ASC
-      `;
-      params = [];
-    }
+  sql = `
+    SELECT e.*, 
+           CASE 
+             WHEN e.Status = 0 THEN 'Pending'
+             WHEN e.Status = 1 THEN 'Approved'
+             ELSE 'Unknown'
+           END as StatusText
+    FROM events e
+    WHERE e.Event_ID IN (
+             SELECT Event_ID 
+             FROM events 
+             WHERE Status = 1
+             UNION
+             SELECT Event_ID
+             FROM events 
+             WHERE Status = 0 AND Student_ID = ?
+           )
+    ORDER BY e.Date ASC
+  `;
+  params = [parseInt(student_id)];
+} else {
+  sql = `
+    SELECT e.*, 
+           CASE 
+             WHEN e.Status = 0 THEN 'Pending'
+             WHEN e.Status = 1 THEN 'Approved'
+             ELSE 'Unknown'
+           END as StatusText
+    FROM events e
+    WHERE e.Event_ID IN (
+             SELECT Event_ID 
+             FROM events 
+             WHERE Status = 1
+           )
+    ORDER BY e.Date ASC
+  `;
+  params = [];
+}
+
     
     const [rows] = await pool.execute(sql, params);
     res.json(rows);
