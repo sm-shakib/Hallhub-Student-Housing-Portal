@@ -454,22 +454,23 @@
 
       try {
         const response = await fetch(`http://localhost:3000/api/allocations?student_id=${currentUser.studentId}`);
-        
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error('Failed to fetch allocation information');
+          throw new Error(data.error || 'Failed to fetch allocation information');
         }
 
-        const allocations = await response.json();
-        
-        if (allocations.length === 0) {
+        if (data.error) {
+          output.innerHTML = `<div class="error">${data.error}</div>`;
+        } else if (data.length === 0) {
           output.innerHTML = '<div class="error">No allocation found for your Student ID.</div>';
         } else {
-          displayAllocations(allocations, output);
+          displayAllocations(data, output);
         }
 
       } catch (error) {
         console.error('Error fetching allocation:', error);
-        output.innerHTML = '<div class="error">Failed to fetch allocation information. Please try again.</div>';
+        output.innerHTML = `<div class="error">${error.message || 'Failed to fetch allocation information. Please try again.'}</div>`;
       } finally {
         btn.disabled = false;
         btn.textContent = 'Reload';

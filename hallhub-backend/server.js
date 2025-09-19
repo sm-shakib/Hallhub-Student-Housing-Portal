@@ -1625,30 +1625,28 @@ app.get('/api/student-found-items/:studentId', async (req, res) => {
 app.get('/api/allocations', async (req, res) => {
   try {
     const { student_id } = req.query;
-    let sql = `
-      SELECT 
-        ra.Hall_No AS Hall_No,
-        ha.Place AS Hall_Place,
-        ra.Room_No AS Room_No,
-        ra.Alloc_Start_Time AS Alloc_Start_Time,
-        ra.Alloc_End_Time AS Alloc_End_Time
-      FROM room_allocation ra
-      LEFT JOIN hall ha ON ra.Hall_No = ha.Hall_No
-    `;
-
-    let params = [];
     
-    if (student_id) {
-      sql += ' WHERE ra.Student_ID = ?';
-      params.push(student_id);
+    const [rows] = await pool.execute(
+      'CALL GetStudentAllocations(?)',
+      [student_id || null]  // Null if no student_id provided
+    );
+    
+    const allocations = Array.isArray(rows[0]) ? rows[0] : rows;
+    
+    res.json(allocations);
+    
+  } catch (error) {
+    console.error('Database error: ', error);
+    
+    if (error.code === 'ER_SIGNAL_EXCEPTION') {
+      return res.status(404).json({ 
+        error: error.message  // Message: "No allocation found for your Student ID"
+      });
     }
     
-    sql += ' ORDER BY ra.Alloc_Start_Time DESC';
-    const [rows] = await pool.execute(sql, params);
-    res.json(rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch allocations' });
+    res.status(500).json({ 
+      error: 'Failed to fetch allocations: ' + error.message 
+    });
   }
 });
 
