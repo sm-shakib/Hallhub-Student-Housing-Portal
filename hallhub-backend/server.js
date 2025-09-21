@@ -476,6 +476,167 @@ app.post('/api/add-to-resident', async (req, res) => {
   }
 });
 
+// Add student to resident with room allocation
+app.post('/api/add-to-resident-with-allocation', async (req, res) => {
+    try {
+        const { student_id, hall_no, room_no } = req.body;
+        console.log('Adding student to resident with allocation:', req.body);
+
+        if (!student_id || !hall_no || !room_no) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Student ID, Hall Number, and Room Number are required' 
+            });
+        }
+
+        // Start transaction
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        try {
+            // Check if student exists
+            const [studentExists] = await connection.execute(
+                'SELECT student_id, name, email FROM Student_Info WHERE student_id = ?', 
+                [student_id]
+            );
+            
+            if (studentExists.length === 0) {
+                await connection.rollback();
+                connection.release();
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Student not found' 
+                });
+            }
+
+            const student = studentExists[0];
+
+            // Check if already resident
+            const [alreadyResident] = await connection.execute(
+                'SELECT student_id FROM Resident WHERE student_id = ?', 
+                [student_id]
+            );
+            
+            if (alreadyResident.length > 0) {
+                await connection.rollback();
+                connection.release();
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Student is already a resident' 
+                });
+            }
+
+            // Check if room is available
+            // const [roomOccupied] = await connection.execute(
+            //     'SELECT Room_No FROM room_allocation WHERE Room_No = ? AND Hall_No = ? AND Alloc_End_Time IS NULL', 
+            //     [room_no, hall_no]
+            // );
+            
+            // if (roomOccupied.length > 0) {
+            //     await connection.rollback();
+            //     connection.release();
+            //     return res.status(400).json({ 
+            //         success: false, 
+            //         message: 'Room is already occupied' 
+            //     });
+            // }
+
+            // Check how many active allocations the room currently has
+const [roomAllocations] = await connection.execute(
+    `SELECT COUNT(*) AS count
+     FROM room_allocation
+     WHERE Room_No = ? 
+       AND Hall_No = ? 
+       AND Alloc_End_Time IS NULL`,
+    [room_no, hall_no]
+);
+
+if (roomAllocations[0].count >= 4) {
+    await connection.rollback();
+    connection.release();
+    return res.status(400).json({
+        success: false,
+        message: 'Room has reached its maximum capacity of 4 students'
+    });
+}
+
+
+            // Check if hall and room exist and are valid
+            const [roomExists] = await connection.execute(
+                'SELECT r.Room_No FROM room r JOIN hall h ON r.Hall_No = h.Hall_No WHERE r.Room_No = ? AND r.Hall_No = ?', 
+                [room_no, hall_no]
+            );
+            
+            if (roomExists.length === 0) {
+                await connection.rollback();
+                connection.release();
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Invalid hall or room selection' 
+                });
+            }
+
+            // Insert into Resident table
+            const [residentResult] = await connection.execute(
+                'INSERT INTO Resident (student_id) VALUES (?)', 
+                [student_id]
+            );
+
+            // Update resident_status in Student_Info
+            await connection.execute(
+                'UPDATE Student_Info SET resident_status = 1 WHERE student_id = ?', 
+                [student_id]
+            );
+
+            // Insert into room_allocation table
+            const [allocationResult] = await connection.execute(
+                'INSERT INTO room_allocation (Student_ID, Room_No, Hall_No, Alloc_Start_Time) VALUES (?, ?, ?, NOW())', 
+                [student_id, room_no, hall_no]
+            );
+
+            // Commit transaction
+            await connection.commit();
+            connection.release();
+
+            // Send Email
+            const mailOptions = {
+                from: 'hallhub00@gmail.com',
+                to: student.email,
+                subject: 'Room Allocation - Resident Status Update',
+                text: `Hello ${student.name},\n\nCongratulations! You have been successfully added to the resident list and allocated to:\n\nHall: ${hall_no}\nRoom: ${room_no}\n\nYour allocation is effective immediately. Please contact the administration for any queries.\n\nRegards,\nHallHub Administration`
+            };
+
+            transporter.sendMail(mailOptions, (err, info) => {
+                if (err) {
+                    console.error('Error sending email:', err);
+                } else {
+                    console.log('Email sent:', info.response);
+                }
+            });
+
+            res.json({ 
+                success: true, 
+                message: 'Student successfully added to resident list and room allocated',
+                resident_id: residentResult.insertId,
+                allocation_id: allocationResult.insertId
+            });
+
+        } catch (error) {
+            await connection.rollback();
+            connection.release();
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('Error adding student to resident with allocation:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Database error occurred', 
+            error: error.message 
+        });
+    }
+});
+
 // Get resident students by joining Resident with Student_Info
 app.get('/api/resident-students', async (req, res) => {
   try {
@@ -1851,6 +2012,362 @@ app.get('/api/items', async (req, res) => {
   }
 });
 
+// Get all halls
+app.get('/api/halls', async (req, res) => {
+    const query = 'SELECT Hall_No, Place FROM hall ORDER BY Hall_No ASC';
+
+    try {
+        const [results] = await pool.query(query);
+        res.json({
+            success: true,
+            halls: results,
+            count: results.length
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
+
+// Add new hall
+app.post('/api/halls/add', async (req, res) => {
+    const { hall_no, place } = req.body;
+
+    if (!hall_no || !place) {
+        return res.status(400).json({
+            success: false,
+            message: 'Hall number and place are required'
+        });
+    }
+
+    const query = 'INSERT INTO hall (Hall_No, Place) VALUES (?, ?)';
+
+    try {
+        await pool.query(query, [hall_no, place]);
+        res.json({ success: true, message: 'Hall added successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
+
+// Update hall
+app.put('/api/halls/update', async (req, res) => {
+    const { hall_no, place } = req.body;
+
+    if (!hall_no || !place) {
+        return res.status(400).json({
+            success: false,
+            message: 'Hall number and place are required'
+        });
+    }
+
+    const query = 'UPDATE hall SET Place = ? WHERE Hall_No = ?';
+
+    try {
+        const [results] = await pool.query(query, [place, hall_no]);
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Hall not found' });
+        }
+
+        res.json({ success: true, message: 'Hall updated successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
+
+// Delete hall
+app.delete('/api/halls/delete', async (req, res) => {
+    const { hall_no } = req.body;
+
+    if (!hall_no) {
+        return res.status(400).json({ success: false, message: 'Hall number is required' });
+    }
+
+    const query = 'DELETE FROM hall WHERE Hall_No = ?';
+
+    try {
+        const [results] = await pool.query(query, [hall_no]);
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Hall not found' });
+        }
+
+        res.json({ success: true, message: 'Hall deleted successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
+
+// Get all rooms with hall information
+app.get('/api/rooms', async (req, res) => {
+    const query = `
+        SELECT r.Room_No, r.Hall_No, h.Place 
+        FROM room r
+        LEFT JOIN hall h ON r.Hall_No = h.Hall_No
+        ORDER BY r.Room_No ASC
+    `;
+
+    try {
+        const [results] = await pool.query(query);
+        res.json({
+            success: true,
+            rooms: results,
+            count: results.length
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
+
+// Add new room
+app.post('/api/rooms/add', async (req, res) => {
+    const { room_no, hall_no } = req.body;
+
+    if (!room_no || !hall_no) {
+        return res.status(400).json({
+            success: false,
+            message: 'Room number and hall number are required'
+        });
+    }
+
+    const query = 'INSERT INTO room (Room_No, Hall_No) VALUES (?, ?)';
+
+    try {
+        await pool.query(query, [room_no, hall_no]);
+        res.json({ success: true, message: 'Room added successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
+
+// Update room
+app.put('/api/rooms/update', async (req, res) => {
+    const { room_no, hall_no } = req.body;
+
+    if (!room_no || !hall_no) {
+        return res.status(400).json({
+            success: false,
+            message: 'Room number and hall number are required'
+        });
+    }
+
+    const query = 'UPDATE room SET Hall_No = ? WHERE Room_No = ?';
+
+    try {
+        const [results] = await pool.query(query, [hall_no, room_no]);
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Room not found' });
+        }
+
+        res.json({ success: true, message: 'Room updated successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
+
+// Delete room
+app.delete('/api/rooms/delete', async (req, res) => {
+    const { room_no } = req.body;
+
+    if (!room_no) {
+        return res.status(400).json({ success: false, message: 'Room number is required' });
+    }
+
+    const query = 'DELETE FROM room WHERE Room_No = ?';
+
+    try {
+        const [results] = await pool.query(query, [room_no]);
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Room not found' });
+        }
+
+        res.json({ success: true, message: 'Room deleted successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
+
+// 1️⃣ Get all room allocations with student and room details
+app.get('/api/room-allocations', async (req, res) => {
+    const query = `
+        SELECT 
+            ra.Allocation_ID,
+            ra.Student_ID,
+            ra.Room_No,
+            ra.Hall_No,
+            ra.Alloc_Start_Time,
+            ra.Alloc_End_Time,
+            si.Name,
+            si.Email,
+            si.Department,
+            si.Level,
+            si.Phone_No,
+            h.Place
+        FROM room_allocation ra
+        JOIN Student_Info si ON ra.Student_ID = si.Student_Id
+        LEFT JOIN hall h ON ra.Hall_No = h.Hall_No
+        WHERE si.resident_status = 1
+        ORDER BY ra.Alloc_Start_Time DESC
+    `;
+
+    try {
+        const [results] = await pool.query(query);
+        res.json({
+            success: true,
+            allocations: results,
+            count: results.length
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
+
+// 2️⃣ Update room allocation (terminate current + insert new)
+app.put('/api/room-allocations/update', async (req, res) => {
+    const { allocation_id, student_id, hall_no, room_no } = req.body;
+
+    if (!allocation_id || !student_id || !hall_no || !room_no) {
+        return res.status(400).json({
+            success: false,
+            message: 'All fields are required'
+        });
+    }
+
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        // Terminate the current allocation
+        const terminateQuery = `
+            UPDATE room_allocation 
+            SET Alloc_End_Time = NOW() 
+            WHERE Allocation_ID = ?
+        `;
+        await connection.query(terminateQuery, [allocation_id]);
+
+        // Create a new allocation
+        const insertQuery = `
+            INSERT INTO room_allocation (Student_ID, Room_No, Hall_No, Alloc_Start_Time)
+            VALUES (?, ?, ?, NOW())
+        `;
+        const [insertResult] = await connection.query(insertQuery, [student_id, room_no, hall_no]);
+
+        await connection.commit();
+
+        res.json({
+            success: true,
+            message: 'Room allocation updated successfully',
+            new_allocation_id: insertResult.insertId
+        });
+    } catch (error) {
+        if (connection) await connection.rollback();
+        console.error('Transaction error:', error);
+        res.status(500).json({ success: false, message: 'Failed to update room allocation' });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// 3️⃣ Terminate a room allocation
+app.put('/api/room-allocations/terminate', async (req, res) => {
+    const { allocation_id } = req.body;
+
+    if (!allocation_id) {
+        return res.status(400).json({ success: false, message: 'Allocation ID is required' });
+    }
+
+    const query = `
+        UPDATE room_allocation
+        SET Alloc_End_Time = NOW()
+        WHERE Allocation_ID = ? AND Alloc_End_Time IS NULL
+    `;
+
+    try {
+        const [result] = await pool.query(query, [allocation_id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Active allocation not found'
+            });
+        }
+
+        res.json({ success: true, message: 'Allocation terminated successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
+
+// 4️⃣ Get available rooms (not currently allocated)
+// app.get('/api/available-rooms', async (req, res) => {
+//     const query = `
+//         SELECT r.Room_No, r.Hall_No, h.Place
+//         FROM room r
+//         LEFT JOIN hall h ON r.Hall_No = h.Hall_No
+//         WHERE r.Room_No NOT IN (
+//             SELECT Room_No
+//             FROM room_allocation
+//             WHERE Alloc_End_Time IS NULL
+//         )
+//         ORDER BY r.Hall_No, r.Room_No
+//     `;
+
+//     try {
+//         const [results] = await pool.query(query);
+//         res.json({ success: true, rooms: results, count: results.length });
+//     } catch (error) {
+//         console.error('Database error:', error);
+//         res.status(500).json({ success: false, message: 'Database error occurred' });
+//     }
+// });
+
+
+
+app.get('/api/available-rooms', async (req, res) => {
+    const query = `
+        SELECT 
+            r.Room_No,
+            r.Hall_No,
+            h.Place,
+            COALESCE(alloc.active_count, 0) AS current_allocation
+        FROM room r
+        JOIN hall h ON r.Hall_No = h.Hall_No
+        LEFT JOIN (
+            SELECT 
+                Room_No,
+                Hall_No,
+                COUNT(*) AS active_count
+            FROM room_allocation
+            WHERE Alloc_End_Time IS NULL
+            GROUP BY Room_No, Hall_No
+        ) AS alloc
+          ON r.Room_No = alloc.Room_No
+         AND r.Hall_No = alloc.Hall_No
+        WHERE COALESCE(alloc.active_count,0) < 4
+        ORDER BY r.Hall_No, r.Room_No;
+    `;
+
+    try {
+        const [results] = await pool.query(query);
+        res.json({ success: true, rooms: results, count: results.length });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ success: false, message: 'Database error occurred' });
+    }
+});
 
 // Clean API route for dashboard statistics
 app.get('/api/dashboard-stats', async (req, res) => {
