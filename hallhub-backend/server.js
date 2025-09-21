@@ -1923,6 +1923,315 @@ app.get('/api/dashboard-stats', async (req, res) => {
   }
 });
 
+
+//api for analytics dashboard
+
+
+
+// Group complaints by status, department, or date
+app.get('/api/analytics/complaints/group-by/:field', async (req, res) => {
+  try {
+    const { field } = req.params;
+    let query;
+    
+    switch (field) {
+      case 'status':
+        query = `
+          SELECT 
+            CASE WHEN status = 0 THEN 'Pending' ELSE 'Resolved' END as group_name,
+            COUNT(*) as count,
+            status as group_value
+          FROM complaint
+          GROUP BY status
+          ORDER BY status
+        `;
+        break;
+      case 'department':
+        query = `
+          SELECT 
+            si.department as group_name,
+            COUNT(c.complaint_id) as count,
+            si.department as group_value
+          FROM complaint c
+          JOIN Student_Info si ON c.student_id = si.student_id
+          GROUP BY si.department
+          ORDER BY count DESC
+        `;
+        break;
+      case 'month':
+        query = `
+          SELECT 
+            DATE_FORMAT(time, '%Y-%m') as group_name,
+            COUNT(*) as count,
+            DATE_FORMAT(time, '%Y-%m') as group_value
+          FROM complaint
+          GROUP BY DATE_FORMAT(time, '%Y-%m')
+          ORDER BY group_name DESC
+          LIMIT 12
+        `;
+        break;
+      default:
+        return res.status(400).json({ success: false, message: 'Invalid group field' });
+    }
+    
+    const [results] = await pool.query(query);
+    res.json({ success: true, data: results, field });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ success: false, message: 'Database error occurred' });
+  }
+});
+
+// Group events by type, status, or month
+app.get('/api/analytics/events/group-by/:field', async (req, res) => {
+  try {
+    const { field } = req.params;
+    let query;
+    
+    switch (field) {
+      case 'type':
+        query = `
+          SELECT 
+            type as group_name,
+            COUNT(*) as count,
+            type as group_value
+          FROM events
+          GROUP BY type
+          ORDER BY count DESC
+        `;
+        break;
+      case 'status':
+        query = `
+          SELECT 
+            CASE WHEN status = 0 THEN 'Pending' 
+                 WHEN status = 1 THEN 'Approved'
+                 ELSE 'Unknown' END as group_name,
+            COUNT(*) as count,
+            status as group_value
+          FROM events
+          GROUP BY status
+          ORDER BY status
+        `;
+        break;
+      case 'month':
+        query = `
+          SELECT 
+            DATE_FORMAT(date, '%Y-%m') as group_name,
+            COUNT(*) as count,
+            DATE_FORMAT(date, '%Y-%m') as group_value
+          FROM events
+          GROUP BY DATE_FORMAT(date, '%Y-%m')
+          ORDER BY group_name DESC
+          LIMIT 12
+        `;
+        break;
+      default:
+        return res.status(400).json({ success: false, message: 'Invalid group field' });
+    }
+    
+    const [results] = await pool.query(query);
+    res.json({ success: true, data: results, field });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ success: false, message: 'Database error occurred' });
+  }
+});
+
+// Group lost items by item type or month
+app.get('/api/analytics/lost-items/group-by/:field', async (req, res) => {
+  try {
+    const { field } = req.params;
+    let query;
+    
+    switch (field) {
+      case 'item_type':
+        query = `
+          SELECT 
+            i.item_type as group_name,
+            COUNT(li.lost_id) as count,
+            i.item_type as group_value
+          FROM lost_item li
+          JOIN item i ON li.item_id = i.item_id
+          GROUP BY i.item_type
+          ORDER BY count DESC
+        `;
+        break;
+      case 'found_status':
+        query = `
+          SELECT 
+            CASE WHEN fi.found_id IS NOT NULL THEN 'Found' ELSE 'Not Found' END as group_name,
+            COUNT(li.lost_id) as count,
+            CASE WHEN fi.found_id IS NOT NULL THEN 1 ELSE 0 END as group_value
+          FROM lost_item li
+          LEFT JOIN found_item fi ON li.lost_id = fi.lost_id
+          GROUP BY CASE WHEN fi.found_id IS NOT NULL THEN 1 ELSE 0 END
+          ORDER BY group_value DESC
+        `;
+        break;
+      case 'month':
+        query = `
+          SELECT 
+            DATE_FORMAT(lost_time, '%Y-%m') as group_name,
+            COUNT(*) as count,
+            DATE_FORMAT(lost_time, '%Y-%m') as group_value
+          FROM lost_item
+          GROUP BY DATE_FORMAT(lost_time, '%Y-%m')
+          ORDER BY group_name DESC
+          LIMIT 12
+        `;
+        break;
+      default:
+        return res.status(400).json({ success: false, message: 'Invalid group field' });
+    }
+    
+    const [results] = await pool.query(query);
+    res.json({ success: true, data: results, field });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ success: false, message: 'Database error occurred' });
+  }
+});
+
+// Group students by department, level, or residence status
+app.get('/api/analytics/students/group-by/:field', async (req, res) => {
+  try {
+    const { field } = req.params;
+    let query;
+    
+    switch (field) {
+      case 'department':
+        query = `
+          SELECT 
+            department as group_name,
+            COUNT(*) as count,
+            department as group_value
+          FROM Student_Info
+          GROUP BY department
+          ORDER BY count DESC
+        `;
+        break;
+      case 'level':
+        query = `
+          SELECT 
+            CONCAT('Level ', level) as group_name,
+            COUNT(*) as count,
+            level as group_value
+          FROM Student_Info
+          GROUP BY level
+          ORDER BY level
+        `;
+        break;
+      case 'residence_status':
+        query = `
+          SELECT 
+            CASE WHEN r.student_id IS NOT NULL THEN 'Resident' ELSE 'Non-Resident' END as group_name,
+            COUNT(*) as count,
+            CASE WHEN r.student_id IS NOT NULL THEN 1 ELSE 0 END as group_value
+          FROM Student_Info si
+          LEFT JOIN Resident r ON si.student_id = r.student_id
+          GROUP BY CASE WHEN r.student_id IS NOT NULL THEN 1 ELSE 0 END
+          ORDER BY group_value DESC
+        `;
+        break;
+      default:
+        return res.status(400).json({ success: false, message: 'Invalid group field' });
+    }
+    
+    const [results] = await pool.query(query);
+    res.json({ success: true, data: results, field });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ success: false, message: 'Database error occurred' });
+  }
+});
+
+// Group visitor entries by status or relation
+app.get('/api/analytics/visitors/group-by/:field', async (req, res) => {
+  try {
+    const { field } = req.params;
+    let query;
+    
+    switch (field) {
+      case 'status':
+        query = `
+          SELECT 
+            CASE WHEN status = 0 THEN 'Pending' ELSE 'Approved' END as group_name,
+            COUNT(*) as count,
+            status as group_value
+          FROM visitor_entry
+          GROUP BY status
+          ORDER BY status
+        `;
+        break;
+      case 'relation':
+        query = `
+          SELECT 
+            relation as group_name,
+            COUNT(*) as count,
+            relation as group_value
+          FROM visitor_entry
+          GROUP BY relation
+          ORDER BY count DESC
+        `;
+        break;
+      default:
+        return res.status(400).json({ success: false, message: 'Invalid group field' });
+    }
+    
+    const [results] = await pool.query(query);
+    res.json({ success: true, data: results, field });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ success: false, message: 'Database error occurred' });
+  }
+});
+
+// Multi-table analytics endpoint
+app.get('/api/analytics/overview', async (req, res) => {
+  try {
+    const queries = {
+      complaints_by_status: `
+        SELECT 'Complaints by Status' as category, 
+               CASE WHEN status = 0 THEN 'Pending' ELSE 'Resolved' END as label,
+               COUNT(*) as value 
+        FROM complaint GROUP BY status
+      `,
+      events_by_type: `
+        SELECT 'Events by Type' as category, 
+               type as label,
+               COUNT(*) as value 
+        FROM events GROUP BY type
+      `,
+      items_by_type: `
+        SELECT 'Lost Items by Type' as category, 
+               i.item_type as label,
+               COUNT(li.lost_id) as value 
+        FROM lost_item li 
+        JOIN item i ON li.item_id = i.item_id 
+        GROUP BY i.item_type
+      `,
+      students_by_department: `
+        SELECT 'Students by Department' as category, 
+               department as label,
+               COUNT(*) as value 
+        FROM Student_Info GROUP BY department
+      `
+    };
+    
+    const results = {};
+    
+    for (const [key, query] of Object.entries(queries)) {
+      const [data] = await pool.query(query);
+      results[key] = data;
+    }
+    
+    res.json({ success: true, analytics: results });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ success: false, message: 'Database error occurred' });
+  }
+});
+
 // Serve HTML pages
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -1986,4 +2295,8 @@ app.get('/visitor-status', (req, res) => {
 
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
+});
+
+app.get('/analytics', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'analytics.html'));
 });

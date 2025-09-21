@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Analytics Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #667eea, #764ba2);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 30px;
+      margin: 30px 0;
+    }
+
+    .analytics-card {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .analytics-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+      flex-grow: 1;
+    }
+
+    .group-by-select {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: white;
+      font-size: 14px;
+    }
+
+    .chart-container {
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .bar-label {
+      font-weight: 500;
+      min-width: 120px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .bar-visual {
+      flex-grow: 1;
+      height: 24px;
+      background: #e9ecef;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border-radius: 12px;
+      transition: width 0.8s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+    }
+
+    .bar-value {
+      font-weight: bold;
+      min-width: 40px;
+      text-align: right;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 150px;
+      color: #667eea;
+    }
+
+    .error {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 150px;
+      color: #dc3545;
+      text-align: center;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .refresh-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+      margin-left: 10px;
+    }
+
+    .refresh-btn:hover {
+      background: #5a67d8;
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .back-link a {
+      text-decoration: none;
+      color: #667eea;
+      font-weight: bold;
+      padding: 12px 24px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .back-link a:hover {
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .no-data {
+      text-align: center;
+      color: #6c757d;
+      font-style: italic;
+      padding: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="header">
+      <h1>Analytics Dashboard</h1>
+      <p>Comprehensive data analysis using GROUP BY operations</p>
+    </div>
+
+    <div class="summary-stats" id="summaryStats">
+      <div class="stat-card">
+        <span class="stat-number" id="totalComplaints">0</span>
+        <span class="stat-label">Total Complaints</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" id="totalEvents">0</span>
+        <span class="stat-label">Total Events</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" id="totalLostItems">0</span>
+        <span class="stat-label">Lost Items</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" id="totalStudents">0</span>
+        <span class="stat-label">Total Students</span>
+      </div>
+    </div>
+
+    <div class="analytics-grid">
+      <!-- Complaints Analytics -->
+      <div class="analytics-card">
+        <div class="card-header">
+          <h3 class="card-title">Complaints Analysis</h3>
+          <select class="group-by-select" id="complaintsGroupBy" onchange="loadComplaintsData()">
+            <option value="status">By Status</option>
+            <option value="department">By Department</option>
+            <option value="month">By Month</option>
+          </select>
+          <button class="refresh-btn" onclick="loadComplaintsData()">Refresh</button>
+        </div>
+        <div class="chart-container" id="complaintsChart">
+          <div class="loading">Loading complaints data...</div>
+        </div>
+      </div>
+
+      <!-- Events Analytics -->
+      <div class="analytics-card">
+        <div class="card-header">
+          <h3 class="card-title">Events Analysis</h3>
+          <select class="group-by-select" id="eventsGroupBy" onchange="loadEventsData()">
+            <option value="type">By Type</option>
+            <option value="status">By Status</option>
+            <option value="month">By Month</option>
+          </select>
+          <button class="refresh-btn" onclick="loadEventsData()">Refresh</button>
+        </div>
+        <div class="chart-container" id="eventsChart">
+          <div class="loading">Loading events data...</div>
+        </div>
+      </div>
+
+      <!-- Lost Items Analytics -->
+      <div class="analytics-card">
+        <div class="card-header">
+          <h3 class="card-title">Lost Items Analysis</h3>
+          <select class="group-by-select" id="lostItemsGroupBy" onchange="loadLostItemsData()">
+            <option value="item_type">By Item Type</option>
+            <option value="found_status">By Found Status</option>
+            <option value="month">By Month</option>
+          </select>
+          <button class="refresh-btn" onclick="loadLostItemsData()">Refresh</button>
+        </div>
+        <div class="chart-container" id="lostItemsChart">
+          <div class="loading">Loading lost items data...</div>
+        </div>
+      </div>
+
+      <!-- Students Analytics -->
+      <div class="analytics-card">
+        <div class="card-header">
+          <h3 class="card-title">Students Analysis</h3>
+          <select class="group-by-select" id="studentsGroupBy" onchange="loadStudentsData()">
+            <option value="department">By Department</option>
+            <option value="level">By Level</option>
+            <option value="residence_status">By Residence Status</option>
+          </select>
+          <button class="refresh-btn" onclick="loadStudentsData()">Refresh</button>
+        </div>
+        <div class="chart-container" id="studentsChart">
+          <div class="loading">Loading students data...</div>
+        </div>
+      </div>
+
+      <!-- Visitors Analytics -->
+      <div class="analytics-card">
+        <div class="card-header">
+          <h3 class="card-title">Visitors Analysis</h3>
+          <select class="group-by-select" id="visitorsGroupBy" onchange="loadVisitorsData()">
+            <option value="status">By Status</option>
+            <option value="relation">By Relation</option>
+          </select>
+          <button class="refresh-btn" onclick="loadVisitorsData()">Refresh</button>
+        </div>
+        <div class="chart-container" id="visitorsChart">
+          <div class="loading">Loading visitors data...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="back-link">
+    <a href="dashb.html">← Back to Dashboard</a>
+  </div>
+
+  <script>
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+      loadOverviewStats();
+      loadComplaintsData();
+      loadEventsData();
+      loadLostItemsData();
+      loadStudentsData();
+      loadVisitorsData();
+    });
+
+    // Load overview statistics
+    async function loadOverviewStats() {
+      try {
+        const response = await fetch('http://localhost:3000/api/analytics/overview');
+        const data = await response.json();
+        
+        if (data.success) {
+          updateSummaryStats(data.analytics);
+        }
+      } catch (error) {
+        console.error('Error loading overview stats:', error);
+      }
+    }
+
+    function updateSummaryStats(analytics) {
+      let totalComplaints = 0, totalEvents = 0, totalLostItems = 0, totalStudents = 0;
+      
+      if (analytics.complaints_by_status) {
+        totalComplaints = analytics.complaints_by_status.reduce((sum, item) => sum + item.value, 0);
+      }
+      
+      if (analytics.events_by_type) {
+        totalEvents = analytics.events_by_type.reduce((sum, item) => sum + item.value, 0);
+      }
+      
+      if (analytics.items_by_type) {
+        totalLostItems = analytics.items_by_type.reduce((sum, item) => sum + item.value, 0);
+      }
+      
+      if (analytics.students_by_department) {
+        totalStudents = analytics.students_by_department.reduce((sum, item) => sum + item.value, 0);
+      }
+      
+      document.getElementById('totalComplaints').textContent = totalComplaints;
+      document.getElementById('totalEvents').textContent = totalEvents;
+      document.getElementById('totalLostItems').textContent = totalLostItems;
+      document.getElementById('totalStudents').textContent = totalStudents;
+    }
+
+    // Generic function to create bar chart
+    function createBarChart(containerId, data, title) {
+      const container = document.getElementById(containerId);
+      
+      if (!data || data.length === 0) {
+        container.innerHTML = `<div class="no-data">No data available for ${title}</div>`;
+        return;
+      }
+      
+      const maxValue = Math.max(...data.map(item => item.count));
+      
+      const chartHtml = data.map(item => {
+        const percentage = maxValue > 0 ? (item.count / maxValue) * 100 : 0;
+        return `
+          <div class="bar-item">
+            <div class="bar-label">${item.group_name}</div>
+            <div class="bar-visual">
+              <div class="bar-fill" style="width: ${percentage}%">
+                ${percentage > 30 ? item.count : ''}
+              </div>
+            </div>
+            <div class="bar-value">${item.count}</div>
+          </div>
+        `;
+      }).join('');
+      
+      container.innerHTML = `<div class="bar-chart">${chartHtml}</div>`;
+    }
+
+    // Load complaints data
+    async function loadComplaintsData() {
+      const groupBy = document.getElementById('complaintsGroupBy').value;
+      const container = document.getElementById('complaintsChart');
+      container.innerHTML = '<div class="loading">Loading complaints data...</div>';
+      
+      try {
+        const response = await fetch(`http://localhost:3000/api/analytics/complaints/group-by/${groupBy}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          createBarChart('complaintsChart', data.data, 'Complaints');
+        } else {
+          container.innerHTML = '<div class="error">Failed to load complaints data</div>';
+        }
+      } catch (error) {
+        console.error('Error loading complaints data:', error);
+        container.innerHTML = '<div class="error">Error loading complaints data</div>';
+      }
+    }
+
+    // Load events data
+    async function loadEventsData() {
+      const groupBy = document.getElementById('eventsGroupBy').value;
+      const container = document.getElementById('eventsChart');
+      container.innerHTML = '<div class="loading">Loading events data...</div>';
+      
+      try {
+        const response = await fetch(`http://localhost:3000/api/analytics/events/group-by/${groupBy}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          createBarChart('eventsChart', data.data, 'Events');
+        } else {
+          container.innerHTML = '<div class="error">Failed to load events data</div>';
+        }
+      } catch (error) {
+        console.error('Error loading events data:', error);
+        container.innerHTML = '<div class="error">Error loading events data</div>';
+      }
+    }
+
+    // Load lost items data
+    async function loadLostItemsData() {
+      const groupBy = document.getElementById('lostItemsGroupBy').value;
+      const container = document.getElementById('lostItemsChart');
+      container.innerHTML = '<div class="loading">Loading lost items data...</div>';
+      
+      try {
+        const response = await fetch(`http://localhost:3000/api/analytics/lost-items/group-by/${groupBy}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          createBarChart('lostItemsChart', data.data, 'Lost Items');
+        } else {
+          container.innerHTML = '<div class="error">Failed to load lost items data</div>';
+        }
+      } catch (error) {
+        console.error('Error loading lost items data:', error);
+        container.innerHTML = '<div class="error">Error loading lost items data</div>';
+      }
+    }
+
+    // Load students data
+    async function loadStudentsData() {
+      const groupBy = document.getElementById('studentsGroupBy').value;
+      const container = document.getElementById('studentsChart');
+      container.innerHTML = '<div class="loading">Loading students data...</div>';
+      
+      try {
+        const response = await fetch(`http://localhost:3000/api/analytics/students/group-by/${groupBy}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          createBarChart('studentsChart', data.data, 'Students');
+        } else {
+          container.innerHTML = '<div class="error">Failed to load students data</div>';
+        }
+      } catch (error) {
+        console.error('Error loading students data:', error);
+        container.innerHTML = '<div class="error">Error loading students data</div>';
+      }
+    }
+
+    // Load visitors data
+    async function loadVisitorsData() {
+      const groupBy = document.getElementById('visitorsGroupBy').value;
+      const container = document.getElementById('visitorsChart');
+      container.innerHTML = '<div class="loading">Loading visitors data...</div>';
+      
+      try {
+        const response = await fetch(`http://localhost:3000/api/analytics/visitors/group-by/${groupBy}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          createBarChart('visitorsChart', data.data, 'Visitors');
+        } else {
+          container.innerHTML = '<div class="error">Failed to load visitors data</div>';
+        }
+      } catch (error) {
+        console.error('Error loading visitors data:', error);
+        container.innerHTML = '<div class="error">Error loading visitors data</div>';
+      }
+    }
+  </script>
+</body>
+</html>
