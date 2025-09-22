@@ -311,7 +311,7 @@
 
             tbody.innerHTML = rooms.map(room => {
                 const hall = allHalls.find(h => h.Hall_No == room.Hall_No);
-                const hallPlace = hall ? hall.Place : 'Unknown';
+                const hallPlace = room.Place ?? 'Unknown';
                 
                 return `
                     <tr class="hover:bg-gray-50 transition-colors">
@@ -327,7 +327,7 @@
                             <span class="text-sm text-gray-900">Hall ${room.Hall_No}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm text-gray-500">${hallPlace}</span>
+                            <span class="text-sm text-gray-500">${room.Place}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button onclick="editRoom(${room.Room_No})" class="text-orange-600 hover:text-orange-900 mr-4">Edit</button>
