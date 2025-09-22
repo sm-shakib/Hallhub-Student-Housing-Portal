@@ -1,0 +1,388 @@
+CREATE TABLE "Student_Info" (
+  "Serial_No" int NOT NULL AUTO_INCREMENT,
+  "Student_Id" bigint NOT NULL,
+  "Name" varchar(100) NOT NULL,
+  "Email" varchar(100) NOT NULL,
+  "Department" varchar(100) NOT NULL,
+  "Level" varchar(50) NOT NULL,
+  "Address" text NOT NULL,
+  "Phone_No" varchar(20) NOT NULL,
+  "Relative_Name" varchar(100) NOT NULL,
+  "Relative_Relation" varchar(50) NOT NULL,
+  "Relative_Address" text NOT NULL,
+  "Relative_Phone_no" varchar(20) NOT NULL,
+  "Password_Hash" varchar(255) NOT NULL,
+  "Created_At" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  "resident_status" tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY ("Student_Id"),
+  UNIQUE KEY "Serial_No_UNIQUE" ("Serial_No")
+)
+
+CREATE TABLE "Resident" (
+  "Student_ID" bigint NOT NULL,
+  "Resident_ID" bigint NOT NULL AUTO_INCREMENT,
+  "Date" datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("Student_ID"),
+  UNIQUE KEY "Resident_ID_UNIQUE" ("Resident_ID"),
+  CONSTRAINT "std_id_fk" FOREIGN KEY ("Student_ID") REFERENCES "Student_Info" ("Student_Id") ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+CREATE TABLE "complaint" (
+  "Student_ID" bigint NOT NULL,
+  "Complaint_ID" bigint NOT NULL AUTO_INCREMENT,
+  "Title" text,
+  "Description" varchar(500) NOT NULL,
+  "Time" datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "Status" tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY ("Complaint_ID"),
+  KEY "com_stdid_fk" ("Student_ID"),
+  CONSTRAINT "com_stdid_fk" FOREIGN KEY ("Student_ID") REFERENCES "Resident" ("Student_ID") ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+CREATE TABLE "complaint_resolution" (
+  "Resolution_ID" bigint NOT NULL AUTO_INCREMENT,
+  "Complaint_ID" bigint NOT NULL,
+  "Receive_Time" datetime NOT NULL,
+  PRIMARY KEY ("Resolution_ID"),
+  KEY "cre_comid_fk" ("Complaint_ID"),
+  CONSTRAINT "cre_comid_fk" FOREIGN KEY ("Complaint_ID") REFERENCES "complaint" ("Complaint_ID") ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+CREATE TABLE "events" (
+  "Event_ID" bigint NOT NULL AUTO_INCREMENT,
+  "Title" text,
+  "Type" varchar(25) NOT NULL,
+  "Date" datetime NOT NULL,
+  "Description" varchar(500) NOT NULL,
+  "Student_ID" bigint NOT NULL,
+  "Status" tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY ("Event_ID"),
+  KEY "eve_stdid_fk" ("Student_ID"),
+  CONSTRAINT "eve_stdid_fk" FOREIGN KEY ("Student_ID") REFERENCES "Resident" ("Student_ID") ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+CREATE TABLE "item" (
+  "Item_ID" bigint NOT NULL AUTO_INCREMENT,
+  "Item_Type" varchar(25) NOT NULL,
+  PRIMARY KEY ("Item_ID")
+)
+
+CREATE TABLE "lost_item" (
+  "Student_ID" bigint NOT NULL,
+  "Item_ID" bigint NOT NULL,
+  "Lost_ID" bigint NOT NULL AUTO_INCREMENT,
+  "Description" varchar(500) NOT NULL,
+  "Lost_Time" datetime NOT NULL,
+  PRIMARY KEY ("Lost_ID"),
+  KEY "los_stdid_fk" ("Student_ID"),
+  KEY "los_itmid_fk" ("Item_ID"),
+  CONSTRAINT "los_itmid_fk" FOREIGN KEY ("Item_ID") REFERENCES "item" ("Item_ID") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "los_stdid_fk" FOREIGN KEY ("Student_ID") REFERENCES "Resident" ("Student_ID") ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+CREATE TABLE "found_item" (
+  "Found_ID" bigint NOT NULL AUTO_INCREMENT,
+  "Lost_ID" bigint NOT NULL,
+  "Found_Time" datetime NOT NULL,
+  PRIMARY KEY ("Found_ID"),
+  KEY "fou_losid_fk" ("Lost_ID"),
+  CONSTRAINT "fou_losid_fk" FOREIGN KEY ("Lost_ID") REFERENCES "lost_item" ("Lost_ID") ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+CREATE TABLE "visitor_entry" (
+  "Student_ID" bigint NOT NULL,
+  "Visitor_ID" bigint NOT NULL AUTO_INCREMENT,
+  "Name" varchar(40) NOT NULL,
+  "Phone_No" varchar(25) NOT NULL,
+  "Relation" varchar(25) NOT NULL,
+  "Status" tinyint NOT NULL DEFAULT '0',
+  "Date" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("Visitor_ID"),
+  KEY "vis_stdid_fk" ("Student_ID"),
+  CONSTRAINT "vis_stdid_fk" FOREIGN KEY ("Student_ID") REFERENCES "Resident" ("Student_ID") ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+CREATE TABLE "hall" (
+  "Hall_No" tinyint NOT NULL,
+  "Place" varchar(25) NOT NULL,
+  PRIMARY KEY ("Hall_No")
+)
+
+CREATE TABLE "room" (
+  "Room_No" smallint NOT NULL,
+  "Hall_No" tinyint NOT NULL,
+  PRIMARY KEY ("Room_No"),
+  KEY "roo_halno_fk" ("Hall_No"),
+  CONSTRAINT "roo_halno_fk" FOREIGN KEY ("Hall_No") REFERENCES "hall" ("Hall_No") ON DELETE CASCADE ON UPDATE CASCADE
+)
+
+CREATE TABLE "room_allocation" (
+  "Allocation_ID" bigint NOT NULL AUTO_INCREMENT,
+  "Student_ID" bigint NOT NULL,
+  "Room_No" smallint NOT NULL,
+  "Hall_No" tinyint NOT NULL,
+  "Alloc_Start_Time" datetime NOT NULL,
+  "Alloc_End_Time" datetime DEFAULT NULL,
+  PRIMARY KEY ("Allocation_ID"),
+  KEY "ral_stdid_fk" ("Student_ID"),
+  KEY "ral_romno_fk" ("Room_No"),
+  KEY "ral_halno_fk" ("Hall_No"),
+  CONSTRAINT "ral_halno_fk" FOREIGN KEY ("Hall_No") REFERENCES "hall" ("Hall_No") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "ral_romno_fk" FOREIGN KEY ("Room_No") REFERENCES "room" ("Room_No") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "ral_stdid_fk" FOREIGN KEY ("Student_ID") REFERENCES "Resident" ("Student_ID") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "ral_alctm_ck" CHECK (((`Alloc_End_Time` is null) or (`Alloc_Start_Time` < `Alloc_End_Time`)))
+)
+
+
+
+
+CREATE OR REPLACE VIEW ComplaintsView AS
+SELECT 
+    c.complaint_id,
+    c.student_id,
+    s.name AS student_name,
+    c.title,
+    c.description,
+    c.status,
+    c.time
+FROM complaint c
+JOIN Student_Info s ON c.student_id = s.student_id;
+
+SELECT * FROM defaultdb.ComplaintsView;
+
+CREATE VIEW lost_items_summary AS
+SELECT i.item_type, COUNT(*) AS total_lost
+FROM lost_item li
+JOIN item i ON li.Item_ID = i.Item_ID
+GROUP BY i.item_type
+ORDER BY total_lost DESC;
+
+SELECT * FROM defaultdb.lost_items_summary;
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE GetLostItems()
+BEGIN
+    SELECT 
+        li.Lost_ID,
+        li.Student_ID,
+        li.Item_ID,
+        li.Description,
+        li.Lost_Time,
+        i.item_type
+    FROM lost_item li
+    LEFT JOIN item i ON li.Item_ID = i.Item_ID
+    WHERE li.Lost_ID NOT IN (SELECT Lost_ID FROM found_item)
+    ORDER BY li.Lost_Time ASC;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE GetFoundItems()
+BEGIN
+    SELECT 
+        fi.Found_ID,
+        fi.Lost_ID,
+        li.Student_ID,
+        fi.Found_Time,
+        li.Description,
+        i.item_type
+    FROM found_item fi
+    INNER JOIN lost_item li ON fi.Lost_ID = li.Lost_ID
+    LEFT JOIN item i ON li.Item_ID = i.Item_ID
+    ORDER BY fi.Found_Time ASC;
+END$$
+
+DELIMITER ;
+
+
+
+CREATE DEFINER="avnadmin"@"%" PROCEDURE "GetStudentAllocations"(IN p_student_id bigint)
+BEGIN
+    DECLARE student_exists INT;
+    
+    IF p_student_id IS NOT NULL THEN
+        SELECT COUNT(*) INTO student_exists 
+        FROM room_allocation 
+        WHERE Student_ID = p_student_id;
+        
+        IF student_exists = 0 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'No allocation found for your Student ID';
+        END IF;
+    END IF;
+
+	SELECT 
+        ra.Hall_No AS Hall_No,
+        ha.Place AS Hall_Place,
+        ra.Room_No AS Room_No,
+        ra.Alloc_Start_Time AS Alloc_Start_Time,
+        ra.Alloc_End_Time AS Alloc_End_Time
+    FROM room_allocation ra
+    LEFT JOIN hall ha ON ra.Hall_No = ha.Hall_No
+    WHERE (p_student_id IS NULL OR ra.Student_ID = p_student_id)
+    ORDER BY ra.Alloc_Start_Time DESC;
+
+END
+
+
+
+
+DELIMITER $$
+
+CREATE TRIGGER after_resident_insert
+AFTER INSERT ON Resident
+FOR EACH ROW
+BEGIN
+    UPDATE Student_Info
+    SET resident_status = 1
+    WHERE student_id = NEW.student_id;
+
+    INSERT INTO room_allocation (Student_ID, Room_No, Hall_No, Alloc_Start_Time)
+    VALUES (NEW.student_id, @room_no, @hall_no, NOW());
+END$$
+
+DELIMITER ;
+
+
+
+SELECT e.*, 
+           CASE 
+             WHEN e.Status = 0 THEN 'Pending'
+             WHEN e.Status = 1 THEN 'Approved'
+             ELSE 'Unknown'
+           END as StatusText
+    FROM events e
+    WHERE e.Event_ID IN (
+             SELECT Event_ID 
+             FROM events 
+             WHERE Status = 1
+             UNION
+             SELECT Event_ID
+             FROM events 
+             WHERE Status = 0 AND Student_ID = ?
+           )
+    ORDER BY e.Date ASC
+  `;
+
+
+
+
+-- Admin user (full rights)
+CREATE USER 'admin_user'@'localhost' IDENTIFIED BY 'adminpass';
+GRANT ALL PRIVILEGES ON *.* TO 'admin_user'@'localhost';
+
+-- Student user (only SELECT at first)
+CREATE USER 'student_user'@'localhost' IDENTIFIED BY 'studpass';
+GRANT SELECT ON your_database.Student_Info TO 'student_user'@'localhost';
+
+
+GRANT UPDATE ON your_database.Student_Info TO 'student_user'@'localhost';
+FLUSH PRIVILEGES;
+
+
+REVOKE UPDATE ON your_database.Student_Info FROM 'student_user'@'localhost';
+FLUSH PRIVILEGES;
+
+
+CREATE TABLE events_seq (seq_val BIGINT NOT NULL);
+INSERT INTO events_seq VALUES (0);
+
+CREATE TABLE resident_seq (seq_val BIGINT NOT NULL);
+INSERT INTO resident_seq VALUES (0);
+
+CREATE TABLE complaint_seq (seq_val BIGINT NOT NULL);
+INSERT INTO complaint_seq VALUES (0);
+
+CREATE TABLE complaint_res_seq (seq_val BIGINT NOT NULL);
+INSERT INTO complaint_res_seq VALUES (0);
+
+CREATE TABLE visitor_seq (seq_val BIGINT NOT NULL);
+INSERT INTO visitor_seq VALUES (0);
+
+CREATE TABLE allocation_seq (seq_val BIGINT NOT NULL);
+INSERT INTO allocation_seq VALUES (0);
+
+CREATE TABLE lost_seq (seq_val BIGINT NOT NULL);
+INSERT INTO lost_seq VALUES (0);
+
+CREATE TABLE found_seq (seq_val BIGINT NOT NULL);
+INSERT INTO found_seq VALUES (0);
+
+CREATE TABLE item_seq (seq_val BIGINT NOT NULL);
+INSERT INTO item_seq VALUES (0);
+
+
+--sequence and trigger for complaint_id
+DELIMITER $$
+CREATE TRIGGER trg_complaint_id
+BEFORE INSERT ON complaint
+FOR EACH ROW
+BEGIN
+  UPDATE complaint_seq SET seq_val = seq_val + 1;
+  SET NEW.Complaint_ID = (SELECT seq_val FROM complaint_seq);
+END$$
+DELIMITER ;
+
+
+--sequence and trigger for resolution_id
+DELIMITER $$
+CREATE TRIGGER trg_complaint_res_id
+BEFORE INSERT ON complaint_resolution
+FOR EACH ROW
+BEGIN
+  UPDATE complaint_res_seq SET seq_val = seq_val + 1;
+  SET NEW.Resolution_ID = (SELECT seq_val FROM complaint_res_seq);
+END$$
+DELIMITER ;
+
+
+--sequennce and trigger for visitor_id
+DELIMITER $$
+CREATE TRIGGER trg_visitor_id
+BEFORE INSERT ON visitor_entry
+FOR EACH ROW
+BEGIN
+  UPDATE visitor_seq SET seq_val = seq_val + 1;
+  SET NEW.Visitor_ID = (SELECT seq_val FROM visitor_seq);
+END$$
+DELIMITER ;
+
+
+--sequence and trigger for allocation_id
+DELIMITER $$
+CREATE TRIGGER trg_allocation_id
+BEFORE INSERT ON room_allocation
+FOR EACH ROW
+BEGIN
+  UPDATE allocation_seq SET seq_val = seq_val + 1;
+  SET NEW.Allocation_ID = (SELECT seq_val FROM allocation_seq);
+END$$
+DELIMITER ;
+
+--sequence and trigger for lost_id
+DELIMITER $$
+CREATE TRIGGER trg_lost_id
+BEFORE INSERT ON lost_item
+FOR EACH ROW
+BEGIN
+  UPDATE lost_seq SET seq_val = seq_val + 1;
+  SET NEW.Lost_ID = (SELECT seq_val FROM lost_seq);
+END$$
+DELIMITER ;
+
+
+--sequence and trigger for found_id
+DELIMITER $$
+CREATE TRIGGER trg_found_id
+BEFORE INSERT ON found_item
+FOR EACH ROW
+BEGIN
+  UPDATE found_seq SET seq_val = seq_val + 1;
+  SET NEW.Found_ID = (SELECT seq_val FROM found_seq);
+END$$
+DELIMITER ;
