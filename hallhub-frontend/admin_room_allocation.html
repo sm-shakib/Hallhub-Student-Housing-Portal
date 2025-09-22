@@ -56,7 +56,7 @@
                     </div>
                 </div>
                 <nav class="flex items-center space-x-6">
-                    <a href="admin_board.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
+                    <a href="admin_dashboard.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
                         Back to Dashboard
                     </a>
                     <div class="flex items-center space-x-3 text-white">
@@ -560,20 +560,39 @@
         }
 
         function updateStats() {
-            const totalAllocations = allAllocations.length;
-            const activeAllocations = allAllocations.filter(a => !a.Alloc_End_Time).length;
-            
-            document.getElementById('totalAllocations').textContent = totalAllocations;
-            document.getElementById('activeStudents').textContent = activeAllocations;
-            
-            // Calculate room statistics
-            const occupiedRooms = new Set(allAllocations.filter(a => !a.Alloc_End_Time).map(a => a.Room_No)).size;
-            const totalRooms = allRooms.length;
-            const availableRooms = totalRooms - occupiedRooms;
-            
-            document.getElementById('availableRooms').textContent = availableRooms;
-            document.getElementById('occupiedRooms').textContent = occupiedRooms;
+    const CAPACITY = 4;
+
+    const totalAllocations = allAllocations.length;
+    const activeAllocations = allAllocations.filter(a => !a.Alloc_End_Time).length;
+
+    document.getElementById('totalAllocations').textContent = totalAllocations;
+    document.getElementById('activeStudents').textContent = activeAllocations;
+
+    // --- room statistics with capacity check ---
+    const activeByRoom = {};
+
+    // count active allocations per room
+    allAllocations.forEach(a => {
+        if (!a.Alloc_End_Time) {
+            activeByRoom[a.Room_No] = (activeByRoom[a.Room_No] || 0) + 1;
         }
+    });
+
+    const totalRooms = allRooms.length;
+    let occupiedRooms = 0; // rooms at full capacity
+
+    for (const room in activeByRoom) {
+        if (activeByRoom[room] >= CAPACITY) {
+            occupiedRooms++;
+        }
+    }
+
+    const availableRooms = totalRooms - occupiedRooms;
+
+    document.getElementById('availableRooms').textContent = availableRooms;
+    document.getElementById('occupiedRooms').textContent = occupiedRooms;
+}
+
 
         function showError(message) {
             const tbody = document.getElementById('allocationsTableBody');

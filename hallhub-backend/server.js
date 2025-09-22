@@ -478,164 +478,131 @@ app.post('/api/add-to-resident', async (req, res) => {
 
 // Add student to resident with room allocation
 app.post('/api/add-to-resident-with-allocation', async (req, res) => {
-    try {
-        const { student_id, hall_no, room_no } = req.body;
-        console.log('Adding student to resident with allocation:', req.body);
+  try {
+    const { student_id, hall_no, room_no } = req.body;
+    console.log('Adding student to resident with allocation:', req.body);
 
-        if (!student_id || !hall_no || !room_no) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Student ID, Hall Number, and Room Number are required' 
-            });
-        }
-
-        // Start transaction
-        const connection = await pool.getConnection();
-        await connection.beginTransaction();
-
-        try {
-            // Check if student exists
-            const [studentExists] = await connection.execute(
-                'SELECT student_id, name, email FROM Student_Info WHERE student_id = ?', 
-                [student_id]
-            );
-            
-            if (studentExists.length === 0) {
-                await connection.rollback();
-                connection.release();
-                return res.status(404).json({ 
-                    success: false, 
-                    message: 'Student not found' 
-                });
-            }
-
-            const student = studentExists[0];
-
-            // Check if already resident
-            const [alreadyResident] = await connection.execute(
-                'SELECT student_id FROM Resident WHERE student_id = ?', 
-                [student_id]
-            );
-            
-            if (alreadyResident.length > 0) {
-                await connection.rollback();
-                connection.release();
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'Student is already a resident' 
-                });
-            }
-
-            // Check if room is available
-            // const [roomOccupied] = await connection.execute(
-            //     'SELECT Room_No FROM room_allocation WHERE Room_No = ? AND Hall_No = ? AND Alloc_End_Time IS NULL', 
-            //     [room_no, hall_no]
-            // );
-            
-            // if (roomOccupied.length > 0) {
-            //     await connection.rollback();
-            //     connection.release();
-            //     return res.status(400).json({ 
-            //         success: false, 
-            //         message: 'Room is already occupied' 
-            //     });
-            // }
-
-            // Check how many active allocations the room currently has
-const [roomAllocations] = await connection.execute(
-    `SELECT COUNT(*) AS count
-     FROM room_allocation
-     WHERE Room_No = ? 
-       AND Hall_No = ? 
-       AND Alloc_End_Time IS NULL`,
-    [room_no, hall_no]
-);
-
-if (roomAllocations[0].count >= 4) {
-    await connection.rollback();
-    connection.release();
-    return res.status(400).json({
+    if (!student_id || !hall_no || !room_no) {
+      return res.status(400).json({
         success: false,
-        message: 'Room has reached its maximum capacity of 4 students'
-    });
-}
-
-
-            // Check if hall and room exist and are valid
-            const [roomExists] = await connection.execute(
-                'SELECT r.Room_No FROM room r JOIN hall h ON r.Hall_No = h.Hall_No WHERE r.Room_No = ? AND r.Hall_No = ?', 
-                [room_no, hall_no]
-            );
-            
-            if (roomExists.length === 0) {
-                await connection.rollback();
-                connection.release();
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'Invalid hall or room selection' 
-                });
-            }
-
-            // Insert into Resident table
-            const [residentResult] = await connection.execute(
-                'INSERT INTO Resident (student_id) VALUES (?)', 
-                [student_id]
-            );
-
-            // Update resident_status in Student_Info
-            await connection.execute(
-                'UPDATE Student_Info SET resident_status = 1 WHERE student_id = ?', 
-                [student_id]
-            );
-
-            // Insert into room_allocation table
-            const [allocationResult] = await connection.execute(
-                'INSERT INTO room_allocation (Student_ID, Room_No, Hall_No, Alloc_Start_Time) VALUES (?, ?, ?, NOW())', 
-                [student_id, room_no, hall_no]
-            );
-
-            // Commit transaction
-            await connection.commit();
-            connection.release();
-
-            // Send Email
-            const mailOptions = {
-                from: 'hallhub00@gmail.com',
-                to: student.email,
-                subject: 'Room Allocation - Resident Status Update',
-                text: `Hello ${student.name},\n\nCongratulations! You have been successfully added to the resident list and allocated to:\n\nHall: ${hall_no}\nRoom: ${room_no}\n\nYour allocation is effective immediately. Please contact the administration for any queries.\n\nRegards,\nHallHub Administration`
-            };
-
-            transporter.sendMail(mailOptions, (err, info) => {
-                if (err) {
-                    console.error('Error sending email:', err);
-                } else {
-                    console.log('Email sent:', info.response);
-                }
-            });
-
-            res.json({ 
-                success: true, 
-                message: 'Student successfully added to resident list and room allocated',
-                resident_id: residentResult.insertId,
-                allocation_id: allocationResult.insertId
-            });
-
-        } catch (error) {
-            await connection.rollback();
-            connection.release();
-            throw error;
-        }
-
-    } catch (error) {
-        console.error('Error adding student to resident with allocation:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Database error occurred', 
-            error: error.message 
-        });
+        message: 'Student ID, Hall Number, and Room Number are required'
+      });
     }
+
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      // 1️⃣ Check if student exists
+      const [studentExists] = await connection.execute(
+        'SELECT student_id, name, email FROM Student_Info WHERE student_id = ?',
+        [student_id]
+      );
+
+      if (studentExists.length === 0) {
+        await connection.rollback();
+        connection.release();
+        return res.status(404).json({ success: false, message: 'Student not found' });
+      }
+
+      const student = studentExists[0];
+
+      // 2️⃣ Check if already resident
+      const [alreadyResident] = await connection.execute(
+        'SELECT student_id FROM Resident WHERE student_id = ?',
+        [student_id]
+      );
+
+      if (alreadyResident.length > 0) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ success: false, message: 'Student is already a resident' });
+      }
+
+      // 3️⃣ Validate room capacity
+      const [roomAllocations] = await connection.execute(
+        `SELECT COUNT(*) AS count
+         FROM room_allocation
+         WHERE Room_No = ? AND Hall_No = ? AND Alloc_End_Time IS NULL`,
+        [room_no, hall_no]
+      );
+
+      if (roomAllocations[0].count >= 4) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({
+          success: false,
+          message: 'Room has reached its maximum capacity of 4 students'
+        });
+      }
+
+      // 4️⃣ Check if hall/room exist
+      const [roomExists] = await connection.execute(
+        'SELECT r.Room_No FROM room r JOIN hall h ON r.Hall_No = h.Hall_No WHERE r.Room_No = ? AND r.Hall_No = ?',
+        [room_no, hall_no]
+      );
+
+      if (roomExists.length === 0) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ success: false, message: 'Invalid hall or room selection' });
+      }
+
+      // 5️⃣ Pass hall/room to trigger via session variables
+      await connection.query('SET @room_no = ?, @hall_no = ?', [room_no, hall_no]);
+
+      // 6️⃣ Insert into Resident → trigger does the rest
+      const [residentResult] = await connection.execute(
+        'INSERT INTO Resident (student_id) VALUES (?)',
+        [student_id]
+      );
+
+      await connection.commit();
+      connection.release();
+
+      // 7️⃣ Send confirmation email
+      const mailOptions = {
+        from: 'hallhub00@gmail.com',
+        to: student.email,
+        subject: 'Room Allocation - Resident Status Update',
+        text: `Hello ${student.name},
+
+Congratulations! You have been successfully added to the resident list and allocated to:
+
+Hall: ${hall_no}
+Room: ${room_no}
+
+Your allocation is effective immediately.
+
+Regards,
+HallHub Administration`
+      };
+
+      transporter.sendMail(mailOptions, (err, info) => {
+        if (err) console.error('Error sending email:', err);
+        else console.log('Email sent:', info.response);
+      });
+
+      res.json({
+        success: true,
+        message: 'Student successfully added to resident list and room allocated',
+        resident_id: residentResult.insertId
+      });
+    } catch (error) {
+      await connection.rollback();
+      connection.release();
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error adding student to resident with allocation:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error occurred',
+      error: error.message
+    });
+  }
 });
+
 
 // Get resident students by joining Resident with Student_Info
 app.get('/api/resident-students', async (req, res) => {
