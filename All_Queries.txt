@@ -1,3 +1,7 @@
+---------------------------------
+Table Creation with Constraints 
+---------------------------------
+
 CREATE TABLE "Student_Info" (
   "Serial_No" int NOT NULL AUTO_INCREMENT,
   "Student_Id" bigint NOT NULL,
@@ -134,7 +138,9 @@ CREATE TABLE "room_allocation" (
 )
 
 
-
+--------------------------------------------
+Use of View for Complaints feature of Admin 
+--------------------------------------------
 
 CREATE OR REPLACE VIEW ComplaintsView AS
 SELECT 
@@ -158,6 +164,11 @@ GROUP BY i.item_type
 ORDER BY total_lost DESC;
 
 SELECT * FROM defaultdb.lost_items_summary;
+
+
+-----------------------------------------
+Use of Procedure for Lost and Found Item
+-----------------------------------------
 
 
 
@@ -200,6 +211,11 @@ END$$
 DELIMITER ;
 
 
+--------------------------------------------------------
+Exception Handling with SIGNAL SQLSTATE ERROR of MySQL
+--------------------------------------------------------
+
+
 
 CREATE DEFINER="avnadmin"@"%" PROCEDURE "GetStudentAllocations"(IN p_student_id bigint)
 BEGIN
@@ -230,7 +246,9 @@ BEGIN
 END
 
 
-
+------------------------------------------------
+Use of Trigger in Resident Allocation for Admin
+------------------------------------------------
 
 DELIMITER $$
 
@@ -248,7 +266,9 @@ END$$
 
 DELIMITER ;
 
-
+---------------------
+Use of Case in Event
+---------------------
 
 SELECT e.*, 
            CASE 
@@ -270,7 +290,9 @@ SELECT e.*,
   `;
 
 
-
+-----------------------
+Use of Grant & Revoke
+-----------------------
 
 -- Admin user (full rights)
 CREATE USER 'admin_user'@'localhost' IDENTIFIED BY 'adminpass';
@@ -288,6 +310,10 @@ FLUSH PRIVILEGES;
 REVOKE UPDATE ON your_database.Student_Info FROM 'student_user'@'localhost';
 FLUSH PRIVILEGES;
 
+
+-----------------
+Use of Sequence
+-----------------
 
 CREATE TABLE events_seq (seq_val BIGINT NOT NULL);
 INSERT INTO events_seq VALUES (0);
