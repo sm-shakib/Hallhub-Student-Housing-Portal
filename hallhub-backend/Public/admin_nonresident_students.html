@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HallHub - Non-Resident Students</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .student-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .student-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <header class="relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700"></div>
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative z-10 container mx-auto px-6 py-8">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <span class="text-2xl">🛡️</span>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white tracking-tight">HallHub</h1>
+                        <p class="text-blue-100 text-sm font-medium">Non-Resident Students</p>
+                    </div>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="admin_dashboard.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
+                        Back to Dashboard
+                    </a>
+                    <div class="flex items-center space-x-3 text-white">
+                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-semibold">AD</span>
+                        </div>
+                        <span class="font-medium">Admin User</span>
+                    </div>
+                    <a href="login.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
+                        Logout
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-grow py-12 px-6">
+        <div class="container mx-auto max-w-7xl">
+            <!-- Page Title -->
+            <div class="mb-12 text-center">
+                <h2 class="text-4xl font-bold gradient-text mb-4">Non-Resident Students</h2>
+                <p class="text-gray-600 text-lg max-w-2xl mx-auto">Manage and oversee all non-resident student records and information.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Non-Residents</p>
+                            <p class="text-2xl font-bold text-gray-900" id="totalCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🚶</span>
+                        </div>
+                    </div>
+                </div>
+                <!--
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Active Students</p>
+                            <p class="text-2xl font-bold text-gray-900" id="activeCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">✅</span>
+                        </div>
+                    </div>
+                </div>
+                -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Departments</p>
+                            <p class="text-2xl font-bold text-gray-900" id="deptCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🏢</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">This Month</p>
+                            <p class="text-2xl font-bold text-gray-900" id="monthCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">📅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-12">
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div class="flex-1">
+                        <input type="text" id="searchInput" placeholder="Search by Student ID" 
+                               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="flex gap-4">
+                        <select id="departmentFilter" class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Departments</option>
+                        </select>
+                        <button onclick="refreshData()" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium">
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Grid -->
+            <div id="studentsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="text-center py-12 col-span-full">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Loading students...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 mt-20">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🎓</span>
+                        </div>
+                        <h3 class="text-xl font-bold">HallHub</h3>
+                    </div>
+                    <p class="text-gray-400 max-w-md">Your comprehensive student hall management platform. Connecting students, managing resources, and building community.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Admin Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="admin_dashboard.html" class="hover:text-white transition">Dashboard</a></li>
+                        <li><a href="#" class="hover:text-white transition">Reports</a></li>
+                        <li><a href="#" class="hover:text-white transition">Settings</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#contact" class="hover:text-white transition">Contact Us</a></li>
+                        <li><a href="#privacy" class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="#terms" class="hover:text-white transition">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                <p>© 2025 HallHub. All rights reserved. Built with ❤️ for students.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Student Details Modal -->
+    <div id="studentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+         <!-- Modernized view details modal with better styling and spacing -->
+        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-hidden">
+             <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-100">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">👤</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900">Student Details</h2>
+                    </div>
+                    <button onclick="closeModal()" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors">
+                        <span class="text-xl">&times;</span>
+                    </button>
+                </div>
+            </div>
+            
+             <!-- Modal Content -->
+            <div class="p-8 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div id="modalContent" class="space-y-6">
+                     Content will be populated by JavaScript 
+                </div>
+            </div>
+            
+             <!-- Modal Footer -->
+            <div class="bg-gray-50 px-8 py-4 border-t border-gray-100 flex justify-end">
+                <button onclick="closeModal()" class="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-hidden">
+             <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-100">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">✏️</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900">Edit Student Information</h2>
+                    </div>
+                    <button onclick="closeEditModal()" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors">
+                        <span class="text-xl">&times;</span>
+                    </button>
+                </div>
+            </div>
+            
+             <!-- Modal Content -->
+            <div class="p-8 overflow-y-auto max-h-[calc(90vh-200px)]">
+                <form id="editForm" class="space-y-8">
+                    <input type="hidden" id="editStudentId">
+                    
+                     <!-- Personal Information Section -->
+                    <div class="bg-gray-50 rounded-2xl p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <span class="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                                <span class="text-xs">👤</span>
+                            </span>
+                            Personal Information
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Added Serial_No input field to edit modal form -->
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Serial No</label>
+                                <input type="text" id="editSerialNo" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Full Name</label>
+                                <input type="text" id="editName" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" required>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Email Address</label>
+                                <input type="email" id="editEmail" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" required>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Department</label>
+                                <input type="text" id="editDepartment" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Level</label>
+                                <input type="text" id="editLevel" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Phone Number</label>
+                                <input type="text" id="editPhone" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                            </div>
+                            <div class="space-y-2 md:col-span-2">
+                                <label class="text-sm font-medium text-gray-700">Address</label>
+                                <textarea id="editAddress" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white resize-none"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                     <!-- Emergency Contact Section -->
+                    <div class="bg-red-50 rounded-2xl p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <span class="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center mr-2">
+                                <span class="text-xs">🚨</span>
+                            </span>
+                            Emergency Contact Information
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Contact Name</label>
+                                <input type="text" id="editRelativeName" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Relationship</label>
+                                <input type="text" id="editRelativeRelation" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Contact Phone</label>
+                                <input type="text" id="editRelativePhone" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                            </div>
+                            <div class="space-y-2 md:col-span-2">
+                                <label class="text-sm font-medium text-gray-700">Contact Address</label>
+                                <textarea id="editRelativeAddress" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white resize-none"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+             <!-- Modal Footer -->
+            <div class="bg-gray-50 px-8 py-6 border-t border-gray-100 flex justify-end space-x-4">
+                <button type="button" onclick="closeEditModal()" class="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-medium">
+                    Cancel
+                </button>
+                <button type="submit" form="editForm" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add to Resident Modal -->
+    <div id="addToResidentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-6 border-b border-gray-100">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🏠</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900">Add to Resident</h2>
+                    </div>
+                    <button onclick="closeAddToResidentModal()" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors">
+                        <span class="text-xl">&times;</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="p-8 overflow-y-auto max-h-[calc(90vh-200px)]">
+                <form id="addToResidentForm" class="space-y-6">
+                    <input type="hidden" id="residentStudentId">
+                    <input type="hidden" id="residentStudentName">
+                    
+                    <!-- Student Info Display -->
+                    <div class="bg-blue-50 rounded-2xl p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <span class="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                                <span class="text-xs">👤</span>
+                            </span>
+                            Student Information
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Student Name</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1" id="displayStudentName">-</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Student ID</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1" id="displayStudentId">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Room Allocation Section -->
+                    <div class="bg-green-50 rounded-2xl p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <span class="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                                <span class="text-xs">🏠</span>
+                            </span>
+                            Room Allocation
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Select Hall *</label>
+                                <select id="hallSelect" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white" required>
+                                    <option value="">Choose a hall...</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-700">Select Room *</label>
+                                <select id="roomSelect" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white" required disabled>
+                                    <option value="">First select a hall...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                            <div class="flex items-start space-x-2">
+                                <span class="text-yellow-600 text-sm">⚠️</span>
+                                <div class="text-sm text-yellow-800">
+                                    <p class="font-medium">Important:</p>
+                                    <p>This will add the student to the resident list and allocate them to the selected room. The allocation will start immediately.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="bg-gray-50 px-8 py-6 border-t border-gray-100 flex justify-end space-x-4">
+                <button type="button" onclick="closeAddToResidentModal()" class="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-medium">
+                    Cancel
+                </button>
+                <button type="submit" form="addToResidentForm" class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium">
+                    Add to Resident & Allocate Room
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        let allStudents = [];
+        let filteredStudents = [];
+        let availableHalls = [];
+        let availableRooms = [];
+
+        // Fetch non-resident students from backend
+        async function fetchNonResidentStudents() {
+            try {
+                console.log('Fetching students...');
+                const response = await fetch('http://localhost:3000/api/nonresident-students');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Received data:', data);
+                
+                if (data.success) {
+                    allStudents = data.students || [];
+                    filteredStudents = [...allStudents];
+                    displayStudents(filteredStudents);
+                    updateStats(filteredStudents);
+                    populateDepartmentFilter(filteredStudents);
+                    console.log(`Loaded ${allStudents.length} students`);
+                } else {
+                    showError('Failed to load students: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error fetching students:', error);
+                showError('Failed to connect to server: ' + error.message);
+            }
+        }
+
+        // Display students in cards
+        function displayStudents(students) {
+            const container = document.getElementById('studentsContainer');
+            
+            if (students.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 col-span-full">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">🔍</span>
+                        </div>
+                        <p class="text-gray-500">No non-resident students found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = students.map(student => `
+                <div class="student-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">👤</span>
+                        </div>
+                        <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-lg text-xs font-semibold">NON-RESIDENT</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">${student.name || 'N/A'}</h3>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <!-- Added Serial_No field to student card display -->
+                        <p><span class="font-medium">Serial No:</span> ${student.serial_no || 'N/A'}</p>
+                        <p><span class="font-medium">ID:</span> ${student.student_id || 'N/A'}</p>
+                        <p><span class="font-medium">Email:</span> ${student.email || 'N/A'}</p>
+                        <p><span class="font-medium">Department:</span> ${student.department || 'N/A'}</p>
+                        <p><span class="font-medium">Level:</span> ${student.level || 'N/A'}</p>
+                        <p><span class="font-medium">Phone:</span> ${student.phone || 'N/A'}</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <div class="flex gap-2 mb-2">
+                            <button onclick="viewStudent('${student.student_id}')" class="flex-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium">
+                                View Details
+                            </button>
+                            <button onclick="editStudent('${student.student_id}')" class="flex-1 px-3 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium">
+                                Edit
+                            </button>
+                        </div>
+                        <button onclick="addToResident('${student.student_id}', '${student.name || 'Student'}')" class="w-full px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium border border-green-200">
+                            ➕ Add to Resident
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update statistics
+        function updateStats(students) {
+            document.getElementById('totalCount').textContent = students.length;
+            //document.getElementById('activeCount').textContent = students.length; // All are considered active
+            
+            const departments = [...new Set(students.map(s => s.department).filter(d => d))];
+            document.getElementById('deptCount').textContent = departments.length;
+            
+            // Calculate this month's students
+            const thisMonth = new Date().getMonth();
+            const thisYear = new Date().getFullYear();
+            const monthStudents = students.filter(s => {
+            const joined = new Date(s.created_at);
+            return joined.getMonth() === thisMonth && joined.getFullYear() === thisYear;
+            }).length;
+
+            document.getElementById('monthCount').textContent = monthStudents;
+        }
+
+        // Populate department filter
+        function populateDepartmentFilter(students) {
+            const departments = [...new Set(students.map(s => s.department).filter(d => d))];
+            const select = document.getElementById('departmentFilter');
+            
+            // Clear existing options except the first one
+            select.innerHTML = '<option value="">All Departments</option>';
+            
+            departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                select.appendChild(option);
+            });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase().trim();
+    const deptFilter = document.getElementById('departmentFilter').value;
+
+    filteredStudents = allStudents.filter(student => {
+        //const name = String(student.name || '').toLowerCase();
+        const id = String(student.student_id || '').toLowerCase();
+        //const dept = String(student.department || '').toLowerCase();
+
+        const matchesSearch = !searchTerm || 
+            //name.includes(searchTerm) ||
+            id.includes(searchTerm); //||
+            //dept.includes(searchTerm);
+
+        const matchesDept = !deptFilter || dept === deptFilter.toLowerCase();
+
+        return matchesSearch && matchesDept;
+    });
+
+    displayStudents(filteredStudents);
+    updateStats(filteredStudents);
+});
+
+
+        // Department filter
+        document.getElementById('departmentFilter').addEventListener('change', function(e) {
+            const department = e.target.value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredStudents = allStudents.filter(student => {
+                const matchesSearch = !searchTerm || 
+                    (student.name || '').toLowerCase().includes(searchTerm) ||
+                    (student.student_id || '').toLowerCase().includes(searchTerm) ||
+                    (student.department || '').toLowerCase().includes(searchTerm);
+                
+                const matchesDept = !department || student.department === department;
+                
+                return matchesSearch && matchesDept;
+            });
+            
+            displayStudents(filteredStudents);
+            updateStats(filteredStudents);
+        });
+
+      // View student details
+        function viewStudent(studentId) {
+            const student = allStudents.find(s => s.student_id == studentId);
+            if (!student) return;
+
+            document.getElementById("modalContent").innerHTML = `
+                <div class="space-y-6">
+                    <!-- Student Header -->
+                    <div class="text-center pb-4 border-b border-gray-100">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">🏠</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-1">${student.name || 'N/A'}</h3>
+                        <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">NON-RESIDENT STUDENT</span>
+                    </div>
+                    
+                    <!-- Personal Information -->
+                    <div class="bg-gray-50 rounded-2xl p-6">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <span class="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                                <span class="text-xs">👤</span>
+                            </span>
+                            Personal Information
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Added Serial_No field to view details modal -->
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Serial No</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.serial_no || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Student ID</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.student_id || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Email</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.email || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Department</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.department || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Level</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.level || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.phone || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 md:col-span-2">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Address</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.address || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Emergency Contact -->
+                    <div class="bg-red-50 rounded-2xl p-6">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <span class="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center mr-2">
+                                <span class="text-xs">🚨</span>
+                            </span>
+                            Emergency Contact
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Contact Name</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.relative_name || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Relationship</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.relative_relation || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Contact Phone</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.relative_phone || 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 md:col-span-2">
+                                <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Contact Address</label>
+                                <p class="text-sm font-semibold text-gray-900 mt-1">${student.relative_address || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("studentModal").classList.remove("hidden");
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('studentModal').classList.add('hidden');
+        }
+
+        // Edit student
+        function editStudent(studentId) {
+            const student = allStudents.find(s => s.student_id == studentId);
+            if (!student) return;
+
+            document.getElementById("editStudentId").value = student.student_id;
+            document.getElementById("editSerialNo").value = student.serial_no || '';
+            document.getElementById("editName").value = student.name || '';
+            document.getElementById("editEmail").value = student.email || '';
+            document.getElementById("editDepartment").value = student.department || '';
+            document.getElementById("editLevel").value = student.level || '';
+            document.getElementById("editPhone").value = student.phone || '';
+            document.getElementById("editAddress").value = student.address || '';
+            document.getElementById("editRelativeName").value = student.relative_name || '';
+            document.getElementById("editRelativeRelation").value = student.relative_relation || '';
+            document.getElementById("editRelativePhone").value = student.relative_phone || '';
+            document.getElementById("editRelativeAddress").value = student.relative_address || '';
+
+            document.getElementById("editModal").classList.remove("hidden");
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById("editModal").classList.add("hidden");
+        }
+
+        // Handle form submit
+        document.getElementById("editForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById("editStudentId").value;
+            const updatedStudent = {
+                serial_no: document.getElementById("editSerialNo").value,
+                name: document.getElementById("editName").value,
+                email: document.getElementById("editEmail").value,
+                department: document.getElementById("editDepartment").value,
+                level: document.getElementById("editLevel").value,
+                phone: document.getElementById("editPhone").value,
+                address: document.getElementById("editAddress").value,
+                relativeName: document.getElementById("editRelativeName").value,
+                relativeRelation: document.getElementById("editRelativeRelation").value,
+                relativePhone: document.getElementById("editRelativePhone").value,
+                relativeAddress: document.getElementById("editRelativeAddress").value
+            };
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/students/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(updatedStudent)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert("✅ Student updated successfully!");
+                    closeEditModal();
+                    fetchNonResidentStudents(); // Reload data
+                } else {
+                    alert("❌ Update failed: " + data.message);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("❌ Server error while updating: " + error.message);
+            }
+        });
+
+        // Add student to resident table
+        // Show add to resident modal
+        function addToResident(studentId, studentName) {
+            document.getElementById('residentStudentId').value = studentId;
+            document.getElementById('residentStudentName').value = studentName;
+            document.getElementById('displayStudentName').textContent = studentName;
+            document.getElementById('displayStudentId').textContent = studentId;
+            
+            // Reset form
+            document.getElementById('hallSelect').value = '';
+            document.getElementById('roomSelect').innerHTML = '<option value="">First select a hall...</option>';
+            document.getElementById('roomSelect').disabled = true;
+            
+            // Fetch halls and show modal
+            fetchHalls();
+            document.getElementById('addToResidentModal').classList.remove('hidden');
+        }
+
+        // Close add to resident modal
+        function closeAddToResidentModal() {
+            document.getElementById('addToResidentModal').classList.add('hidden');
+        }
+
+        // Fetch available halls
+        async function fetchHalls() {
+            try {
+                const response = await fetch('http://localhost:3000/api/halls');
+                const data = await response.json();
+                if (data.success) {
+                    availableHalls = data.halls || [];
+                    populateHallSelect();
+                }
+            } catch (error) {
+                console.error('Error fetching halls:', error);
+            }
+        }
+
+        // Fetch available rooms for selected hall
+        async function fetchRoomsForHall(hallNo) {
+            try {
+                const response = await fetch('http://localhost:3000/api/available-rooms');
+                const data = await response.json();
+                if (data.success) {
+                    availableRooms = data.rooms.filter(room => room.Hall_No == hallNo);
+                    populateRoomSelect();
+                }
+            } catch (error) {
+                console.error('Error fetching rooms:', error);
+            }
+        }
+
+        // Populate hall select dropdown
+        function populateHallSelect() {
+            const select = document.getElementById('hallSelect');
+            select.innerHTML = '<option value="">Choose a hall...</option>';
+            
+            availableHalls.forEach(hall => {
+                const option = document.createElement('option');
+                option.value = hall.Hall_No;
+                option.textContent = `Hall ${hall.Hall_No} - ${hall.Place}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Populate room select dropdown
+        function populateRoomSelect() {
+            const select = document.getElementById('roomSelect');
+            select.innerHTML = '<option value="">Choose a room...</option>';
+            
+            if (availableRooms.length === 0) {
+                select.innerHTML = '<option value="">No available rooms in this hall</option>';
+                select.disabled = true;
+                return;
+            }
+            
+            select.disabled = false;
+            availableRooms.forEach(room => {
+                const option = document.createElement('option');
+                option.value = room.Room_No;
+                option.textContent = `Room ${room.Room_No}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Hall selection change handler
+        document.getElementById('hallSelect').addEventListener('change', function(e) {
+            const hallNo = e.target.value;
+            const roomSelect = document.getElementById('roomSelect');
+            
+            if (hallNo) {
+                fetchRoomsForHall(hallNo);
+            } else {
+                roomSelect.innerHTML = '<option value="">First select a hall...</option>';
+                roomSelect.disabled = true;
+            }
+        });
+
+        // Handle add to resident form submit
+        document.getElementById('addToResidentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const studentId = document.getElementById('residentStudentId').value;
+            const studentName = document.getElementById('residentStudentName').value;
+            const hallNo = document.getElementById('hallSelect').value;
+            const roomNo = document.getElementById('roomSelect').value;
+            
+            if (!hallNo || !roomNo) {
+                alert('Please select both hall and room');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to add "${studentName}" to the resident list and allocate them to Hall ${hallNo}, Room ${roomNo}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/add-to-resident-with-allocation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        student_id: studentId,
+                        hall_no: hallNo,
+                        room_no: roomNo
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ ${studentName} has been successfully added to the resident list and allocated to Hall ${hallNo}, Room ${roomNo}!`);
+                    closeAddToResidentModal();
+                    fetchNonResidentStudents(); // Refresh the data
+                } else {
+                    alert(`❌ Failed to add student: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error adding student to resident with allocation:', error);
+                alert('❌ Server error while adding student to resident list');
+            }
+        });
+
+        // Utility functions
+        function showError(message) {
+            const container = document.getElementById('studentsContainer');
+            container.innerHTML = `
+                <div class="text-center py-12 col-span-full">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">⚠️</span>
+                    </div>
+                    <p class="text-red-500 font-medium">${message}</p>
+                    <button onclick="refreshData()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        function refreshData() {
+            fetchNonResidentStudents();
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, fetching students...');
+            fetchNonResidentStudents();
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            const studentModal = document.getElementById('studentModal');
+            const editModal = document.getElementById('editModal');
+            const addToResidentModal = document.getElementById('addToResidentModal');
+            
+            if (event.target === studentModal) {
+                closeModal();
+            }
+            if (event.target === editModal) {
+                closeEditModal();
+            }
+            if (event.target === addToResidentModal) {
+                closeAddToResidentModal();
+            }
+        });
+    </script>
+</body>
+</html>

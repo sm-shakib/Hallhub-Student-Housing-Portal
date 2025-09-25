@@ -19,7 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const pool = mysql.createPool({
   host: 'mysql-71ed2b0-hallhub-1.g.aivencloud.com',
-  port: 28592,//port updated
+  port: 28592,
   user: 'avnadmin',
   password: 'AVNS_FnvYhizl3z5Xkya3Tr4',
   database: 'defaultdb',
@@ -111,49 +111,6 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// API route to handle student login
-// app.post('/api/login', async (req, res) => {
-//   try {
-//     const { studentId, password } = req.body;
-
-//     if (!studentId || !password) {
-//       return res.status(400).json({ error: 'Please provide student ID and password' });
-//     }
-
-//     // Find student by ID
-//     const sql = 'SELECT student_id, name, email, password_hash FROM Student_Info WHERE student_id = ?';
-//     const [rows] = await pool.execute(sql, [studentId]);
-
-//     if (rows.length === 0) {
-//       return res.status(401).json({ error: 'Invalid student ID or password' });
-//     }
-
-//     const student = rows[0];
-
-//     // Verify password
-//     const passwordMatch = await bcrypt.compare(password, student.password_hash);
-    
-//     if (!passwordMatch) {
-//       return res.status(401).json({ error: 'Invalid student ID or password' });
-//     }
-
-//     // Return success with student info (exclude password hash)
-//     res.json({
-//       success: true,
-//       message: 'Login successful',
-//       student: {
-//         studentId: student.student_id,
-//         name: student.name,
-//         email: student.email
-//       }
-//     });
-
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Internal Server Error' });
-//   }
-// });
-
 app.post('/api/login', async (req, res) => {
   try {
     console.log('POST /api/login body:', req.body);
@@ -236,7 +193,6 @@ app.post('/api/forgot-password', async (req, res) => {
   }
 });
 
-
 app.post('/api/verify-otp', async (req, res) => {
   const { email, student_id, otp } = req.body;
 
@@ -272,7 +228,6 @@ app.post('/api/verify-otp', async (req, res) => {
 
   res.json({ success: true, message: 'OTP verified successfully', token: resetToken });
 });
-
 
 app.post('/api/reset-password', async (req, res) => {
   try {
@@ -453,7 +408,6 @@ app.post('/api/add-to-resident', async (req, res) => {
         }
       });
 
-
       res.json({ 
         success: true, 
         message: 'Student successfully added to resident list',
@@ -493,7 +447,7 @@ app.post('/api/add-to-resident-with-allocation', async (req, res) => {
     await connection.beginTransaction();
 
     try {
-      // 1️⃣ Check if student exists
+      // Check if student exists
       const [studentExists] = await connection.execute(
         'SELECT student_id, name, email FROM Student_Info WHERE student_id = ?',
         [student_id]
@@ -507,7 +461,7 @@ app.post('/api/add-to-resident-with-allocation', async (req, res) => {
 
       const student = studentExists[0];
 
-      // 2️⃣ Check if already resident
+      // Check if already resident
       const [alreadyResident] = await connection.execute(
         'SELECT student_id FROM Resident WHERE student_id = ?',
         [student_id]
@@ -519,7 +473,7 @@ app.post('/api/add-to-resident-with-allocation', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Student is already a resident' });
       }
 
-      // 3️⃣ Validate room capacity
+      // Validate room capacity
       const [roomAllocations] = await connection.execute(
         `SELECT COUNT(*) AS count
          FROM room_allocation
@@ -536,7 +490,7 @@ app.post('/api/add-to-resident-with-allocation', async (req, res) => {
         });
       }
 
-      // 4️⃣ Check if hall/room exist
+      // Check if hall/room exist
       const [roomExists] = await connection.execute(
         'SELECT r.Room_No FROM room r JOIN hall h ON r.Hall_No = h.Hall_No WHERE r.Room_No = ? AND r.Hall_No = ?',
         [room_no, hall_no]
@@ -548,10 +502,10 @@ app.post('/api/add-to-resident-with-allocation', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid hall or room selection' });
       }
 
-      // 5️⃣ Pass hall/room to trigger via session variables
+      // Pass hall/room to trigger via session variables
       await connection.query('SET @room_no = ?, @hall_no = ?', [room_no, hall_no]);
 
-      // 6️⃣ Insert into Resident → trigger does the rest
+      // Insert into Resident → trigger does the rest
       const [residentResult] = await connection.execute(
         'INSERT INTO Resident (student_id) VALUES (?)',
         [student_id]
@@ -560,7 +514,7 @@ app.post('/api/add-to-resident-with-allocation', async (req, res) => {
       await connection.commit();
       connection.release();
 
-      // 7️⃣ Send confirmation email
+      // Send confirmation email
       const mailOptions = {
         from: 'hallhub00@gmail.com',
         to: student.email,
@@ -685,38 +639,6 @@ app.post('/api/remove-from-resident', async (req, res) => {
     });
   }
 });
-
-
-// Get all complaints ordered by time
-// app.get('/api/complaints', async (req, res) => {
-//   try {
-//     const query = `
-//       SELECT 
-//           complaint_id,
-//           student_id,
-//           title,
-//           description,
-//           time,
-//           status
-//       FROM complaint 
-//       ORDER BY time ASC
-//     `;
-    
-//     const [results] = await pool.query(query);
-
-//     res.json({
-//       success: true,
-//       complaints: results,
-//       count: results.length
-//     });
-//   } catch (error) {
-//     console.error('Database error:', error);
-//     res.status(500).json({
-//       success: false,
-//       message: 'Database error occurred'
-//     });
-//   }
-// });
 
 app.get('/api/complaints', async (req, res) => {
     try {
@@ -881,10 +803,6 @@ app.get('/api/complaints/:studentId', async (req, res) => {
   }
 });
 
-// ===============================
-// Items API
-// ===============================
-
 // Get all items
 app.get('/api/items', async (req, res) => {
   try {
@@ -1015,10 +933,6 @@ app.delete('/api/items/delete', async (req, res) => {
   }
 });
 
-// ===============================
-// Lost & Found Items API
-// ===============================
-
 // Get Lost Items
 app.get('/api/lost-items', async (req, res) => {
   try {
@@ -1062,7 +976,6 @@ app.get('/api/found-items', async (req, res) => {
   }
 });
 
-
 // Mark lost item as found
 app.post('/api/mark-as-found', async (req, res) => {
   const { lost_id } = req.body;
@@ -1088,19 +1001,15 @@ app.post('/api/mark-as-found', async (req, res) => {
       });
     }
 
-    // Insert new found record
-    const foundId = Date.now(); // temporary unique ID (better: AUTO_INCREMENT in DB)
-
     await pool.query(
-      `INSERT INTO found_item (Found_ID, Lost_ID, Found_Time) 
-       VALUES (?, ?, NOW())`,
-      [foundId, lost_id]
+      `INSERT INTO found_item (Lost_ID, Found_Time) 
+      VALUES (?, NOW())`,
+      [lost_id]
     );
 
     res.json({
       success: true,
       message: 'Item marked as found successfully',
-      found_id: foundId
     });
   } catch (error) {
     console.error('Database error:', error);
@@ -1181,84 +1090,6 @@ app.post('/api/approve-visitor', async (req, res) => {
         });
     }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// // API routes for events - FIXED VERSION
-// app.get('/api/events', async (req, res) => {
-//   try {
-//     const sql = 'SELECT * FROM events ORDER BY Date DESC';
-//     const [rows] = await pool.execute(sql);
-//     res.json(rows);
-//   } catch (error) {
-//     console.error('Error fetching events:', error);
-//     res.status(500).json({ error: 'Failed to fetch events' });
-//   }
-// });
-
-// app.post('/api/events', async (req, res) => {
-//   try {
-//     const { Title, Type, Date, Description, Student_ID } = req.body;
-    
-//     if (!Title || !Date || !Student_ID || !Type || !Description) {
-//       return res.status(400).json({ error: 'Please provide title, type, description, date, and ID' });
-//     }
-    
-//     const sql = `
-//       INSERT INTO events (Title, Type, Date, Description, Student_ID)
-//       VALUES (?, ?, ?, ?, ?)
-//     `;
-//     const [result] = await pool.execute(sql, [Title, Type, Date, Description, Student_ID]);
-    
-//     // Return the correct field name that matches your frontend expectation
-//     res.json({
-//       success: true,
-//       message: 'Event created successfully',
-//       Event_ID: result.insertId  // Changed from 'eventId' to 'Event_ID'
-//     });
-    
-//   } catch (error) {
-//     console.error('Error creating event:', error);
-//     res.status(500).json({ error: 'Failed to create event' });
-//   }
-// });
-
-
-
-
-
-
-
 
 // Get all events
 app.get('/api/eevents', async (req, res) => {
@@ -1370,12 +1201,6 @@ app.delete('/api/events/delete', async (req, res) => {
     }
 });
 
-
-
-
-
-
-
 // API routes for events - UPDATED VERSION with status filtering
 app.get('/api/events', async (req, res) => {
   try {
@@ -1484,31 +1309,6 @@ app.get('/api/events/my/:student_id', async (req, res) => {
   }
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Updated API route for lost items to match the lost_item table structure
 app.post('/api/lostitems', async (req, res) => {
   try {
@@ -1551,10 +1351,10 @@ app.post('/api/lostitems', async (req, res) => {
     `;
     
     const [result] = await pool.execute(sql, [
-      studentId,           // maps to Student_ID
-      itemId,             // maps to Item_ID (foreign key)
-      description,        // maps to Description
-      lostDateTime        // maps to Lost_Time
+      studentId,          
+      itemId,             
+      description,        
+      lostDateTime        
     ]);
 
     res.json({
@@ -1606,9 +1406,7 @@ app.get('/api/lostitems', async (req, res) => {
   }
 });
 
-
 // API route to get lost items for a specific student
-
 app.get('/api/student-lostitems/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -1670,44 +1468,6 @@ app.get('/api/student-lostitems/:studentId', async (req, res) => {
   }
 });
 
-
-// // API route to fetch found items by Lost ID
-
-// app.get('/api/founditems/:lostId', async (req, res) => {
-//   try {
-//     const { lostId } = req.params;
-    
-//     console.log('Looking up Lost ID:', lostId); // Debug log
-    
-//     const sql = `
-//       SELECT 
-//         fi.Found_ID,
-//         fi.Lost_ID,
-//         fi.Found_Time,
-//         li.Student_ID,
-//         si.Name as student_name,
-//         li.Description,
-//         li.Lost_Time,
-//         i.Item_Type
-//       FROM found_item fi
-//       JOIN lost_item li ON fi.Lost_ID = li.Lost_ID
-//       LEFT JOIN Student_Info si ON li.Student_ID = si.Student_ID
-//       LEFT JOIN item i ON li.Item_ID = i.Item_ID
-//       WHERE fi.Lost_ID = ?
-//       ORDER BY fi.Found_Time DESC
-//     `;
-    
-//     const [rows] = await pool.execute(sql, [lostId]);
-    
-//     console.log('Query result:', rows); // Debug log
-    
-//     res.json(rows);
-//   } catch (error) {
-//     console.error('Error fetching found items:', error);
-//     res.status(500).json({ error: 'Failed to fetch found items: ' + error.message });
-//   }
-// });
-
 // API route to fetch found items for a specific student
 app.get('/api/student-found-items/:studentId', async (req, res) => {
   try {
@@ -1744,11 +1504,6 @@ app.get('/api/student-found-items/:studentId', async (req, res) => {
   }
 });
 
-
-
-
-
-
 // API routes for allocation info
 app.get('/api/allocations', async (req, res) => {
   try {
@@ -1778,34 +1533,7 @@ app.get('/api/allocations', async (req, res) => {
   }
 });
 
-// app.post('/api/allocations', async (req, res) => {
-//   try {
-//     const { student_id, room_number, building, allocation_date, fee_status } = req.body;
-
-//     if (!student_id || !room_number || !building) {
-//       return res.status(400).json({ error: 'Please provide student ID, room number, and building' });
-//     }
-
-//     const sql = `
-//       INSERT INTO Room_Allocations (student_id, room_number, building, allocation_date, fee_status)
-//       VALUES (?, ?, ?, ?, ?)
-//     `;
-//     const [result] = await pool.execute(sql, [student_id, room_number, building, allocation_date, fee_status || 'unpaid']);
-
-//     res.json({
-//       success: true,
-//       message: 'Room allocation created successfully',
-//       allocationId: result.insertId
-//     });
-
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Failed to create allocation' });
-//   }
-// });
-
 // API routes for visitor applications
-// Essential API endpoint for visitor entry submission
 app.post('/api/visitor-entry', async (req, res) => {
   try {
     console.log('Received visitor entry request:', req.body);
@@ -1887,9 +1615,6 @@ app.get('/api/test', (req, res) => {
 });
 
 // API routes for visitor status
-// Add this route to your server.js file after your existing visitor entry routes
-
-// API route to get visitor entries for a specific student with Status column
 app.get('/api/visitor-entries-by-student', async (req, res) => {
   try {
     const { student_id } = req.query;
@@ -1955,7 +1680,6 @@ app.get('/api/visitor-entries-by-student', async (req, res) => {
 });
 
 // API route to fetch items from the 'item' table
-// Replace your existing /api/items endpoint with this:
 app.get('/api/items', async (req, res) => {
   try {
     const sql = 'SELECT * FROM item ORDER BY item_id ASC'; // Use your actual table structure
@@ -2164,7 +1888,7 @@ app.delete('/api/rooms/delete', async (req, res) => {
     }
 });
 
-// 1️⃣ Get all room allocations with student and room details
+// Get all room allocations with student and room details
 app.get('/api/room-allocations', async (req, res) => {
     const query = `
         SELECT 
@@ -2200,7 +1924,7 @@ app.get('/api/room-allocations', async (req, res) => {
     }
 });
 
-// 2️⃣ Update room allocation (terminate current + insert new)
+// Update room allocation (terminate current + insert new)
 app.put('/api/room-allocations/update', async (req, res) => {
     const { allocation_id, student_id, hall_no, room_no } = req.body;
 
@@ -2247,7 +1971,7 @@ app.put('/api/room-allocations/update', async (req, res) => {
     }
 });
 
-// 3️⃣ Terminate a room allocation
+// Terminate a room allocation
 app.put('/api/room-allocations/terminate', async (req, res) => {
     const { allocation_id } = req.body;
 
@@ -2277,31 +2001,6 @@ app.put('/api/room-allocations/terminate', async (req, res) => {
         res.status(500).json({ success: false, message: 'Database error occurred' });
     }
 });
-
-// 4️⃣ Get available rooms (not currently allocated)
-// app.get('/api/available-rooms', async (req, res) => {
-//     const query = `
-//         SELECT r.Room_No, r.Hall_No, h.Place
-//         FROM room r
-//         LEFT JOIN hall h ON r.Hall_No = h.Hall_No
-//         WHERE r.Room_No NOT IN (
-//             SELECT Room_No
-//             FROM room_allocation
-//             WHERE Alloc_End_Time IS NULL
-//         )
-//         ORDER BY r.Hall_No, r.Room_No
-//     `;
-
-//     try {
-//         const [results] = await pool.query(query);
-//         res.json({ success: true, rooms: results, count: results.length });
-//     } catch (error) {
-//         console.error('Database error:', error);
-//         res.status(500).json({ success: false, message: 'Database error occurred' });
-//     }
-// });
-
-
 
 app.get('/api/available-rooms', async (req, res) => {
     const query = `
@@ -2360,9 +2059,7 @@ app.get('/api/dashboard-stats', async (req, res) => {
 
     const [pendingComplaints] = await pool.execute('SELECT COUNT(*) as count FROM complaint WHERE status = 0 AND student_id = ?', [student_id]);
     stats.pendingComplaints = pendingComplaints[0].count;
-    
-    
-    
+
     // Total students
     try {
       const [totalStudents] = await pool.execute('SELECT COUNT(*) as count FROM Student_Info');
@@ -2407,11 +2104,7 @@ app.get('/api/dashboard-stats', async (req, res) => {
   }
 });
 
-
 //api for analytics dashboard
-
-
-
 // Group complaints by status, department, or date
 app.get('/api/analytics/complaints/group-by/:field', async (req, res) => {
   try {
@@ -2716,71 +2409,10 @@ app.get('/api/analytics/overview', async (req, res) => {
   }
 });
 
-// Serve HTML pages
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-app.get('/home', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'home.html'));
-});
-
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashb.html'));
-});
-
-app.get('/register', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'register.html'));
-});
-
-app.get('/events', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'event.html'));
-});
-
-app.get('/lostitems', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'lostitem.html'));
-});
-
-app.get('/founditems', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'founditem.html'));
-});
-
-app.get('/see-lost-items', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'seelostitem.html'));
-});
-
-app.get('/item-categories', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'itemcat.html'));
-});
-
-app.get('/complaints', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'complain.html'));
-});
-
-app.get('/show-complaints', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'showcomp.html'));
-});
-
-app.get('/resolved-complaints', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'resolvedcomp.html'));
-});
-
-app.get('/allocations', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'allocinfo.html'));
-});
-
-app.get('/visitor-applications', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'vissapp.html'));
-});
-
-app.get('/visitor-status', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'visstat.html'));
 });
 
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
-});
-
-app.get('/analytics', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'analytics.html'));
 });

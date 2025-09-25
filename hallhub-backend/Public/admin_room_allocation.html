@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HallHub - Room Allocation Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <header class="relative overflow-hidden">
+        <!-- Changed gradient color to teal-cyan for room allocation page -->
+        <div class="absolute inset-0 bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-700"></div>
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative z-10 container mx-auto px-6 py-8">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <span class="text-2xl">🏠</span>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white tracking-tight">HallHub</h1>
+                        <p class="text-teal-100 text-sm font-medium">Room Allocation Management</p>
+                    </div>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="admin_dashboard.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
+                        Back to Dashboard
+                    </a>
+                    <div class="flex items-center space-x-3 text-white">
+                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-semibold">AD</span>
+                        </div>
+                        <span class="font-medium">Admin User</span>
+                    </div>
+                    <a href="admin_login.html" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 font-medium backdrop-blur-sm">
+                        Logout
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-grow py-12 px-6">
+        <div class="container mx-auto max-w-7xl">
+            <!-- Page Title -->
+            <div class="mb-12 text-center">
+                <h2 class="text-4xl font-bold gradient-text mb-4">Room Allocation Management</h2>
+                <p class="text-gray-600 text-lg max-w-2xl mx-auto">Manage student room allocations and assignments.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Allocations</p>
+                            <p class="text-2xl font-bold text-gray-900" id="totalAllocations">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🏠</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Active Students</p>
+                            <p class="text-2xl font-bold text-teal-600" id="activeStudents">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">👥</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Available Rooms</p>
+                            <p class="text-2xl font-bold text-green-600" id="availableRooms">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🚪</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Occupied Rooms</p>
+                            <p class="text-2xl font-bold text-orange-600" id="occupiedRooms">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">🔒</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-12">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search by Student ID</label>
+                        <input type="text" id="searchStudentId" placeholder="Enter Student ID" 
+                               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Hall</label>
+                        <select id="hallFilter" onchange="loadRoomsForHall()" 
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                            <option value="">All Halls</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Room</label>
+                        <select id="roomFilter" 
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                            <option value="">All Rooms</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="applyFilters()" class="px-6 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors font-medium">
+                            Filter
+                        </button>
+                        <button onclick="clearFilters()" class="px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors font-medium">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Allocations Table -->
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                <div class="px-8 py-6 border-b border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-900">Student Room Allocations</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Info</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Room</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Allocation Period</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allocationsTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
+                                    <p class="text-gray-500">Loading allocations...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Allocation Modal -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-teal-50 to-cyan-50 px-8 py-6 border-b border-gray-100">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
+                            <span class="text-xl">✏️</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900">Edit Room Allocation</h2>
+                    </div>
+                    <button onclick="closeEditModal()" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors">
+                        <span class="text-xl">&times;</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal Content -->
+            <form id="editForm" class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Student Information</h3>
+                        <div class="bg-gray-50 p-4 rounded-xl">
+                            <p><strong>Name:</strong> <span id="studentName"></span></p>
+                            <p><strong>Student ID:</strong> <span id="studentId"></span></p>
+                            <p><strong>Email:</strong> <span id="studentEmail"></span></p>
+                            <p><strong>Department:</strong> <span id="studentDepartment"></span></p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Hall</label>
+                        <select id="editHallSelect" onchange="loadRoomsForEdit()" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                            <option value="">Select Hall</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Room</label>
+                        <select id="editRoomSelect" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                            <option value="">Select Room</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <input type="hidden" id="currentAllocationId">
+                <input type="hidden" id="currentStudentId">
+            </form>
+            
+            <!-- Modal Footer -->
+            <div class="bg-gray-50 px-8 py-4 border-t border-gray-100 flex justify-end space-x-4">
+                <button onclick="closeEditModal()" class="px-6 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-medium">
+                    Cancel
+                </button>
+                <button onclick="updateAllocation()" class="px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors font-medium">
+                    Update Allocation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        let allAllocations = [];
+        let allHalls = [];
+        let allRooms = [];
+
+        async function loadInitialData() {
+            await Promise.all([
+                fetchAllocations(),
+                fetchHalls(),
+                fetchRooms()
+            ]);
+        }
+
+        async function fetchAllocations() {
+            try {
+                const response = await fetch('http://localhost:3000/api/room-allocations');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    allAllocations = data.allocations || [];
+                    displayAllocations(allAllocations);
+                    updateStats();
+                } else {
+                    showError('Failed to load allocations: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error fetching allocations:', error);
+                showError('Failed to connect to server: ' + error.message);
+            }
+        }
+
+        async function fetchHalls() {
+            try {
+                const response = await fetch('http://localhost:3000/api/halls');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allHalls = data.halls || [];
+                    populateHallDropdowns();
+                }
+            } catch (error) {
+                console.error('Error fetching halls:', error);
+            }
+        }
+
+        async function fetchRooms() {
+            try {
+                const response = await fetch('http://localhost:3000/api/rooms');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allRooms = data.rooms || [];
+                }
+            } catch (error) {
+                console.error('Error fetching rooms:', error);
+            }
+        }
+
+        function displayAllocations(allocations) {
+            const tbody = document.getElementById('allocationsTableBody');
+            
+            if (allocations.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl">🔍</span>
+                            </div>
+                            <p class="text-gray-500">No allocations found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = allocations.map(allocation => {
+                const startDate = new Date(allocation.Alloc_Start_Time).toLocaleDateString();
+                const endDate = allocation.Alloc_End_Time ? new Date(allocation.Alloc_End_Time).toLocaleDateString() : 'Active';
+                const isActive = !allocation.Alloc_End_Time;
+                
+                return `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-sm font-semibold text-teal-600">${allocation.Name.charAt(0)}</span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">${allocation.Name}</div>
+                                    <div class="text-sm text-gray-500">ID: ${allocation.Student_ID}</div>
+                                    <div class="text-sm text-gray-500">${allocation.Email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900">Room ${allocation.Room_No}</div>
+                            <div class="text-sm text-gray-500">Hall ${allocation.Hall_No} - ${allocation.Place || 'N/A'}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">Start: ${startDate}</div>
+                            <div class="text-sm text-gray-500">End: ${endDate}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${isActive ? 'Active' : 'Terminated'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right text-sm font-medium">
+                            ${isActive ? `
+                                <button onclick="editAllocation(${allocation.Allocation_ID})" class="text-teal-600 hover:text-teal-900 mr-4">Edit</button>
+                                <button onclick="terminateAllocation(${allocation.Allocation_ID})" class="text-red-600 hover:text-red-900">Terminate</button>
+                            ` : `
+                                <span class="text-gray-400">Terminated</span>
+                            `}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function populateHallDropdowns() {
+            const hallFilter = document.getElementById('hallFilter');
+            const editHallSelect = document.getElementById('editHallSelect');
+            
+            const hallOptions = allHalls.map(hall => 
+                `<option value="${hall.Hall_No}">Hall ${hall.Hall_No} - ${hall.Place}</option>`
+            ).join('');
+            
+            hallFilter.innerHTML = '<option value="">All Halls</option>' + hallOptions;
+            editHallSelect.innerHTML = '<option value="">Select Hall</option>' + hallOptions;
+        }
+
+        function loadRoomsForHall() {
+            const selectedHall = document.getElementById('hallFilter').value;
+            const roomFilter = document.getElementById('roomFilter');
+            
+            if (!selectedHall) {
+                roomFilter.innerHTML = '<option value="">All Rooms</option>';
+                return;
+            }
+            
+            const hallRooms = allRooms.filter(room => room.Hall_No == selectedHall);
+            const roomOptions = hallRooms.map(room => 
+                `<option value="${room.Room_No}">Room ${room.Room_No}</option>`
+            ).join('');
+            
+            roomFilter.innerHTML = '<option value="">All Rooms</option>' + roomOptions;
+        }
+
+        function loadRoomsForEdit() {
+            const selectedHall = document.getElementById('editHallSelect').value;
+            const editRoomSelect = document.getElementById('editRoomSelect');
+            
+            if (!selectedHall) {
+                editRoomSelect.innerHTML = '<option value="">Select Room</option>';
+                return;
+            }
+            
+            const hallRooms = allRooms.filter(room => room.Hall_No == selectedHall);
+            const roomOptions = hallRooms.map(room => 
+                `<option value="${room.Room_No}">Room ${room.Room_No}</option>`
+            ).join('');
+            
+            editRoomSelect.innerHTML = '<option value="">Select Room</option>' + roomOptions;
+        }
+
+        function applyFilters() {
+            const studentId = document.getElementById('searchStudentId').value.trim();
+            const hallNo = document.getElementById('hallFilter').value;
+            const roomNo = document.getElementById('roomFilter').value;
+            
+            let filtered = allAllocations;
+            
+            if (studentId) {
+                filtered = filtered.filter(allocation => 
+                    String(allocation.Student_ID).includes(studentId)
+                );
+            }
+            
+            if (hallNo) {
+                filtered = filtered.filter(allocation => 
+                    allocation.Hall_No == hallNo
+                );
+            }
+            
+            if (roomNo) {
+                filtered = filtered.filter(allocation => 
+                    allocation.Room_No == roomNo
+                );
+            }
+            
+            displayAllocations(filtered);
+        }
+
+        function clearFilters() {
+            document.getElementById('searchStudentId').value = '';
+            document.getElementById('hallFilter').value = '';
+            document.getElementById('roomFilter').value = '';
+            loadRoomsForHall();
+            displayAllocations(allAllocations);
+        }
+
+        function editAllocation(allocationId) {
+            const allocation = allAllocations.find(a => a.Allocation_ID == allocationId);
+            if (!allocation) return;
+
+            document.getElementById('currentAllocationId').value = allocation.Allocation_ID;
+            document.getElementById('currentStudentId').value = allocation.Student_ID;
+            document.getElementById('studentName').textContent = allocation.Name;
+            document.getElementById('studentId').textContent = allocation.Student_ID;
+            document.getElementById('studentEmail').textContent = allocation.Email;
+            document.getElementById('studentDepartment').textContent = allocation.Department;
+            document.getElementById('editHallSelect').value = allocation.Hall_No;
+            
+            loadRoomsForEdit();
+            setTimeout(() => {
+                document.getElementById('editRoomSelect').value = allocation.Room_No;
+            }, 100);
+            
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        async function updateAllocation() {
+            const allocationId = document.getElementById('currentAllocationId').value;
+            const studentId = document.getElementById('currentStudentId').value;
+            const hallNo = document.getElementById('editHallSelect').value;
+            const roomNo = document.getElementById('editRoomSelect').value;
+
+            if (!hallNo || !roomNo) {
+                alert('Please select both hall and room');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/room-allocations/update', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        allocation_id: parseInt(allocationId),
+                        student_id: parseInt(studentId),
+                        hall_no: parseInt(hallNo),
+                        room_no: parseInt(roomNo)
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ Room allocation updated successfully!');
+                    closeEditModal();
+                    fetchAllocations();
+                } else {
+                    alert(`❌ Failed to update allocation: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error updating allocation:', error);
+                alert('❌ Server error while updating allocation');
+            }
+        }
+
+        async function terminateAllocation(allocationId) {
+            if (!confirm('Are you sure you want to terminate this allocation?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/room-allocations/terminate', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        allocation_id: allocationId
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ Allocation terminated successfully!');
+                    fetchAllocations();
+                } else {
+                    alert(`❌ Failed to terminate allocation: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error terminating allocation:', error);
+                alert('❌ Server error while terminating allocation');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function updateStats() {
+    const CAPACITY = 4;
+
+    const totalAllocations = allAllocations.length;
+    const activeAllocations = allAllocations.filter(a => !a.Alloc_End_Time).length;
+
+    document.getElementById('totalAllocations').textContent = totalAllocations;
+    document.getElementById('activeStudents').textContent = activeAllocations;
+
+    // --- room statistics with capacity check ---
+    const activeByRoom = {};
+
+    // count active allocations per room
+    allAllocations.forEach(a => {
+        if (!a.Alloc_End_Time) {
+            activeByRoom[a.Room_No] = (activeByRoom[a.Room_No] || 0) + 1;
+        }
+    });
+
+    const totalRooms = allRooms.length;
+    let occupiedRooms = 0; // rooms at full capacity
+
+    for (const room in activeByRoom) {
+        if (activeByRoom[room] >= CAPACITY) {
+            occupiedRooms++;
+        }
+    }
+
+    const availableRooms = totalRooms - occupiedRooms;
+
+    document.getElementById('availableRooms').textContent = availableRooms;
+    document.getElementById('occupiedRooms').textContent = occupiedRooms;
+}
+
+
+        function showError(message) {
+            const tbody = document.getElementById('allocationsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">❌</span>
+                        </div>
+                        <p class="text-red-600 font-medium">${message}</p>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInitialData();
+        });
+    </script>
+</body>
+</html>

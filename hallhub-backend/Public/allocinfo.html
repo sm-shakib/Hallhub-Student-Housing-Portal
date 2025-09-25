@@ -180,19 +180,99 @@
       margin-top: 10px;
       font-style: italic;
     }
+
+    /* Group By Dropdown Styles */
+    .group-by-container {
+      margin: 10px 0;
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: white;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      border-radius: 8px;
+      z-index: 1;
+      border: 1px solid #ccc;
+      top: 100%;
+      left: 0;
+    }
+
+    .dropdown-content a {
+      color: #333;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+    }
+
+    .dropdown-content a:hover {
+      background-color: #f1f1f1;
+    }
+
+    .dropdown-content a:first-child {
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+
+    .dropdown-content a:last-child {
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    .dropdown.show .dropdown-content {
+      display: block;
+    }
+
+    .group-header {
+      background: #87CEFA;
+      color: white;
+      padding: 15px;
+      margin: 20px 0 10px 0;
+      border-radius: 8px;
+      font-weight: bold;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .group-items {
+      margin-bottom: 20px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 <body>
   <div class="info-box">
     <h2>🏠 Room Allocation Info</h2>
-    <label for="studentIdInput" class="student-id-label">Your Student ID</label>
-    <input type="text" id="studentIdInput" readonly />
-    <div>
+    <div class="button-group">
       <button onclick="getMyAllocations()" id="getInfoBtn">View My Allocations</button>
+      
+      <div class="dropdown">
+        <button onclick="toggleDropdown()" id="getGrpBtn">Group By ▼</button>
+        <div id="groupDropdown" class="dropdown-content">
+          <a href="#" onclick="groupByOption('Room_No', 'Room')">Room</a>
+          <a href="#" onclick="groupByOption('Hall_No', 'Hall')">Hall</a>
+          <a href="#" onclick="groupByOption('Alloc_Start_Time', 'Start Year')">Start Year</a>
+          <a href="#" onclick="groupByOption('Alloc_End_Time', 'End Year')">End Year</a>
+        </div>
+      </div>
     </div>
     <div class="details" id="allocationDetails"></div>
-    <p class="info-note">You can only view your own allocation information</p>
-    
     <div class="nav-buttons">
       <button class="back-btn" onclick="goBack()">← Back to Dashboard</button>
     </div>
@@ -208,6 +288,150 @@
         console.error('Error parsing user session:', error);
         return null;
       }
+    }
+
+    // Toggle dropdown visibility
+    function toggleDropdown() {
+      const dropdown = document.getElementById('groupDropdown').parentElement;
+      dropdown.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    window.onclick = function(event) {
+      if (!event.target.matches('#getGrpBtn')) {
+        const dropdowns = document.getElementsByClassName("dropdown");
+        for (let i = 0; i < dropdowns.length; i++) {
+          const openDropdown = dropdowns[i];
+          if (openDropdown.classList.contains('show')) {
+            openDropdown.classList.remove('show');
+          }
+        }
+      }
+    }
+
+    // Function to handle group by selection
+    async function groupByOption(column, displayName) {
+      // Close dropdown
+      document.getElementById('groupDropdown').parentElement.classList.remove('show');
+      
+      const currentUser = getCurrentUser();
+      const output = document.getElementById('allocationDetails');
+      const btn = document.getElementById('getGrpBtn');
+      
+      if (!currentUser || !currentUser.studentId) {
+        output.innerHTML = '<div class="error">Session expired. Please log in again.</div>';
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Loading...';
+      output.innerHTML = `<div class="loading">Grouping allocations by ${displayName}...</div>`;
+
+      try {
+        const response = await fetch(`http://localhost:3000/api/allocations?student_id=${currentUser.studentId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch allocation information');
+        }
+
+        const allocations = await response.json();
+        
+        if (allocations.length === 0) {
+          output.innerHTML = '<div class="error">No allocations found to group.</div>';
+        } else {
+          displayGroupedAllocations(allocations, column, displayName, output);
+        }
+
+      } catch (error) {
+        console.error('Error fetching allocations for grouping:', error);
+        output.innerHTML = '<div class="error">Failed to fetch allocation information. Please try again.</div>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Group By ▼';
+      }
+    }
+
+    // Function to group and display allocations
+    function displayGroupedAllocations(allocations, column, displayName, container, showAllData = false) {
+      const groups = {};
+      
+      allocations.forEach(allocation => {
+        let groupKey;
+        
+        if (column === 'Alloc_Start_Time' || column === 'Alloc_End_Time') {
+          // Extract year from date
+          const date = allocation[column];
+          if (date) {
+            groupKey = new Date(date).getFullYear().toString();
+          } else {
+            groupKey = column === 'Alloc_End_Time' ? 'Ongoing' : 'Unknown';
+          }
+        } else {
+          groupKey = allocation[column] || 'Unknown';
+        }
+        
+        if (!groups[groupKey]) {
+          groups[groupKey] = [];
+        }
+        groups[groupKey].push(allocation);
+      });
+
+      const totalAllocations = allocations.length;
+      const groupCount = Object.keys(groups).length;
+      
+      let html = `<div class="success">
+        <strong>${showAllData ? 'All' : 'Your'} Allocations Grouped by ${displayName}:</strong><br>
+        <em>Total: ${totalAllocations} allocations across ${groupCount} ${displayName.toLowerCase()}${groupCount > 1 ? 's' : ''}</em><br><br>
+      `;
+
+      // Sort group keys
+      const sortedKeys = Object.keys(groups).sort((a, b) => {
+        if (column === 'Alloc_Start_Time' || column === 'Alloc_End_Time') {
+          // Sort years numerically, with special handling for 'Ongoing' and 'Unknown'
+          if (a === 'Ongoing' || a === 'Unknown') return 1;
+          if (b === 'Ongoing' || b === 'Unknown') return -1;
+          return parseInt(a) - parseInt(b);
+        }
+        return a.localeCompare(b);
+      });
+
+      sortedKeys.forEach(groupKey => {
+        html += `<div class="group-header">${displayName}: ${groupKey} (${groups[groupKey].length} allocation${groups[groupKey].length > 1 ? 's' : ''})</div>`;
+        html += '<div class="group-items">';
+        
+        groups[groupKey].forEach(allocation => {
+          const formattedStart = allocation.Alloc_Start_Time
+            ? formatBDTime(allocation.Alloc_Start_Time)
+            : 'Not specified';
+          
+          const formattedEnd = allocation.Alloc_End_Time
+            ? formatBDTime(allocation.Alloc_End_Time)
+            : 'Not specified';
+
+          const allocStatus = allocation.Alloc_End_Time === null ? 'Current' : 'Former';
+          const allocClass = allocation.Alloc_End_Time === null ? 'current' : 'former';
+
+          html += `
+            <div style="margin-bottom: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: white;">
+              <strong>Hall No.:</strong> ${allocation.Hall_No}<br>
+              <strong>Hall Location:</strong> ${allocation.Hall_Place}<br>
+              <strong>Room No.:</strong> ${allocation.Room_No}<br>
+              <strong>Allocated Start:</strong> ${formattedStart}<br>
+              <strong>Allocation End:</strong> ${formattedEnd}<br>
+              <strong>Status:</strong> 
+              <span class="allocStatus ${allocClass}">${allocStatus}</span>
+            </div>
+          `;
+        });
+        
+        html += '</div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
     }
 
     // Function to get current user's allocations
@@ -230,25 +454,26 @@
 
       try {
         const response = await fetch(`http://localhost:3000/api/allocations?student_id=${currentUser.studentId}`);
-        
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error('Failed to fetch allocation information');
+          throw new Error(data.error || 'Failed to fetch allocation information');
         }
 
-        const allocations = await response.json();
-        
-        if (allocations.length === 0) {
+        if (data.error) {
+          output.innerHTML = `<div class="error">${data.error}</div>`;
+        } else if (data.length === 0) {
           output.innerHTML = '<div class="error">No allocation found for your Student ID.</div>';
         } else {
-          displayAllocations(allocations, output);
+          displayAllocations(data, output);
         }
 
       } catch (error) {
         console.error('Error fetching allocation:', error);
-        output.innerHTML = '<div class="error">Failed to fetch allocation information. Please try again.</div>';
+        output.innerHTML = `<div class="error">${error.message || 'Failed to fetch allocation information. Please try again.'}</div>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = 'View My Allocations';
+        btn.textContent = 'Reload';
       }
     }
 
@@ -316,7 +541,9 @@
       
       // Set the read-only student ID field
       const studentIdInput = document.getElementById('studentIdInput');
-      studentIdInput.value = currentUser.studentId;
+      if (studentIdInput) {
+        studentIdInput.value = currentUser.studentId;
+      }
       
       // Auto-load allocations on page load
       getMyAllocations();
